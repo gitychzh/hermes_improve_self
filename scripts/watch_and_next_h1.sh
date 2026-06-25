@@ -35,12 +35,12 @@ if [ -z "$LATEST_ROUND" ]; then
 fi
 
 FILENAME=$(basename "$LATEST_ROUND")
-LAST_LINE=$(tail -1 "$LATEST_ROUND")
 
 echo "[$TS] 对端提交 $LATEST_HASH, 轮次: $FILENAME"
-echo "[$TS] 标记: $LAST_LINE"
 
-if echo "$LAST_LINE" | grep -q "轮到.*HM1.*优化.*HM2"; then
+# 用grep搜索整个文件，不只是最后一行
+if grep -q "轮到.*HM1.*优化.*HM2" "$LATEST_ROUND"; then
+    echo "[$TS] 检测到: 轮到HM1优化HM2"
     echo "=================================================="
     echo "  ✅ 轮到我了 — HM1 立即执行优化！"
     echo "=================================================="
@@ -48,5 +48,6 @@ if echo "$LAST_LINE" | grep -q "轮到.*HM1.*优化.*HM2"; then
     exit 3
 fi
 
+echo "[$TS] 未检测到轮到HM1的标记"
 echo "$LATEST_HASH" > "$LOCK_FILE"
 exit 0
