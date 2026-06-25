@@ -1,61 +1,93 @@
 #!/bin/bash
 # ============================================================
-# HM1 交替优化轮询脚本 (HM1角色)
+# 交替优化轮询脚本 (HM1/HM2 各部署一份)
+# 核心:
+#   - 检测远程仓库有 "非本机提交" 的新 commit → 轮到我了
+#   - 一个在操作，另一个必须停止(但可参与计划讨论)
+#   - 双方都有 cron 每5分钟轮询
 # ============================================================
 
 REPO_DIR="$HOME/hm_ps/hermes_improve_self"
-MY_HOSTNAME="$(hostname)"      # opcsname
-MY_GIT_USER="opc_uname"        # HM1的git用户
-OPPONENT_USER="opc2_uname"     # HM2的git用户
+MY_HOSTNAME="$(hostname)"   # opc2sname (HM2) 或 opc_uname (HM1)
+MY_ROLE="${MY_ROLE:-HM1}"   # 通过环境变量传入
+
+# 从主机名推断角色 (如果未设置)
+if [ "$MY_ROLE" = "HM1" ] && [ "$MY_HOSTNAME" = "opc2sname" ]; then
+    MY_ROLE="HM2"
+fi
 
 cd "$REPO_DIR" || exit 1
 
-# === 步骤1: 强制同步远端最新 ===
-git fetch origin main 2>&1
-git reset --hard origin/main 2>&1
+# 获取拉取前的 HEAD commit hash (远程修改前本地状态)
+BEFORE_PULL=$(git rev-parse HEAD 2>/dev/null)
 
-# === 步骤2: 检查最新 commit 作者 — 必须是对端 (HM2) ===
-LATEST_AUTHOR=*** log -1 --format='%an' HEAD)
-LATEST_MSG=$(git log -1 --format='%s' HEAD)
+# === 步骤1: 拉取最新 ===
+git pull --ff-only origin main 2>/dev/null
 
-echo "[$(date '+%Y-%m-%d %H:%M:%S')] 最新提交: $LATEST_AUTHOR → $LATEST_MSG"
+# === 步骤2: 检查是否有新提交 (不是我自己提交的) ===
+AFTER_PULL=$(git rev-parse HEAD 2>/dev/null)
 
-# 如果提交者是本机(HM1)，这是我自己提交的 — 不触发
+if [ -z "$BEFORE_PULL" ] || [ "$BEFORE_PULL" = "$AFTER_PULL" ]; then
+    echo "[$(date '+%Y-%m-%d %H:%M:%S')] 无新提交, 继续等待"
+    exit 0  # 无变更, 正常退出
+fi
+
+# 有新提交! 检查最新 commit 的作者
+LATEST_AUTHOR=$(git log -1 --format='%an' HEAD)
+LATEST_COMMIT_MSG=$(git log -1 --format='%s' HEAD)
+
+echo "[$(date '+%Y-%m-%d %H:%M:%S')] 检测到新提交: ${LATEST_AUTHOR} → '${LATEST_COMMIT_MSG}'"
+
+# 如果提交者不是本机用户, 说明是对端操作了
+# HM1用户: opc_uname, HM2用户: opc2_uname
+if [ "$MY_ROLE" = "HM1" ]; then
+    MY_GIT_USER="opc_uname"
+    OPPONENT_USER="opc2_uname"
+elif [ "$MY_ROLE" = "HM2" ]; then
+    MY_GIT_USER="opc2_uname"
+    OPPONENT_USER="opc_uname"
+fi
+
 if [ "$LATEST_AUTHOR" = "$MY_GIT_USER" ]; then
-    echo "这是我提交的，不触发。等待对方(HM2)行动。"
+    echo "[$(date '+%Y-%m-%d %H:%M:%S')] 这是我提交的, 不是交替优化。等待对方行动。"
     exit 0
 fi
 
-# 如果不是HM2的提交，也是不相关
-if [ "$LATEST_AUTHOR" != "$OPPONENT_USER" ]; then
-    echo "最新提交者非对方，不触发。"
-    exit 0
-fi
-
-# === 步骤3: HM2提交了! 检查 round 文件 ===
+# === 步骤3: 对端提交了! 检查最新 round 文件 ===
+# 找到最新的轮次文件
 LATEST_ROUND=$(ls -1t "$REPO_DIR/rounds"/R*_*.md 2>/dev/null | head -1)
 
 if [ -z "$LATEST_ROUND" ]; then
-    echo "无轮次记录，等待初始化。"
+    echo "[$(date '+%Y-%m-%d %H:%M:%S')] 无轮次记录，等待初始化。"
     exit 0
 fi
 
 FILENAME=$(basename "$LATEST_ROUND")
+
+echo "[$(date '+%Y-%m-%d %H:%M:%S')] 对端($OPPONENT_USER)提交，最新轮次: $FILENAME"
+
+# 提取最后一行判断是否轮到我了
 LAST_LINE=$(tail -1 "$LATEST_ROUND")
 
-echo "对端提交，最新轮次: $FILENAME"
-echo "最后一行: $LAST_LINE"
-
-# 检查 "轮到HM1" 标记
-if echo "$LAST_LINE" | grep -q "轮到.*HM1.*优化.*HM2"; then
-    echo "=================================================="
-    echo "  ✅ 轮到我了 — HM1 立即执行优化！"
-    echo "=================================================="
-    exit 3  # 脚本返回3 → cron 触发 HM1 的优化流程
-elif echo "$LAST_LINE" | grep -q "R2完成" || echo "$LAST_LINE" | grep -q "等待下一轮"; then
-    echo "R2已完成，但标记不明确，等待下轮。"
-    exit 0
+# 检查 "轮到HM2优化HM1" 标记
+if echo "$LAST_LINE" | grep -q "轮到.*优化"; then
+    # 从标记中提取执行者
+    TARGET=$(echo "$LAST_LINE" | grep -oP '(?<=轮到)(HM\d)' | head -1)
+    
+    if [ "$TARGET" = "$MY_ROLE" ]; then
+        echo "=================================================="
+        echo "  ✅ 轮到我了 — $MY_ROLE 立即执行优化！"
+        echo "=================================================="
+        exit 3  # 返回3 = 轮到我了, 触发优化 (cron会执行)
+    else
+        echo "[$(date '+%Y-%m-%d %H:%M:%S')] 当前轮到 $TARGET, 我是 $MY_ROLE, 等待"
+        # 我是质疑者角色, 可以输出参与计划讨论的建议
+        if [ -n "$OPPONENT_USER" ]; then
+            echo "质疑者提示: 我可以参与计划讨论，但等待执行者提交"
+        fi
+        exit 0
+    fi
 fi
 
-echo "无明确标记，等待。"
+echo "[$(date '+%Y-%m-%d %H:%M:%S')] 无明确轮到标记，等待"
 exit 0
