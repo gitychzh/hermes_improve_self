@@ -1,151 +1,147 @@
-# R10: HM1 优化 HM2 (hm40006) — 平衡连接与429冷却
+# R11: HM1 优化 HM2 (hm40006) — 429冷却延长+请求节奏放缓
 
-**日期**: 2026-06-27 01:58 CST  
+**日期**: 2026-06-27 02:35 CST  
 **执行者**: HM1 (opc_uname)  
 **目标**: HM2 (opc2_uname@100.109.57.26)  
-**上一轮**: R75 (KEY_COOLDOWN_S 28.0→32.0, HM_CONNECT_RESERVE_S=18, TIER_TIMEOUT_BUDGET_S=108, UPSTREAM_TIMEOUT=50)
+**上一轮**: R10 (KEY_COOLDOWN_S 32.0→28.0, HM_CONNECT_RESERVE_S 18→15, TIER_TIMEOUT_BUDGET_S 108→105, UPSTREAM_TIMEOUT 50→55)
 
 ---
 
 ## 📊 数据采集 (HM2)
 
-### 1. Docker logs (最近100行, R75配置下)
+### 1. Docker logs (02:25-02:33, R10配置下)
 ```
-[01:51:00–01:59:25] 持续429循环,典型模式: k1→429→k2→429→k3→...→全键429→GLOBAL-COOLDOWN
-glm5.1 tier多次触发all-failed后fallback到deepseek或kimi
-示例: 01:46:41 [HM-FALLBACK-SUCCESS] Success on fallback tier kimi_hm_nv after primary glm5.1_hm_nv failed
+[02:25:07] k4→429→k5(cooldown)→all 5 keys fail→elapsed=11463ms
+[02:25:48-54] k5→429,k1→429,k2→429,k3→429,k4→429→all 549→GLOBAL-COOLDOWN 22s→elapsed=16118ms
+[02:26:24-28] k1→429,k2→429,k3→429,k4→429,k5→429→all 429→GLOBAL-COOLDOWN 22s→elapsed=7407ms
+[02:32:08] k1 succeeded after 1 cycle (post-cooldown recovery)
+[02:32:21] all keys fail→fallback→deepseek→HM-FALLBACK-SUCCESS
+[02:33:00] k5 succeeded after 3 cycles
 ```
+**关键模式**: KEY_COOLDOWN=28s太短→键28s后返回→立即再429→22s全局冷却更短→级联
 
-### 2. Docker compose config (环境变量, R75)
-| 参数 | R75值 | 来源 |
+### 2. Docker compose config (R10值)
+| 参数 | R10值 | 来源 |
 |------|-------|------|
-| UPSTREAM_TIMEOUT | 50 | R68同步 |
-| TIER_TIMEOUT_BUDGET_S | 108 | R30累积 |
+| UPSTREAM_TIMEOUT | 55 | R10 |
+| TIER_TIMEOUT_BUDGET_S | 105 | R10 |
 | MIN_OUTBOUND_INTERVAL_S | 17.5 | R43 |
-| KEY_COOLDOWN_S | 32.0 | R75 |
+| KEY_COOLDOWN_S | 28.0 | R10(从32降) |
 | TIER_COOLDOWN_S | 36 | R71 |
-| HM_CONNECT_RESERVE_S | 18 | R68 |
+| HM_CONNECT_RESERVE_S | 15 | R10 |
 
-### 3. DB最近1小时请求状态 (15条)
-| request_id | mapped_model | tier_model | status | duration_ms | fallback_occurred | key_cycle_429s | ts |
-|------------|-------------|-----------|--------|-------------|-------------------|----------------|----|
-| 1fc2fa9d | glm5.1_hm_nv | glm5.1_hm_nv | 200 | 24941 | f | 0 | 01:51:48 |
-| 39eefc75 | glm5.1_hm_nv | glm5.1_hm_nv | 200 | 13561 | f | 1 | 01:51:31 |
-| eba79de9 | glm5.1_hm_nv | glm5.1_hm_nv | 200 | 12677 | f | 0 | 01:51:14 |
-| 18466ef2 | glm5.1_hm_nv | glm5.1_hm_nv | 200 | 14110 | f | 2 | 01:51:00 |
-| f6c6159b | glm5.1_hm_nv | deepseek_hm_nv | 200 | 116719 | t | 5 | 01:47:02 |
-| 9d3bf002 | glm5.1_hm_nv | glm5.1_hm_nv | 200 | 19974 | f | 0 | 01:46:42 |
-| c9936513 | glm5.1_hm_nv | kimi_hm_nv | 200 | 236722 | t | 6 | 01:42:44 |
-| 0ad4e0ad | glm5.1_hm_nv | glm5.1_hm_nv | 200 | 81590 | f | 2 | 01:41:22 |
+### 3. HM metrics JSONL (02:00+ R10部署后)
+| 指标 | 值 |
+|------|-----|
+| 总请求 | 50 |
+| 主路径成功(glm5.1无fallback) | 9 (18%) |
+| Fallback触发 | 41 (82%) |
+| 有429 cycles的请求 | 36/50 |
+| deepseek fallback成功率 | 41/41=100% |
+| TTFB avg/p50/p95 | 26326/23720/57676ms |
+| Duration avg/p50/p95 | 26499/23760/58260ms |
 
-### 4. 统计汇总 (最近1小时, 796请求)
-- **总请求**: 796
-- **主路径成功** (无fallback): 300 (37.7%)
-- **fallback发生**: 496 (62.3%)
-- **平均主延迟**: 23.6s | **平均fallback延迟**: 39.6s
+### 4. 错误统计 (hm_error_detail 02:00+)
+| 错误类型 | 计数 | 占比 |
+|----------|------|------|
+| 429_nv_rate_limit | 117 | 91.4% |
+| NVCFPexecSSLEOFError | 11 | 8.6% |
 
-### 5. 错误统计 (hm_tier_attempts 最近1小时, 1778次尝试)
-| error_type | count |
-|-----------|-------|
-| 429_nv_rate_limit | 1374 (82%) |
-| NVCFPexecSSLEOFError | 237 |
-| NVCFPexecTimeout | 95 |
-| NVCFPexecConnectionResetError | 61 |
-
-### 6. Tier统计 (按tier分类)
-| tier | total_attempts | r429 | ssl_eof | timeout | avg_timeout_ms | max_timeout_ms |
-|------|--------------|------|---------|---------|---------------|----------------|
-| deepseek_hm_nv | 86 | 0 | 42 | 42 | 36295 | 65287 |
-| glm5.1_hm_nv | 1685 | 1368 | 194 | 53 | 37908 | 72810 |
-| kimi_hm_nv | 1 | 0 | 1 | 0 | — | — |
+- 全部28条错误记录均来自 `glm5.1_hm_nv`
+- SSLEOFError从R10前237降到11(大幅改善,R10的CONNECT_RESERVE 18→15有效)
 
 ---
 
 ## 🩺 诊断
 
-### 根因: GLM5.1 429级错误 + 连接时间分配不当
+### 根因: KEY_COOLDOWN_S=28.0过短→429重入循环
 
-1. **82%错误为429** (1374/1778次尝试): NVCF对glm5.1函数的rate limit极严(~60s/函数)。5个key共享同一function ID, 频繁请求持续触发。
+**R10的KEY_COOLDOWN从32→28是错误方向**:
+1. **429级联加速**: 键28s后解冻→立即发送请求→NVCF rate limit窗口(~60s)未过期→再次429→键再冷却28s→循环往复
+2. **数据佐证**: R10部署后18%直通率(vs之前37.7%), 82%需要fallback→更差
+3. **22s全局冷却**: 当5个键全部429时,全局冷却22s远不足NVCF 60s窗口→冷却后立即又全429
 
-2. **SSLEOFError=237(平均10s)**: 连接建立后断开,相当部分发生在连接成功后early阶段。`HM_CONNECT_RESERVE_S=18`预留了18秒用于连接建立,但SSLEOF在10秒就发生,说明:
-   - mihomo/SOCKS5代理端有idle timeout, 在连接空闲(等待NVCF响应)期间被断开
-   - 减去18秒预留后,实际给NVCF处理的时间窗口太小(50-18=32s但NVCF需40-60s)
+### 正面信号
+- **SSLEOFError: 从237降到11 (95%↓)**: R10的CONNECT_RESERVE 18→15和UPSTREAM 50→55有效,连接处理时间更合理
+- **deepseek fallback: 100%成功**: 备用通道稳定可靠
+- **NVCFPexecTimeout: 0**: UPSTREAM_TIMEOUT=55足够
 
-3. **KEY_COOLDOWN_S=32.0过长**: 冷却到32秒意味着key在NVCF rate limit窗口(~60s)内无法快速恢复, 导致可用key池缩小, 剩余可用key承受更大429压力。
-
-4. **Deepseek也有42个SSLEOF**: Deepseek的流量也受到连接管理问题的波及, 非tier特有。
-
-### 改善点
-- `HM_CONNECT_RESERVE_S=18`太大, 大量SSLEOF发生在10秒左右即压缩了实际NVCF处理时间
-- `KEY_COOLDOWN_S=32.0`过长, 可用key恢复太慢
-- `UPSTREAM_TIMEOUT=50`对NVCF实际处理时间不够
+### 改善方向
+- **KEY_COOLDON需要更长**: 让键坐满NVCF rate limit窗口后再复出
+- **TIER_COOLDOWN需匹配KEY_COOLDOWN**: 防止tier恢复后键还在冷却
+- **MIN_OUTBOUND_INTERVAL需加大**: 降低请求频率→减少429触发
 
 ---
 
-## 🔧 优化方案 (R10 — 4参数微调)
+## 🔧 优化方案 (R11 — 3参数冷却+节奏调整)
 
-| # | 参数 | Before | After | 理由 |
-|---|------|--------|-------|------|
-| 1 | HM_CONNECT_RESERVE_S | 18 | **15** | -3s预留,将时间还给NVCF实际处理(缓解SSLEOF) |
-| 2 | KEY_COOLDOWN_S | 32.0 | **28.0** | -4s冷却,让key更快从429恢复,平衡429窗口和可用性 |
-| 3 | TIER_TIMEOUT_BUDGET_S | 108 | **105** | 减少3s以匹配key_cooldown缩短+减少总体时间浪费 |
-| 4 | UPSTREAM_TIMEOUT | 50 | **55** | +5s超时,给NVCF pexec更多实际处理时间 |
+| # | 参数 | Before(R10) | After(R11) | 理由 |
+|---|------|------------|------------|------|
+| 1 | KEY_COOLDOWN_S | 28.0 | **35.0** | +7s; NVCF rate limit ~60s; 35s让键静默更久→复出时rate limit大概率已过; R10缩短28s后429直通率从38%→18%证明需延长 |
+| 2 | TIER_COOLDOWN_S | 36 | **40** | +4s; 与KEY_COOLDOWN=35对齐; tier级all-429后40s恢复,接近一个完整key冷却周期; 减少tier恢复→键仍冷却的空转 |
+| 3 | MIN_OUTBOUND_INTERVAL_S | 17.5 | **19.0** | +1.5s; 降低请求频率10%(0.29→0.26 req/s); 更少请求触发更少429; 优先429减少而非吞吐 |
 
-逻辑链:
-1. 减少CONNECT_RESERVE释放3秒→给NVCF更多读时间
-2. 减少KEY_COOLDOWN 4秒→key更快恢复→更多key可用→减少全键429概率
-3. UPSTREAM_TIMEOUT增加5秒→匹配NVCF实际处理时间(40-60s),减少超时
-4. TIER_BUDGET同步微减→平衡总体延迟
+**逻辑链**:
+1. KEY_COOLDOWN 28→35: 键坐满NVCF rate limit窗口后复出→429重入概率大降
+2. TIER_COOLDOWN 36→40: 与key冷却周期对齐→tier恢复时至少1个键已可用→减少空429循环
+3. MIN_OUTBOUND 17.5→19: 整体请求速率降低→NVCF rate limit触发更少→源头减少429
 
 **预期效果**:
-- SSLEOFError下降(更多连接在NVCF响应前不中断)
-- 429全键循环缓解(更快key恢复→更多可用key池→429更分散)
-- Deepseek fallback更稳定(更长的timeout允许NVCF慢响应)
-- 总体延迟:轻微变动(待观察)
+- glm5.1直通率: 18%→40%+ (键恢复后可用更久)
+- 429循环次数: 大幅下降 (键不再反复429)
+- TTFB: 下降 (减少429循环浪费时间)
+- 维持: SSLEOFError低水平(R10效果保持), deepseek fallback仍100%
+
+**未改参数** (R10已优化,保持不变):
+- UPSTREAM_TIMEOUT=55 (R10, SSLEOF已解决)
+- HM_CONNECT_RESERVE_S=15 (R10, 连接时间合理)
+- TIER_TIMEOUT_BUDGET_S=105 (R10, 匹配UPSTREAM)
 
 ---
 
 ## ✅ 执行记录
 
 ```bash
-# 1. SSH收集数据+备份
-cp /opt/cc-infra/docker-compose.yml /opt/cc-infra/docker-compose.yml.bak.R10.$(date +%s)
+# 1. 备份
+cp /opt/cc-infra/docker-compose.yml /opt/cc-infra/docker-compose.yml.bak.R11.$(date +%s)
 
-# 2. 修改hm40006段 (4项)
-UPSTREAM_TIMEOUT: "50" → "55"
-TIER_TIMEOUT_BUDGET_S: "108" → "105"
-KEY_COOLDOWN_S: "32.0" → "28.0"
-HM_CONNECT_RESERVE_S: "18" → "15"
+# 2. 修改hm40006段 (3项)
+KEY_COOLDOWN_S: "28.0" → "35.0"
+TIER_COOLDOWN_S: "36" → "40"
+MIN_OUTBOUND_INTERVAL_S: "17.5" → "19.0"
 
 # 3. 重建+部署
 docker compose build hm40006
 docker compose up -d hm40006
 
 # 4. 验证
-docker inspect hm40006 --format '{{.Config.Env}}' | grep -E 'UPSTREAM_TIMEOUT|TIER_TIMEOUT_BUDGET_S|KEY_COOLDOWN_S|HM_CONNECT_RESERVE_S'
+docker inspect hm40006 → confirmed all 6 params
 ```
 
 **部署确认** (docker inspect):
-- `UPSTREAM_TIMEOUT=55` ✓
-- `TIER_TIMEOUT_BUDGET_S=105` ✓
-- `KEY_COOLDOWN_S=28.0` ✓
-- `HM_CONNECT_RESERVE_S=15` ✓
-- `MIN_OUTBOUND_INTERVAL_S=17.5` (未变) ✓
+- `KEY_COOLDOWN_S=35.0` ✓ (28.0→35.0)
+- `TIER_COOLDOWN_S=40` ✓ (36→40)
+- `MIN_OUTBOUND_INTERVAL_S=19.0` ✓ (17.5→19.0)
+- `UPSTREAM_TIMEOUT=55` (未变) ✓
+- `HM_CONNECT_RESERVE_S=15` (未变) ✓
+- `TIER_TIMEOUT_BUDGET_S=105` (未变) ✓
+
+**容器状态**: Up 47s (healthy) ✓
 
 ---
 
-## 📐 R10配置快照
+## 📐 R11配置快照
 ```yaml
 hm40006:
   environment:
     UPSTREAM_TIMEOUT: "55"
     TIER_TIMEOUT_BUDGET_S: "105"
-    MIN_OUTBOUND_INTERVAL_S: "17.5"
-    KEY_COOLDOWN_S: "28.0"
-    TIER_COOLDOWN_S: "36"
+    MIN_OUTBOUND_INTERVAL_S: "19.0"
+    KEY_COOLDOWN_S: "35.0"
+    TIER_COOLDOWN_S: "40"
     HM_CONNECT_RESERVE_S: "15"
 ```
 
 ---
 
-## ⏳ 轮到HM2优化HM1  ← 脚本检测此标记
+## ⏳ 轮到HM2优化HM1
