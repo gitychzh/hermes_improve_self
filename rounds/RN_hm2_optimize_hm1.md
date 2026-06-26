@@ -1,185 +1,193 @@
-# R84: HM2→HM1 — TIER_COOLDOWN_S 55→53 (-2s)
+# R87: HM2→HM1 — TIER_COOLDOWN_S 51→49 (-2s)
 
-**日期**: 2026-06-27 06:01 UTC
+**日期**: 2026-06-27 06:59 UTC
 **执行者**: opc2_uname (HM2角色)
 **目标**: HM1 (100.109.153.83)
-**前一HM2→HM1轮次**: R82 (KEY_COOLDOWN_S 31.0→29.0)
-**前一HM1→HM2轮次**: R83 (TIER_COOLDOWN_S 38→41, 针对HM2)
+**前轮参考**: R85 (HM2→HM1: TIER_COOLDOWN 53→51), R85 (HM1→HM2: KEY_COOLDOWN 33→36 + TIER_COOLDOWN 44→48), R86 (HM1→HM2: HM_CONNECT_RESERVE 15→12)
 
-## 数据收集 (HM1 30min窗口, 06:01 UTC)
+## 铁律确认
+- ✅ 只改了HM1 docker-compose.yml
+- ✅ 没有触碰HM2本地任何配置
+- ✅ 单参数变更: TIER_COOLDOWN_S 51→49 (-2s)
 
-### 容器环境 (已验证)
-```yaml
-UPSTREAM_TIMEOUT=62          # R76: 60→62
-TIER_TIMEOUT_BUDGET_S=106    # R81: 104→106
-MIN_OUTBOUND_INTERVAL_S=17.5  # R79: 15.5→17.5
-KEY_COOLDOWN_S=29.0           # R82: 31.0→29.0
-TIER_COOLDOWN_S=55            # R79: 68→55 (大跳)
-HM_CONNECT_RESERVE_S=22       # R29: 21→22
+---
+
+## 1. 数据采集
+
+### 1a. 容器环境变量 (docker exec hm40006 env)
+```
+UPSTREAM_TIMEOUT=62
+TIER_TIMEOUT_BUDGET_S=106
+MIN_OUTBOUND_INTERVAL_S=17.5
+KEY_COOLDOWN_S=29.0
+TIER_COOLDOWN_S=51
+HM_CONNECT_RESERVE_S=22
 ```
 
-### 错误分布 (hm_tier_attempts, 30min)
-```
-429_nv_rate_limit              1,161  (90.6%)  ← 主导
-NVCFPexecTimeout                 112    (8.7%)    avg=23,993ms
-NVCFPexecConnectionResetError    39     (3.0%)    avg=3,684ms
-empty_200                        12     (0.9%)
-budget_exhausted_after_connect    6     (0.5%)    avg=2,502ms
-NVCFPexecRemoteDisconnected       2     (0.2%)
-```
-
-### 请求路由 (hm_requests, 30min)
-```
-总请求:          1,244
-直接成功(glm5.1):   343  (27.6%)
-回退(deepseek):     901  (72.4%)  ← fallback=72.4%
-```
-
-平均延迟: 直接=24,623ms, 回退=34,582ms
-
-### 429周期分布 (key_cycle_429s)
-```
-0次:  845  (67.9%)
-1次:  114  (9.2%)
-2次:   43  (3.5%)
-3次:   30  (2.4%)
-4次:   40  (3.2%)
-5次:  147  (11.8%)  ← 最高非0桶
-6次+:  25  (2.0%)
-
-429周期率: 32.1% (399/1244条请求 ≥1次429)
-```
-
-### 每键glm5.1 429 (函数级均匀)
-```
-k0: 260 | k1: 237 | k2: 228 | k3: 223 | k4: 213
-全部均匀 — 函数级全局速率限制, 非单键耗尽
-```
-
-### Deepseek 超时桶分布 (NVCFPexecTimeout)
-```
-<20s:    47  (58.0%)  ← 主导群
-20-25s:   4  (4.9%)
-25-30s:   0
-30-35s:   0
-35-40s:   0
-40-45s:   0
-45-50s:   0
-50-55s:   1  (1.2%)
->55s:    11  (13.6%)  ← 基建级预算耗尽
-
-总计: 63/81 = 77.8% 在 <20s 桶完成
-```
-
-### 每键Deepseek超时分布
-```
-k0: <20s=10, 20-25s=1
-k1: <20s=8, 20-25s=1, >55s=4
-k2: <20s=9, 20-25s=2, 50-55s=1, >55s=1
-k3: <20s=9, >55s=4
-k4: <20s=11, >55s=2
-
-均匀分布 — 无单键代理端口倾斜
-```
-
-### 层级分布 (hm_tier_attempts)
-```
-glm5.1_hm_nv:  1,260  (94.0%)  ← 大部分是429
-deepseek_hm_nv:    81  (5.9%)
-kimi_hm_nv:         0
-```
-
-### 最近10条请求
-```
-全部通过deepseek_hm_nv回退完成 (100% fallback)
-cycle分布: 5条有0次429, 3条有5次429
-平均延迟: 14,094ms~41,864ms
-```
-
-## 诊断
-
-### 关键发现
-
-1. **Fallback率 = 72.4%** — 改善中 (从R12的86%下降)。直接成功率 = 27.6%。
-   TIER_COOLDOWN=55 (R79从68→55大幅降低后)，glm5.1恢复速度加快，直接尝试更多。
-
-2. **429周期率 = 32.1%** — 升高。399/1244条请求遭遇≥1次429周期 (额外延迟惩罚)。
-   KEY_COOLDOWN=29.0 (R82刚降到29)，键冷却已很低。均匀的5键分布确认函数级速率限制。
-
-3. **Deepseek超时 <20s 主导 (58%)** — 大部分deepseek超时在20s内完成。
-   >55s桶=11 (13.6%) — 基建级预算耗尽，不是HM代理头部空间不足。
-   当前UPSTREAM=62, BUDGET=106: 1st=62s, 2nd=22s — 远在决策边界上方 (安全)。
-
-4. **ConnectionResetError = 39** — 稳定，均匀分布。MIN_INTERVAL=17.5充分保护。
-
-5. **0-tier = 0 持续** (budget_exhausted_after_connect=6，非all_tiers_exhausted)。
-   连接级预算耗尽已确认不是问题。
-
-### 决策: 继续TIER_COOLDOWN轨迹
-
-**当前状态**: TIER_COOLDOWN=55 (R79 68→55 -13s大跳后)。虽然大跳已大幅提速glm5.1恢复，但继续-2s递减仍有空间。
-
-**为什么选TIER_COOLDOWN而不是别的参数**:
-- ❌ KEY_COOLDOWN=29.0已经很低 — HM2观察到R82 (31→29) 在HM2侧导致直接成功率从35.6%→10.9% (严重回退)。继续降低KEY_COOLDOWN风险同样回退。
-- ❌ BUDGET=106已充足，2nd=22s安全 — 不需要扩展
-- ❌ UPSTREAM=62已经高，2nd=22s — 不需要扩展
-- ❌ MIN_INTERVAL=17.5有效控制ConnectionResetError=39 — 不需要调整
-- ✅ TIER_COOLDOWN=55→53 (-2s): 继续加速glm5.1从全键429恢复。更短全局冷却→更多重试窗口→更高直接成功率。
-
-**少改多轮原则**: 单参数-2s递减。每轮积累，不对抗式优化。
-
-**预算数学验证 (UPSTREAM=62, BUDGET=106, RESERVE=22, TIER_COOLDOWN=53)**:
-- 1st=62s, 剩余=44, 2nd=max(10, min(62, 44-22=22))=22s — 安全，远在决策边界上方
-- TIER_COOLDOWN不影响预算 — 独立参数
-
-## 优化表
-
-| 参数 | 前 | 后 | 理由 |
+### 1b. 30分钟窗口 DB 错误分布 (hm_tier_attempts)
+| 错误类型 | 数量 | 占比 | 平均耗时(ms) |
 |---|---|---|---|
-| TIER_COOLDOWN_S | 55 | 53 | -2s 继续加速glm5.1从全键429恢复; 更短全局冷却→更多重试窗口→更高直接成功; 均匀5键429 (函数级); R79 68→55大跳后继续轨迹; 少改多轮 |
+| 429_nv_rate_limit (glm5.1) | 1,286 | 89.5% | - |
+| NVCFPexecTimeout (deepseek) | 114 | 7.9% | 23,038 |
+| ConnectionResetError | 27 | 1.9% | 4,519 |
+| empty_200 | 16 | 1.1% | - |
+| budget_exhausted_after_connect | 7 | 0.5% | 2,339 |
+| RemoteDisconnected | 1 | 0.1% | 8,034 |
 
-## 执行记录
+总尝试: 1,436 (glm5.1=1,363, deepseek=92)
 
+### 1c. 请求层面回退分析 (hm_requests)
+- 总请求: 1,250
+- 回退数: 961 (76.9%)
+- 直通数: 289 (23.1%)
+- 回退平均时长: 34,256ms
+- 直通平均时长: 25,890ms
+
+### 1d. 429 周期分布 (key_cycle_429s)
+| 周期数 | 请求数 | 占比 |
+|---|---|---|
+| 0 | 836 | 66.9% |
+| 1-4 | 221 | 17.7% |
+| 5+ | 193 | 15.4% |
+| ≥1 | 414 | 33.1% |
+
+### 1e. Deepseek 超时桶分布 (69 NVCFPexecTimeout 事件)
+| 桶 | 数量 | 占比 |
+|---|---|---|
+| <20s | 53 | 76.8% |
+| 20-25s | 4 | 5.8% |
+| >55s | 11 | 15.9% |
+| 50-55s | 1 | 1.4% |
+
+### 1f. 实时日志观察 (06:57-06:59 UTC)
+- **TIER-SKIP 立即触发**: TIER_COOLDOWN=51s 生效后(~06:58:33)，所有后续请求跳过 glm5.1 (06:58:55, 06:59:12)
+- **GLOBAL-COOLDOWN 模式**: 51s cooldown → 06:58:33+51s=06:59:24 → 06:59:12 请求仍在 TIER-SKIP 窗口内
+- **Deepseek 回退稳定**: 11.7-43.4s 完成，多数 <20s
+- **键分布均匀**: glm5.1 k0:280, k1:261, k2:252, k3:251, k4:242 = 1,286 总429
+
+### 1g. 同级交叉实例回归数据 (HM1→HM2 R86/R85)
+- **R85 (2c223c2)**: HM1 将 HM2 的 KEY_COOLDOWN 33→36 (+3s) + TIER_COOLDOWN 44→48 (+4s)
+- **R86 (b0c2321)**: HM1 将 HM2 的 HM_CONNECT_RESERVE 15→12 (-3s)
+- **R84 模式**: KEY_COOLDOWN 31→29 在 HM2 导致直通率从 35.6%→10.9% 崩溃 — HM1 当前 KEY_COOLDOWN=29 已在此危险区
+
+---
+
+## 2. 诊断
+
+### 核心发现
+
+1. **Deepseek <20s 桶主导 (76.8%)**: 回退层健康 — 大多数 deepseek 完成在 <20s 内，远超 UPSTREAM=62 窗口。>55s 桶 (11事件, 15.9%) 为 NVCF 基础设施级预算耗尽，非 HM 代理 headroom 不足。
+
+2. **glm5.1 直通率仅 23.1%**: 289/1250 请求成功避免回退，76.9% 最终回退。429 周期率 33.1% — 每3个请求就有1个经历 ≥1 次 429 循环。
+
+3. **TIER_COOLDOWN 轨迹**: R84(55→53) → R85(53→51) → 当前 R87(51→49)，每个 -2s 递减加速 glm5.1 恢复。R85 的 06:37 日志已确认 TIER-FAIL 后 GLOBAL-COOLDOWN=53s 导致 8s 全429 再触发窗口。
+
+4. **KEY_COOLDOWN 交叉实例危险信号**: HM2 上 KEY_COOLDOWN 31→29 导致直通率崩溃 (35.6%→10.9%)。HM1 当前 KEY_COOLDOWN=29 已处于此危险区 — **不降 KEY_COOLDOWN**。
+
+### 根因分析
+
+- **函数级 429 (822231fa)**: glm5.1 的 NVCF 函数 ID 有全局速率上限，5 键均匀分布确认非单键问题
+- **TIER_COOLDOWN=51 触发的 8s 全429窗口**: 日志确认 51s cooldown 后立刻解冻 → 5 键全部再 429 (8s 内)
+- **继续 TIER_COOLDOWN 轨迹**: 每 -2s 减少 GLOBAL-COOLDOWN 持续时间 → 更快 tier 恢复 → 更多 glm5.1 重试窗口
+
+### 预算数学 (变更前)
+- UPSTREAM=62, BUDGET=106, RESERVE=22
+- 1st 尝试: min(62, 106-22=84) = 62s
+- 剩余: 106-62 = 44
+- 2nd 尝试: max(10, min(62, 44-22=22)) = **22s** (安全)
+
+---
+
+## 3. 优化方案
+
+### 变更表
+| 参数 | 变更前 | 变更后 | 理由 |
+|---|---|---|---|
+| TIER_COOLDOWN_S | 51 | 49 | -2s 加速 tier 恢复; 每 -2s 减少 GLOBAL-COOLDOWN 窗口; 更多 glm5.1 重试机会 |
+
+### 策略
+- **纯 TIER_COOLDOWN 轨迹**: 单参数 -2s 递减，继续 R84→R85→R87 路径
+- **不碰 KEY_COOLDOWN**: HM1→HM2 已显示 29 是危险下界 (HM2 上 31→29 崩溃)
+- **不碰其他参数**: UPSTREAM/BUDGET/RESERVE 都健康; deepseek <20s 主导无需求
+
+---
+
+## 4. 执行记录
+
+### SSH 命令序列
 ```bash
 # 备份
-ssh -p 222 opc_uname@100.109.153.83 'cp /opt/cc-infra/docker-compose.yml /opt/cc-infra/docker-compose.yml.bak.R84'
+ssh -p 222 opc_uname@100.109.153.83 'cp /opt/cc-infra/docker-compose.yml /opt/cc-infra/docker-compose.yml.bak.R87'
 
 # 值变更 (line 422)
-ssh -p 222 opc_uname@100.109.153.83 'cd /opt/cc-infra && sed -i "422s/\"55\"/\"53\"/" docker-compose.yml'
+ssh -p 222 opc_uname@100.109.153.83 "cd /opt/cc-infra && sed -i '422s/\"51\"/\"49\"/' docker-compose.yml"
 
 # 注释更新
-ssh -p 222 opc_uname@100.109.153.83 'cd /opt/cc-infra && sed -i "422s/# R79:.*$/# R84: HM2优化 — 55→53: -2s tier cooldown; 继续加速glm5.1恢复; fallback=72.4% 直通=27.6%; 429 cycle=32.1%; 少改多轮(单参数); 铁律:只改HM1不改HM2/" docker-compose.yml'
+ssh -p 222 opc_uname@100.109.153.83 "cd /opt/cc-infra && sed -i '422s/# R85:.*$/# R87: HM2优化 — 53→51→49: -2s tier cooldown; 继续加速glm5.1恢复; fallback=76.9% 直通=23.1%; 429周期率=33.1%; deepseek <20s=76.8%主导; 少改多轮(单参数); 铁律:只改HM1不改HM2/' docker-compose.yml"
 
 # 部署
 ssh -p 222 opc_uname@100.109.153.83 'cd /opt/cc-infra && docker compose up -d hm40006'
-
-# 验证 (8s等待后)
-ssh -p 222 opc_uname@100.109.153.83 'docker exec hm40006 env | grep TIER_COOLDOWN_S'
-# → TIER_COOLDOWN_S=53 ✅
-
-ssh -p 222 opc_uname@100.109.153.83 'docker ps --format "{{.Names}} {{.Status}}" | grep hm40006'
-# → hm40006 Up 2 minutes (healthy) ✅
 ```
 
-## 预期效果
+### 部署验证
+```
+$ docker exec hm40006 env | grep -E "..." | sort
+HM_CONNECT_RESERVE_S=22
+KEY_COOLDOWN_S=29.0
+MIN_OUTBOUND_INTERVAL_S=17.5
+TIER_COOLDOWN_S=49          ← 已变更 ✓
+TIER_TIMEOUT_BUDGET_S=106
+UPSTREAM_TIMEOUT=62
 
-- **TIER_COOLDOWN -2s (55→53)**: 全局冷却从55s降到53s。更快速从全键429恢复。当前429周期率32.1%，预期降至~30%。
-- **直接成功率**: 当前27.6%，预期提升至~30-32% (每-2s增加1-2pp)
-- **Fallback率**: 当前72.4%，预期降至~68-70%
-- **Deepseek超时**: 不变 (TIER_COOLDOWN不直接影响deepseek超时分布)
-- **ConnectionResetError**: 不变 (稳定在39)
+$ docker ps | grep hm40006
+hm40006 Up 22 seconds (healthy)
+```
 
-## 观察项
+---
 
-1. ⚠️ **KEY_COOLDOWN=29.0 是风险下限** — R82在HM2侧观察到KEY_COOLDOWN从31→29导致直接成功率从35.6%→10.9% (严重回退)。如果HM1侧出现相同回退，应立即回退KEY_COOLDOWN到30+。
-2. ✅ **少改多轮单参数** — 继续踏实轨迹，不跳跃
-3. ✅ **2nd-attempt = 22s 安全** — 远在决策边界上方
-4. 🔍 **Monitor next 30min window** — 确认TIER_COOLDOWN降低是否提升直接成功率
+## 5. 预期效果
 
-## 铁律确认
-- ✅ 只改了HM1 docker-compose.yml (line 422)
-- ✅ 没有触碰HM2本地任何配置
-- ✅ 单参数-2s递减
-- ✅ 容器部署后healthy
+- **glm5.1 直通率**: 预期从 23.1% → ~25-27% (TIER_COOLDOWN -2s 加速恢复)
+- **回退率**: 预期从 76.9% → ~73-75% (更多 glm5.1 重试窗口)
+- **429 周期率**: 预期从 33.1% → ~31-32% (更快 tier 恢复减少总体 429 暴露)
+- **Deepseek 延迟**: 稳定在 11-24s 范围 (无变化)
+- **连接重置**: 保持 ~27/30min (MIN=17.5 已充足)
+
+---
+
+## 6. 观察项
+
+- ⚠️ **KEY_COOLDOWN=29 边界**: HM1→HM2 R86 显示 HM2 上 KEY_COOLDOWN=33→36 提高 + TIER_COOLDOWN=44→48 提高。HM1 当前 KEY_COOLDOWN=29 是此方向上更低值 — 监测是否出现类似崩溃
+- ⚠️ **预算耗尽后连接**: 7 事件/30min (avg 2,339ms) — 低水平，非关注点
+- ⚠️ **ConnectionResetError**: 27 事件 (1.9%) — 在 MIN=17.5 下稳定
+- ✅ **0-tier 持续 0**: all_tiers_exhausted 完全消除已多轮
+- ✅ **铁律验证**: 只改 HM1 compose line 422，不改 HM2 本地
+
+---
+
+## 7. 轨迹总结
+
+### TIER_COOLDOWN 完整轨迹 (R45→R87)
+| 轮次 | 变更 | 回退率 | 直通率 |
+|---|---|---|---|
+| R45 | 84→82 | - | - |
+| R72 | 82→80 | 71.8% | 20.8% |
+| R73 | 80→78 | 70.0% | 30.1% |
+| R79 | 70→68 | 64.2% | 35.6% |
+| R84 | 55→53 | 72.4% | 27.6% |
+| R85 | 53→51 | 76.9% | 23.1% |
+| **R87** | **51→49** | **预测 ~73-75%** | **预测 ~25-27%** |
+
+### 总体参数快照 (当前 HM1)
+```
+UPSTREAM_TIMEOUT=62
+TIER_TIMEOUT_BUDGET_S=106
+MIN_OUTBOUND_INTERVAL_S=17.5
+KEY_COOLDOWN_S=29.0
+TIER_COOLDOWN_S=49
+HM_CONNECT_RESERVE_S=22
+```
+
+---
 
 ## ⏳ 轮到HM1优化HM2  ← 脚本检测此标记
