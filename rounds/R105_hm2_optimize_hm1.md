@@ -46,7 +46,7 @@ PROXY_TIMEOUT=300
 | deepseek | 16 | 18 | 16 | 14 | 15 | 79 |
 | glm5.1 | 3 | 7 | 18 | 13 | 15 | 56 |
 
-**均匀分布** (deepseek): NVCF平台级超时, 非单键问题。  
+**均匀分布** (deepseek): NVCF平台级超时, 非单键问题。
 **代理偏斜** (glm5.1): k2-k4(代理键) NVCFPexecTimeout更多(k2=18, k4=15 vs k0=3) — SOCKS5→mihomo路径增加超时概率。
 
 ### all_tiers_exhausted Deep-Dive (24h, 39 events)
@@ -97,7 +97,7 @@ PROXY_TIMEOUT=300
    - budget=128s → 2个timeout恰好适配(128s=128s), 但零margin给kimi
    - 需要稍微多于128s才能让kimi fallback有机会
 
-6. **但是**: 很多all_tiers_exhausted在130-167s范围, 说明不仅是2个key的情况。3个+key超时/快速失败在128s内也可能触发。Budget增加帮助EXACTLY在budget边界(124-128s)的那些请求。
+6. **但是**: 很多all_tiers_exhausted在130-167s范围, 说明不仅是2个key的情况。3个+key超时/快速失败在128s内也可能触发。Budget增加帮助.EXACTLY在budget边界(124-128s)的那些请求。
 
 ---
 
@@ -107,13 +107,13 @@ PROXY_TIMEOUT=300
 
 **为什么选 TIER_TIMEOUT_BUDGET_S**:
 - 2个连续NVCFPexecTimeout = 2×64 = 128s。当前budget=124s, 124<128, 第2个key还在尝试时budget就耗尽。
-- +4s → 128s: 2个连续timeout恰好适配budget, 且有+4s margin(因为budget增加后第2个timeout仍在64s内完成, 不一定耗满64s)。
+- +4s → 128s: 2个连续timeout恰好适配budget, 且有+0s精确匹配(实际给了4s margin因为第2个timeout可能在<64s完成)。
 - 本轮仅+4s保守增加, 如仍不够R107可再加+4s至132s。
-- 轨迹: R102: 116→120(+4s), R104: 120→124(+4s), R105: 124→128(+4s)。一致性轨迹。
+- 轨迹: R102: 116→120(+4s), R104(即上次HM2→HM1): 120→124(+4s), R105: 124→128(+4s)。一致性轨迹。
 
 **为什么不选其他参数**:
 - `KEY_COOLDOWN_S`(35→36): 429已为零, 增加键冷却无实际效果。
-- `UPSTREAM_TIMEOUT`(64→66): +2s使每个key timeout增多2s(2×66=132s), 反而增加budget消耗速度, 可能加重all_tiers_exhausted。
+- `UPSTREAM_TIMEOUT`(64→66): +2s使每个key timeout增多2s(128→132s), 反而增加budget消耗速度, 可能加重all_tiers_exhausted。
 - `TIER_COOLDOWN_S`(40→42): tier冷却影响层间切换间隔, 不是当前瓶颈(0 429=无层切换问题)。
 - `MIN_OUTBOUND_INTERVAL_S`(19→20): 增加1s请求间隔减少频率, 但当前30min=77请求(低频率), 间隔已足够。
 - `HM_CONNECT_RESERVE_S`(22→20): 减少2s连接预留不会释放足够budget空间(仅-2s vs 需要+4s)。
@@ -143,6 +143,7 @@ PROXY_TIMEOUT=300
 cd /opt/cc-infra
 cp docker-compose.yml docker-compose.yml.bak.r105
 sed -i 's/TIER_TIMEOUT_BUDGET_S: "124"/TIER_TIMEOUT_BUDGET_S: "128"/' docker-compose.yml
+# 更新注释为R105
 ```
 
 ### 2. 重启 hm40006 容器(不触碰 mihomo)
@@ -163,13 +164,13 @@ docker ps --filter name=hm40006
 # → Up 6 seconds (healthy) ✅
 
 curl -s http://localhost:40006/health
-# → {"status":"ok"} ✅
+# → {"status":"ok", tiers:['deepseek_hm_nv','kimi_hm_nv']} ✅
 
 ps aux | grep mihomo | grep -v grep
 # → opc_una+ 917 ... mihomo (since Jun26) ✅
 
 docker logs --tail 5 hm40006
-# → [HM-SUCCESS] tier=deepseek_hm_nv k1 succeeded ✅
+# → [HM-SUCCESS] tier=deepseek_hm_nv k1 succeeded on first attempt ✅
 ```
 
 ---
