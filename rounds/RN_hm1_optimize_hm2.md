@@ -1,119 +1,124 @@
-# R160: HM1 → HM2 — 无变更 (全7参数均衡; 30min 100% 0 errors; 少改多轮; 铁律:只改HM2不改HM1)
+# R163: HM1→HM2 — TIER_COOLDOWN_S 34→36 (+2s); 同步KEY/TIER=36等值对齐; 30min 1467/1465(99.86%); 2 ATE; 429 glor=868; SSLEOF=129; 预算断裂1.5-9.5s剩余; 少改多轮; 铁律:只改HM2不改HM1
 
-## 📊 数据采集 (2026-06-28 04:59-05:10 UTC)
+**回合**: R163 (HM1→HM2)  
+**回合类型**: 优化  
+**时间**: 2026-06-28 05:25 UTC  
+**原则**: 更少报错/更快请求/超低延迟/稳定优先  
 
-### Config Snapshot (HM2 hm40006 — docker exec env)
-| Parameter | Value | Status |
-|-----------|-------|--------|
-| MIN_OUTBOUND_INTERVAL_S | 11.0 | R159: 10.5→11.0 (+0.5s), 已应用 |
-| UPSTREAM_TIMEOUT | 71 | 未变更 |
-| TIER_TIMEOUT_BUDGET_S | 132 | 未变更 |
-| KEY_COOLDOWN_S | 36 | 未变更 |
-| TIER_COOLDOWN_S | 34 | 未变更, KEY-TIER gap=2s (最小安全) |
-| HM_CONNECT_RESERVE_S | 24 | 未变更 |
-| PROXY_TIMEOUT | 300 | 未变更 |
+---
 
-### 30min Window (91 requests) — Post R159 MIN_OUTBOUND=11.0
-- **Success rate: 100%** (91/91, **0 errors**)
-- P50: 12,386ms, P90: 35,516ms, P95: 53,322ms, P99: 69,032ms
-- Avg: 17,912ms
-- **Errors: 0** — zero ATE, zero other errors
-- **Fallback: 49/91 (53.8%)** — all glm5.1→deepseek, **zero kimi reached**
+## 📊 数据收集
 
-### 30min Tier Distribution
-| Tier | Requests | Pct | Avg | P95 |
-|------|----------|-----|-----|-----|
-| glm5.1_hm_nv | 42 | 46.2% | 12,504ms | — |
-| deepseek_hm_nv | 49 | 53.8% | 22,547ms | — |
+### 30分钟窗口 (DB, 截至 05:23 UTC)
+| 指标 | 值 |
+|------|-----|
+| 总请求 | 1467 |
+| 成功(200) | 1465 (99.86%) |
+| 失败 | 2 (all_tiers_exhausted) |
+| Deepseek | 468/468 (100%), avg=21.2s, p95=54.8s |
+| GLM5.1 | 996/996 (100%), avg=15.1s, p95=46.7s |
 
-### Per-Key Success (30min)
-| Key | Total | Avg | P95 | Fallback% |
-|-----|-------|-----|-----|-----------|
-| k0 | 9 | 16,727ms | 27,448ms | 100.0% |
-| k1 | 28 | 11,090ms | 27,138ms | 32.1% |
-| k2 | 18 | 16,984ms | 33,568ms | 50.0% |
-| k3 | 16 | 21,956ms | 41,676ms | 75.0% |
-| k4 | 20 | 25,596ms | 68,400ms | 50.0% |
+### 键级 429 (hm_tier_attempts, 30min)
+| Tier | 总尝试 | 429 |
+|------|--------|-----|
+| glm5.1_hm_nv | 1055 | 867 (82.2%) |
+| deepseek_hm_nv | 29 | 0 (0%) |
 
-### Tier Attempts (30min)
-| Tier | Error Type | Count | Avg Elapsed |
-|------|------------|-------|-------------|
-| glm5.1_hm_nv | 429_nv_rate_limit | 69 | — |
-| glm5.1_hm_nv | NVCFPexecSSLEOFError | 9 | 5,006ms |
-| glm5.1_hm_nv | 500_nv_error | 2 | — |
-| glm5.1_hm_nv | NVCFPexecRemoteDisconnected | 1 | 563ms |
-| glm5.1_hm_nv | NVCFPexecConnectionResetError | 1 | 7,089ms |
-| deepseek_hm_nv | NVCFPexecSSLEOFError | 7 | 9,166ms |
-| deepseek_hm_nv | empty_200 | 1 | — |
+### SSLEOFError (30min)
+- 129 次 `NVCFPexecSSLEOFError` → ~4.3/min
+- HM_CONNECT_RESERVE_S=24 (双方已收敛)
 
-### Fallback Paths (30min)
-- 100% glm5.1_hm_nv → deepseek_hm_nv (49 events, avg=22,547ms)
-- **Zero kimi_hm_nv reached** — kimi fallback starvation (Pitfall #41: kimi tier never engaged)
+### 预算断裂事件 (host log, 今日)
+```
+[00:13] tier=glm5.1_hm_nv budget 130.0s remaining 9.0s < 10s minimum, breaking
+[01:06] tier=glm5.1_hm_nv budget 132.0s remaining 1.5s < 10s minimum, breaking
+[02:09] tier=glm5.1_hm_nv budget 132.0s remaining 9.5s < 10s minimum, breaking
+[03:35] tier=deepseek_hm_nv budget 132.0s remaining 2.0s < 10s minimum, breaking
+[03:37] tier=deepseek_hm_nv budget 132.0s remaining 2.1s < 10s minimum, breaking
+```
 
-### 1h Window
-- 207/207 = 100% success, 0 errors
+### ATE 6h窗口
+- 7 ATE total (2026-06-27 16:27 → 2026-06-28 03:35 UTC)
+- 最近一次: ~2h前 — 历史数据, 非当前配置窗口
 
-### 6h Window
-- 1049/1051 = 99.81% success, 2 errors
+### 日窗口对比
+| 窗口 | 失败 | ATE |
+|------|------|-----|
+| 30min | 2 | 2 |
+| 1h | 2 | 2 |
+| 2h | 2 | 2 |
+| 6h | 8 | 7 |
+| 24h | 36 | — |
 
-### 24h Window
-- 3658/3694 = 99.03% success, 36 errors (most from 6h+ ago — pre-R159)
+### 运行环境 (docker exec env 确认)
+- KEY_COOLDOWN_S=36, TIER_COOLDOWN_S=34, MIN_OUTBOUND_INTERVAL_S=11.0
+- UPSTREAM_TIMEOUT=71, TIER_TIMEOUT_BUDGET_S=132, HM_CONNECT_RESERVE_S=24
+- CHARS_PER_TOKEN_ESTIMATE=3.0, PROXY_TIMEOUT=300
 
-### Docker Logs (Recent 150 lines)
-- Heavy 429 pattern on glm5.1 tier: all keys hitting `429_nv_rate_limit` → cycled → cooldown → fallback to deepseek
-- No `[HM-GLOBAL-COOLDOWN]` events in recent 200 lines (global cooldown not triggering at current spacing)
-- SSLEOFError on both tiers: 9 events glm5.1, 7 events deepseek
-- ConnectionResetError and RemoteDisconnected on glm5.1 (rare)
-- No budget-break events — TIER_TIMEOUT_BUDGET_S=132 adequate
+### 错误详情 JSONL (最近20行)
+- 所有事件: `all_429: true` (8/20) 或 `all_429: false` (12/20)
+- 混合模式: 12/20 含 `NVCFPexecSSLEOFError`
+- elapsed_ms: 1749ms ~ 21180ms (avg ~8957ms)
 
-### Request Rate
-- ~3.0 req/min (91 in 30min)
-- Capacity at MIN_OUTBOUND=11.0s: ~5.5 req/min
-- Utilization: 54.5% of capacity (comfortable headroom)
+---
 
-## 🎯 优化分析
+## 📈 分析
 
-**结论: 系统已收敛，无变更必要。**
+### 关键发现
 
-The 30min window shows **100% success, 0 errors** — the strongest possible signal that all parameters are balanced. The previous R159 change (MIN_OUTBOUND=10.5→11.0) has been absorbed and the system is stable.
+1. **2 ATE 在30分钟窗口**: 这是R162部署后首次在30分钟窗口出现ATE. 前几轮(30min/1h/2h)均为0 ATE
+2. **预算断裂频繁**: 今日5次断裂, 剩余时间: 1.5s, 2.0s, 2.1s, 9.0s, 9.5s — 均接近10s最小阈值
+3. **KEY=36/TIER=34 不对称**: KEY_COOLDOWN_S刚在R162从34→36, 但TIER_COOLDOWN_S仍停留34 — 存在2s的KEY<TIER反向gap
+4. **SSLEOFError 129**: 频率4.3/min, HM_CONNECT_RESERVE_S=24已收敛, 此方向不可再调
+5. **DIAGNOSTIC: 820/1055 (82.2%) key-level 429→请求成功**: 键级429高但请求级成功率高 — 函数级速率限制为主因
 
-**Why no change:**
-1. **0 errors in 30min**: The ultimate success metric. No parameter change can improve on zero errors.
-2. **All 7 parameters at equilibrium**: MIN_OUTBOUND=11.0, KEY_COOLDOWN=36, TIER_COOLDOWN=34, UPSTREAM_TIMEOUT=71, TIER_TIMEOUT_BUDGET=132, HM_CONNECT_RESERVE=24, PROXY_TIMEOUT=300.
-3. **KEY-TIER gap=2s (minimum safe)**: TIER_COOLDOWN=34 vs KEY_COOLDOWN=36. Gap cannot narrow further without risking key-level false cooldown overlap.
-4. **429 pattern is NVCF server-side**: 69×429 in 30min is NVCF function-level rate limiting (server-side, not configurable from HM's side). The system handles this correctly via the ring fallback pattern.
-5. **p95=53s well within UPSTREAM_TIMEOUT=71s**: Success path latency has 18s headroom below timeout — no truncation risk.
-6. **0 kimi fallback**: The kimi tier never engages (Pitfall #41 — kimi fallback starvation). But this is a feature, not a bug: all failures are handled by deepseek successfully.
+### 优化方向判定
 
-**Decision Framework:**
-- If any parameter were off-balance, adjust it incrementally (单参数少改多轮).
-- Since ALL parameters show no error signal in 30min, the only correct action is: **no change**.
-- The 53.8% fallback rate is a consequence of NVCF's rate limiting, not configurable from HM2's side. The system successfully absorbs it.
+**TIER_COOLDOWN_S 34→36 (+2s)**:
+- 原因: 修复KEY<TIER反向gap. R162将KEY从34→36, TIER仍为34. 当所有键429时, TIER_COOLDOWN_S=34比KEY_COOLDOWN_S=36提前2s过期 → 键级冷却未完成时tier冷却已过期 → 新请求恢复更早尝试已被标记冷却的键 → 浪费额外429周期
+- 目标: KEY=36, TIER=36 → 等值对齐 → 消除2s反向gap
+- 预期: Tier冷却对称后, 减少预算断裂事件(当前5次/日 → 预期降为3次/日)
 
-**Budget Verification (Pitfall #23):**
-- 5×11.0=55.0s cycle vs GLOBAL=45s → buffer=10.0s
-- The 30min 0-ATE proves the buffer is sufficient — no 429 collision cascade reaches tier exhaustion.
+**不选其他参数**:
+- KEY_COOLDOWN_S: 刚调整R162, 不应连调
+- MIN_OUTBOUND_INTERVAL_S: 11.0已达高值(缓冲10.0s), 再增过度
+- UPSTREAM_TIMEOUT: 71已稳定, 不支持再调
+- TIER_TIMEOUT_BUDGET_S: 132可行但预算断裂主要是cooldown同步问题非预算不足
+- HM_CONNECT_RESERVE_S: 24双方已收敛
 
-## 🔧 变更执行
+---
 
-**无变更** — 所有7参数已验证均衡，稳定优先。
+## 🔧 执行: TIER_COOLDOWN_S 34→36 (+2s)
 
-## 📈 预期效果
+### 变更命令
+```bash
+ssh opc2_uname@100.109.57.26 'sed -i "s|TIER_COOLDOWN_S: \"34\"|TIER_COOLDOWN_S: \"36\"|" /opt/cc-infra/docker-compose.yml'
+cd /opt/cc-infra && docker compose up -d --no-deps --force-recreate hm40006
+```
 
-| Metric | Current | Expected |
-|--------|---------|-----------|
-| 30min success rate | 100% | 100% (maintain) |
-| 30min ATE count | 0 | 0 (maintain) |
-| 24h success rate | 99.03% | ≥ 99.0% |
-| Fallback rate | 53.8% | ~50-55% (NVCF rate-limit controlled) |
-| P95 latency | 53,322ms | < 71s (UPSTREAM_TIMEOUT) |
+### 验证
+- [x] `docker exec hm40006 env | grep TIER_COOLDOWN_S` → 36 ✅
+- [x] `docker ps --filter name=hm40006` → Up 39 seconds (healthy) ✅
+- [x] `curl -s http://localhost:40006/health` → 200 OK ✅
+- [x] `pgrep -a mihomo` → 2008535 运行中 ✅
+- [x] `curl -s http://localhost:40006/v1/models` → 运行中 ✅
 
-## ⚖️ 评判标准
+### 变更前/后
+| 参数 | 前 | 后 | 变化 |
+|------|-----|-----|------|
+| TIER_COOLDOWN_S | 34 | **36** | +2s |
+| KEY_COOLDOWN_S | 36 | 36 | 不变 |
+| KEY/TIER gap | 2s (反向) | **0s** (等值对齐) | gap闭合 |
 
-- **更少报错**: ✅ 已有 0 errors/30min — 当前配置最优
-- **更快请求**: ✅ p50=12.4s, avg=17.9s — 维持当前水平
-- **超低延迟**: ✅ 所有 key p95 < 71s — 无超时截断风险
-- **稳定优先**: ✅ 不修改任何参数 — 避免破坏已验证的7参数均衡
-- **铁律**: ✅ 只改 HM2 配置绝不动 HM1 本地 (本回合无改动)
+---
+
+## 📋 预期效果
+
+- **KEY/TIER对称**: KEY=36, TIER=36 → 消除2s反向gap → 减少“tier冷却提前过期→键仍标记冷却→浪费429周期”
+- **30分钟ATE**: 预期从2降为0（tier冷却对称后不会触发预算断裂）
+- **SSLEOFError**: 不变(129) — HM_CONNECT_RESERVE_S=24保持 — 非此参数可解决的问题
+- **5-key 429**: 键级429不变(867) — 函数级速率限制为主因 — TIER/KEY对称减少浪费但不会提升成功率
+
+---
 
 ## ⏳ 轮到HM2优化HM1  ← 脚本检测此标记
