@@ -108,14 +108,14 @@ KEY_COOLDOWN_S = 36s (距GLOBAL=45s 差9s)
 
 ### 为什么不是其他参数
 
-| 参数 | 当前值 | 为什么不改 |
+| 参数 | 当前值 | 为什么不改 | 
 |------|--------|------------|
-| TIER_COOLDOWN_S | 36 | 与 KEY=36 对称 —— 改 KEY 不改 TIER 会打破对称 |
-| MIN_OUTBOUND_INTERVAL_S | 11.0 | 5×11=55s 缓冲区 10s 充足 —— 再增加浪费 429 周期不降 |
-| UPSTREAM_TIMEOUT | 71 | P95=50s 在 71 内 —— 不裁剪合法慢请求 |
-| TIER_TIMEOUT_BUDGET_S | 132 | 有效预算=132-24=108s 充足 —— 不扩容 |
-| HM_CONNECT_RESERVE_S | 24 | 已收敛（跨机 24/24）—— 不再动 |
-| PROXY_TIMEOUT | 300 | 固定值 —— 不变 |
+| TIER_COOLDOWN_S | 36 | 与 KEY=36 对称 —— 改 KEY 不改 TIER 会打破对称 | 
+| MIN_OUTBOUND_INTERVAL_S | 11.0 | 5×11=55s 缓冲区 10s 充足 —— 再增加浪费 429 周期不降 | 
+| UPSTREAM_TIMEOUT | 71 | P95=50s 在 71 内 —— 不裁剪合法慢请求 | 
+| TIER_TIMEOUT_BUDGET_S | 132 | 有效预算=132-24=108s 充足 —— 不扩容 | 
+| HM_CONNECT_RESERVE_S | 24 | 已收敛（跨机 24/24）—— 不再动 | 
+| PROXY_TIMEOUT | 300 | 固定值 —— 不变 | 
 
 ### 参数选择理由
 
