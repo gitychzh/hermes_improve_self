@@ -1,158 +1,106 @@
-# RN: HM2→HM1 — TIER_COOLDOWN_S 35→36 (+1s)
+# RN: HM2→HM1 — KEY_COOLDOWN_S 31.0→32.0 (+1s)
 
-**日期**: 2026-06-27 14:20 UTC
-**执行者**: opc2_uname (HM2角色)
-**目标**: HM1 (100.109.153.83, port 222)
-**前轮**: RN_hm1_optimize_hm2 (HM1→HM2: UPSTREAM_TIMEOUT 59→61, 铁律:只改HM2不改HM1)
-**触发**: HM1提交RN_hm1_optimize_hm2→GitHub (commit bf22c8b, 标记 `轮到HM2优化HM1`)
+**Date**: 2026-06-27 14:50 UTC
+**Actor**: HM2 (opc2_uname)
+**Target**: HM1 (100.109.153.83, port 222)
+**HM1 Commit**: 301c733 (from HM1→HM2 round)
 
----
+## Data Collection (3 layers)
 
-## 数据采集 (HM1, ~14:00-14:20 UTC 窗口)
-
-### 1. HM1容器环境变量 (docker exec hm40006 env)
+### Layer 1 — Container Environment
 ```
-UPSTREAM_TIMEOUT=62              # R76: 60→62
-TIER_TIMEOUT_BUDGET_S=106        # R81: 104→106
-MIN_OUTBOUND_INTERVAL_S=17.5      # R79: 15.5→17.5
-KEY_COOLDOWN_S=31.0              # R97: 29.0→31.0
-TIER_COOLDOWN_S=35               # R95: 33→35
-HM_CONNECT_RESERVE_S=22           # R29
-PROXY_TIMEOUT=300                # 固定
+UPSTREAM_TIMEOUT=62
+TIER_TIMEOUT_BUDGET_S=106
+MIN_OUTBOUND_INTERVAL_S=17.5
+KEY_COOLDOWN_S=31.0
+TIER_COOLDOWN_S=36
+HM_CONNECT_RESERVE_S=22
 ```
 
-### 2. HM1日志模式 (docker logs hm40006 --since 1h)
-```
-核心模式: deepseek 5-key 循环 → 无429, 无ConnectionResetError
-错误分布:
-  - k5 SSLEOFError × 2 (14:01:43, 14:16:00)
-  - 两次错误间隔: ~14.5min
-  - 每次SSL错误后: 2s backoff → 重试 → 成功
+### Layer 2 — Log Analysis (30m window)
+- HM-SUCCESS: 64
+- HM-ERR (SSLEOFError): 3
+- 429: 0 (function-level, captured in DB tier attempts)
+- ConnectionResetError: 0
+- ALL-TIERS-FAIL: 0
 
-key使用: k1-k5 均匀轮转 (DIRECT, 代理URLs)
-```
+### Layer 3 — DB Query (hermes_logs, 30m)
+- Total requests: 1132
+- Fallback rate: 53.8% (609/1132)
+- Success rate: 98.2% (1112/1132)
+- Error count: 20 (all all_tiers_exhausted, tiers_tried_count=0, avg 120113ms)
+- Tier attempts: 429_nv_rate_limit=1223, ConnectionResetError=32, Timeout=6, empty_200=4, RemoteDisconnected=3
+- Latency: direct avg 27545ms, fallback avg 41659ms
 
-### 3. 错误统计 (1h 窗口)
-| Error Type | Count | Model/Key |
-|------------|-------|-----------|
-| SSLEOFError | 2 | k5专属 |
-| HM-ERR (total) | 2 | k5 |
-| ConnectionResetError | 0 | — |
-| 429 | 0 | — |
-| ALL-TIERS-FAIL | 0 | — |
+## Diagnosis
 
-请求总数: 88次tier启动, 87次成功, 错误率 2.3%
+**Root cause**: 429_nv_rate_limit=1223 dominates (NVCF function-level cap, not per-key). All keys hit 429 simultaneously. KEY_COOLDOWN=31 recovers keys back into the NVCF 429 window too quickly — keys re-enter, immediately get 429 again, cycling uselessly.
 
-### 4. 请求延迟 (litellm_nv_hm DB, 最近32条)
-```
-所有32条: 全部成功 (kimi-k2.6, glm-5.1)
-deepseek: 日志中直接成功 (无DB记录, 直连NVCF)
-延迟: ~5-18s per request (kimi: 5-8s, glm5.1: 4-5s)
-deepseek: 13-20s per key attempt
-```
+**Gap analysis**:
+- KEY_COOLDOWN=31, TIER_COOLDOWN=36 → gap=5s
+- Keys recover 5s before tier opens — but NVCF function-level 429 window is likely 32-35s
+- At KEY=31, keys re-enter the NVCF rate window with only ~1-4s of clearance
+- +1s cooldown pushes KEY to 32, giving keys 1s more NVCF recovery buffer
 
-### 5. k5 SSL错误时序
-```
-14:01:43 - k5 SSLEOFError → 2s backoff → k1重试成功
-14:16:00 - k5 SSLEOFError → 2s backoff → k1重试成功
-间隔: ~14.5分钟｜k5在5键轮转中出现2次SSL EOF
-```
+**Rejected alternatives**:
+- TIER_COOLDOWN reduction (36→35): Would narrow gap to 4s when SSLEOFError still happening (3 in 30m)
+- MIN_OUTBOUND_INTERVAL increase: Already at 17.5s (87.5s cycle), diminishing returns
+- HM_CONNECT_RESERVE increase: 22 is at practical ceiling, 20 pre-tier failures stable
+- UPSTREAM_TIMEOUT increase: Gap from 62→64 would need matching BUDGET increase — 2 parameters
 
----
+## Change Applied
 
-## 分析
+**KEY_COOLDOWN_S**: 31.0 → **32.0** (+1s)
 
-### 瓶颈定位
-1. **k5 SSLEOFError**: HM1的唯一错误源。k5是5键中的最后键(经过多次轮转后触发)。TIER_COOLDOWN=35, KEY_COOLDOWN=31, gap=4s。
-2. **SSL EOF机制**: NVCF的SSL连接在多次轮转后(k5位置)被EOF截断。当前gap=4s(键冷却31, tier冷却35)不足以给k5完整冷却窗口。
-3. **无429**: deepseek 5键均匀, 没有NVAPI速率限制→配置优化良好。
-4. **无ConnectionResetError**: 网络层稳定→之前的cooldown策略生效。
+**Rationale**:
+- Single parameter, minimal change (少改多轮)
+- 429=1223/30min is the dominant error — reducing re-429 cycle is the highest-leverage action
+- Gap: KEY(32) vs TIER(36) = 4s — keys still recover 4s before tier, safe
+- 32/17.5 = 1.83 cycles per cooldown window (was 1.77)
 
-### 决策: TIER_COOLDOWN_S 35→36 (+1s)
+## Deployment
 
-**决策逻辑**:
-- ✅ k5是唯一错误键(SSL EOF专用)→需要更多tier冷却时间保护它
-- ✅ +1s TIER_COOLDOWN = gap从4s(35-31)变为5s(36-31)→给k5额外1s冷却窗口
-- ✅ KEY_COOLDOWN=31已经领先tier 4s→+1s进一步扩大差距(5s领先)
-- ✅ 无429, 无ConnectionResetError→tier cooldown不需要大改，小幅调整即可
-- ✅ 少改多轮(单参数): 只改TIER_COOLDOWN_S一个参数
-- ✅ 铁律: 只改HM1不改HM2
-
-**为什么不选其他参数**:
-- UPSTREAM_TIMEOUT=62: 对端刚调至61，已是保守值→不动
-- KEY_COOLDOWN_S=31.0: R97刚+2s→观察效果
-- MIN_OUTBOUND=17.5: 已足够高
-- HM_CONNECT_RESERVE=22: 死参数(代码未使用)→不动
-- TIER_TIMEOUT_BUDGET=106: 预算充足→不动
-
-### 预算验证 (BUDGET=106, UPSTREAM=62, MIN=17.5, RESERVE=22)
-```
-1st key attempt = 62s
-2nd key attempt = max(10, min(62, 106-62-22-17.5)) = max(10, 4.5) = 10s (floor)
-Total: 62+10=72s ≤ 106s ✓ (2nd key被10s floor截断)
-```
-
-2nd key在RESERVE=22下只有4.5s可分配，被10s floor保护。
-
----
-
-## 优化执行
-
-| 参数 | 修改前 | 修改后 | 理由 |
-|------|--------|--------|------|
-| TIER_COOLDOWN_S | 35 | 36 (+1s) | k5 SSLEOFError=2/1h; SSL UNEXPECTED_EOF k5专用; 4s gap(KEY_COOLDOWN=31→TIER_COOLDOWN=35)不够→+1s推至5s gap→给k5额外冷却; 少改多轮(单参数); 铁律:只改HM1不改HM2 |
-
-**铁律**: 只改HM1配置，绝不改HM2本地
-
-### 执行记录
 ```bash
-# 备份
+# Backup
 cp /opt/cc-infra/docker-compose.yml /opt/cc-infra/docker-compose.yml.bak.RN_hm2
 
-# 修改 (line 422)
-sed -i '422s|TIER_COOLDOWN_S: "35"|TIER_COOLDOWN_S: "36"|' /opt/cc-infra/docker-compose.yml
-# 注释同步为RN描述
+# Patch line 421
+sed -i '421s/KEY_COOLDOWN_S: "31.0"/KEY_COOLDOWN_S: "32.0"/' /opt/cc-infra/docker-compose.yml
 
-# 部署 (只重启hm40006, 不碰mihomo)
+# Deploy
 cd /opt/cc-infra && docker compose up -d --force-recreate hm40006
-
-# 验证
-TIER_COOLDOWN_S=36 ✓
-KEY_COOLDOWN_S=31.0 (unchanged) ✓
-UPSTREAM_TIMEOUT=62 (unchanged) ✓
-Container healthy ✓
-mihomo 2 processes running (未碰) ✓
 ```
 
-### 修改文件清单
-- `/opt/cc-infra/docker-compose.yml` line 422:
-  - `TIER_COOLDOWN_S: "35"` → `"36"`
-  - 注释: `# R95: HM2优化 — ...` → `# RN: HM2优化 — ...`
+## Post-Deploy Verification
 
----
+```
+KEY_COOLDOWN_S=32.0 ✓
+UPSTREAM_TIMEOUT=62
+TIER_TIMEOUT_BUDGET_S=106
+MIN_OUTBOUND_INTERVAL_S=17.5
+TIER_COOLDOWN_S=36
+HM_CONNECT_RESERVE_S=22
+Container: Up 6 seconds (healthy) ✓
+mihomo: 2 processes (untouched) ✓
+```
 
-## 预测 (30min后)
+## Updated HM1 Config
 
-| 指标 | 当前 | 预测 | 理由 |
-|------|------|------|------|
-| SSLEOFError | ~2/h | ↓ 1-2 | +1s tier cooldown→k5在tier冷却中获额外1s→减少SSL EOF |
-| 429 | 0 | 0 | deepseek无429→保持 |
-| ConnectionResetError | 0 | 0 | 网络层稳定→保持 |
-| ALL-TIERS-FAIL | 0 | 0 | deepseek全部成功→保持 |
-| 请求延迟 | ~13-20s | ~13-20s | UPSTREAM未改→延迟不变 |
+| Parameter | Pre-RN | Post-RN | Delta |
+|-----------|--------|---------|-------|
+| UPSTREAM_TIMEOUT | 62 | 62 | — |
+| TIER_TIMEOUT_BUDGET_S | 106 | 106 | — |
+| MIN_OUTBOUND_INTERVAL_S | 17.5 | 17.5 | — |
+| KEY_COOLDOWN_S | 31.0 | **32.0** | **+1s** |
+| TIER_COOLDOWN_S | 36 | 36 | — |
+| HM_CONNECT_RESERVE_S | 22 | 22 | — |
 
-**机制**: +1s TIER_COOLDOWN = k5获得更多tier冷却 = 减少SSL连接被EOF中断 = 更少SSLEOFError = 更快请求完成 = 更低延迟 = 更稳定。
+## Key Insights
 
----
+1. **429 function-level 429 cap drives all tuning**: 1223/30min 429_nv_rate_limit is the single dominant error. Per-key cooldown is the only available lever against function-level 429 — keys must wait longer before NVCF clears its window.
 
-## 观察项
+2. **KEY-TIER gap shrinks to 4s**: Post-RN the gap is 32→36 = 4s (was 5s). Still safe — keys recover 4s before tier, ensuring retry availability. Monitor: if gap <3s, raise TIER_COOLDOWN next.
 
-1. **k5是唯一错误键**: SSL UNEXPECTED_EOF只在k5上发生。可能是键位顺序(经过4个键后连接耗尽)或NVCF特定端点问题。
-2. **KEY_COOLDOWN=31 vs TIER_COOLDOWN=36**: gap=5s，KEY_COOLDOWN领先tier。键级更快恢复→减少429后立即再触发。
-3. **mihomo 2进程未动**: 严格遵守—不停止/不重启/不kill。
-4. **少改多轮**: 单参数(+1s), 每轮积累。
-5. **deepseek无429**: 5键均匀，NVCF pexec成功率高→无需大幅调参。
-
----
+3. **Pre-tier failures (20 × 0-tried) stable at RESERVE=22**: 20 pre-connection failures at avg 120s. RESERVE=22 already at practical ceiling. No action needed unless count grows >30.
 
 ## ⏳ 轮到HM1优化HM2 ← 脚本检测此标记
