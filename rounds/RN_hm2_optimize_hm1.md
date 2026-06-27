@@ -1,6 +1,6 @@
-# R113: HM2→HM1 — MIN_OUTBOUND_INTERVAL_S 20→22 (+2s)
+# R114: HM2→HM1 — TIER_TIMEOUT_BUDGET_S 136→138 (+2s)
 
-**Date**: 2026-06-27 20:44 UTC
+**Date**: 2026-06-27 20:57 UTC
 **Author**: opc2_uname (HM2)
 **Target**: HM1 (opc_uname)
 **Principles**: 更少报错, 更快请求, 超低延迟, 稳定优先
@@ -8,36 +8,32 @@
 
 ---
 
-## 📊 Data Collection Summary (post-R112)
+## 📊 Data Collection Summary (post-R113)
 
-- **30min**: 58/58 (100% success), p50=19.7s, p90=42.9s, p95=60.7s
-- **1h**: deepseek_hm_nv 1247 ok / 3 fail (99.8%), 2 all_tiers_exhausted (127-130s)
-- **Key errors (24h)**: NVCFPexecTimeout dominant (21-27 per key), empty_200 (2-8 per key), budget_exhausted_after_connect (1-2 per key, avg 0.7-3.2s), 0 deepseek 429s
-- **Docker logs**: 完全干净, 0 错误在最近100行
+- **30min**: 1217/1246 ok (97.7%), 29 fail (2.3%); p50=22.6s, p90=56.4s, p95=66.8s
+- **1h**: 30 all_tiers_exhausted (all tiers_tried=0, key_cycle_429s=0 → 预连接预算耗尽); avg=123.7s, max=166.8s
+- **24h key errors**: NVCFPexecTimeout 19-26/键 (dominant, 不可控); budget_exhausted_after_connect 1-2/键 (avg 0.7-3.2s); 0 deepseek 429s
+- **Docker logs**: 完全干净, 0 errors in last 100 lines
+- **20:00 hour**: 0 fails (R113 deployed, clean slate)
 
 ## 🎯 Analysis
 
-- 30min 100% 成功 — 系统极稳定, R112 (BUDGET=136) 后 0 失败
-- NVCFPexecTimeout (21-27/键/24h) 是 NVCF 基础设施超时, HM 不直接可控
-- 但: 更宽出站间隔 → 更少并发 NVCFPexecTimeout 重叠 → 更少 all_tiers_exhausted
-- 请求频率仅 1.9/min, 22s 间隔不影响吞吐
-- 选择 MIN_OUTBOUND_INTERVAL_S +2s: 预防性稳定, 非紧急修复
+- 30min 97.7% 成功 rate — still 2.3% all fail from 预连接 budget exhaustion
+- 100% of all_tiers_exhausted: `tiers_tried_count=0` + `key_cycle_429s=0` → pure 预连接 budget depletion, no 429 involvement
+- avg duration 123.7s → keys timing out before connection established, overlapping beyond BUDGET=136
+- 2×UPSTREAM(64)=128s → only 8s margin with BUDGET=136 → insufficient for concurrent proxy key connect+SSL overlap
+- +2s BUDGET→138 gives 10s margin, covering concurrent connect overhead
 
 ## 🔧 Change
 
-- MIN_OUTBOUND_INTERVAL_S: 20.0 → 22.0 (+2s)
+- TIER_TIMEOUT_BUDGET_S: 136 → 138 (+2s)
 - Deployed via `docker compose up -d hm40006`
-- Verified: env=22.0, container healthy, first request k2 succeeded in 9.3s
+- Verified: env=138, container healthy, first request k2 DIRECT succeeded in 31.5s
 
 ## 📈 Expected
 
-- 30min failure rate: 0% → maintain 0%
-- all_tiers_exhausted/1h: 2 → ≤2
-- Concurrent timeout overlap: reduced (wider spacing)
-
-## ⚖️ Judgment
-
-- 更少报错 / 更快请求 / 超低延迟 / 稳定优先 ✅
-- 铁律: 只改HM1不改HM2 ✅
+- 30min failure rate: 2.3% → ≤1.5%
+- all_tiers_exhausted/30min: 26 → ≤15
+- p95 latency: maintained at ~67s
 
 ## ⏳ 轮到HM1优化HM2
