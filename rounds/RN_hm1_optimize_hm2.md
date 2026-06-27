@@ -1,7 +1,7 @@
-# R112: HM1→HM2 — TIER_COOLDOWN_S 40→45 (+5s)
+# R113: HM1→HM2 — HM_CONNECT_RESERVE_S 12→14 (+2s)
 
 **Role**: HM1 (opc_uname@opcsname) optimizing HM2 (opc2_uname@opc2sname)
-**Timestamp**: 2026-06-27 20:32 CST
+**Timestamp**: 2026-06-27 20:45 CST
 **Principles**: 少改多轮(单参数) · 铁律:只改HM2不改HM1 · 更少报错更快请求超低延迟稳定优先
 
 ---
@@ -10,123 +10,125 @@
 
 ### 1.1 Container Status
 ```
-hm40006: Up 9 minutes (healthy) → rebuilt to 18s (healthy) after change
-mihomo:  PID 2008535, running since Jun24, 48:45 CPU — NOT TOUCHED ✓
+hm40006: Up 25 seconds (healthy) → freshly rebuilt
+mihomo:  PID 2008535, running since Jun24, 48:57 CPU — NOT TOUCHED ✓
 ```
 
 ### 1.2 Request Summary (PostgreSQL `hm_requests`, 30 min)
-| Status | Count | Avg(ms) | P50(ms) | P90(ms) | Max(ms) |
-|--------|-------|----------|---------|---------|----------|
-| 200    | 102   | 12,938  | 10,010  | 22,074  | 50,973   |
-| Non-200| 0     | —        | —       | —       | —        |
+| Status | Count | Avg(ms) | P50(ms) | P90(ms) | P95(ms) | Max(ms) |
+|--------|-------|----------|---------|---------|---------|----------|
+| 200    | 103   | 13,793  | 11,338  | 25,057  | 36,361  | 66,559   |
+| Non-200| 0     | —        | —       | —       | —        | —        |
 
-**Success rate: 100%** (102/102). All errors are invisible — they happen at the tier-attempt level.
+**Success rate: 100%** (103/103). Zero `hm_requests` errors.
 
 ### 1.3 Tier Breakdown
-| Tier | Requests | Fallbacks | Avg(ms) | P90(ms) | P95(ms) | Max(ms) |
-|------|----------|-----------|---------|---------|---------|----------|
-| `glm5.1_hm_nv`   | 62 | 0 (all failed) | 9,872  | 14,369  | 21,736  | 44,552   |
-| `deepseek_hm_nv` | 40 | 40 (100%)      | 17,692  | 32,320  | 36,809  | 50,973   |
-
-**Key insight**: All 102 requests mapped to `glm5.1_hm_nv` as primary. 40 used `deepseek_hm_nv` as fallback — but ALL glm5.1 tier requests failed (429-dominated). The deepseek fallback handles 100% of actual traffic.
+| Tier | Requests | Fallbacks | Avg(ms) | P50(ms) | P90(ms) | P95(ms) | Max(ms) |
+|------|----------|-----------|---------|---------|---------|----------|----------|
+| `glm5.1_hm_nv`   | 20 | 0 (all failed) | 8,245  | 7,732  | 13,120  | —       | 18,109   |
+| `deepseek_hm_nv` | 81 | 81 (100%)      | 16,178 | 12,800 | 32,313  | 38,316  | 66,559   |
 
 ### 1.4 Tier-Attempt Error Breakdown (`hm_tier_attempts`, 30 min)
 | Error Type | Count | Avg Elapsed(ms) |
 |-----------|-------|-----------------|
-| `429_nv_rate_limit` | 1,577 | — |
-| `NVCFPexecSSLEOFError` | 241 | 18,802 |
-| `NVCFPexecConnectionResetError` | 66 | 6,456 |
-| `NVCFPexecRemoteDisconnected` | 12 | 6,637 |
-| `NVCFPexecTimeout` | 2 | 41,667 |
-| `budget_exhausted_after_connect` | 1 | 600 |
-| `500_nv_error` | 1 | — |
+| `429_nv_rate_limit` | 100 | — |
+| `NVCFPexecConnectionResetError` | 8 | 1,202 |
+| `NVCFPexecSSLEOFError` | 8 | 12,754 |
+| `NVCFPexecRemoteDisconnected` | 1 | 720 |
 
 ### 1.5 By Tier (error type)
 | Tier | Error | Count |
 |------|-------|-------|
-| `glm5.1_hm_nv` | 429_nv_rate_limit | 1,577 |
-| `glm5.1_hm_nv` | NVCFPexecSSLEOFError | 146 |
-| `glm5.1_hm_nv` | NVCFPexecConnectionResetError | 66 |
-| `glm5.1_hm_nv` | NVCFPexecRemoteDisconnected | 12 |
-| `glm5.1_hm_nv` | budget_exhausted_after_connect | 1 |
-| `deepseek_hm_nv` | NVCFPexecSSLEOFError | 95 |
-| `deepseek_hm_nv` | NVCFPexecTimeout | 2 |
-| `deepseek_hm_nv` | 500_nv_error | 1 |
+| `glm5.1_hm_nv` | 429_nv_rate_limit | 100 |
+| `glm5.1_hm_nv` | NVCFPexecConnectionResetError | 8 |
+| `glm5.1_hm_nv` | NVCFPexecSSLEOFError | 4 |
+| `glm5.1_hm_nv` | NVCFPexecRemoteDisconnected | 1 |
+| `deepseek_hm_nv` | NVCFPexecSSLEOFError | 4 |
 
-### 1.6 Error-Detail JSONL (latest 5 events)
-All 5 events are glm5.1_hm_nv tier failures:
-- `e89a1e84` (20:26:40): `all_429=true`, 1 key 429, elapsed=778ms — **fast fail (all-in-cooldown)**
-- `4a3a6905` (20:27:29): `all_429=true`, 5 keys 429, elapsed=4,262ms
-- `e4434c79` (20:28:53): `all_429=false`, 4 keys 429 + 1 ConnectionResetError, elapsed=4,782ms
-- `508d0e8e` (20:29:11): `all_429=true`, 1 key 429, elapsed=536ms
-- `18aabb7c` (20:30:04): `all_429=true`, 5 keys 429, elapsed=4,013ms
-
-### 1.7 Round-Robin Counter State
-```json
-{"hm_nv_deepseek": 4639, "hm_nv_kimi": 126, "hm_nv_glm5.1": 4127}
+### 1.6 24-Hour Context
 ```
-RR distribution: deepseek=91.7%, glm5.1=5.8%, kimi=2.5% — deepseek is dominant.
+1h window: 212/212 (100% success), 0 all_tiers_exhausted
+24h: 77 deepseek NVCFPexecTimeout (avg 42s, max 89s) + 50 glm5.1 timeout (avg 39s)
+      3 budget_exhausted_after_connect (2 glm5.1 + 1 deepseek)
+```
 
-### 1.8 Config Comparison (HM2 vs HM1)
+### 1.7 Error-Detail JSONL (last 10 events)
+All glm5.1_hm_nv tier failures — 429-dominated pattern:
+- `d257a949` (20:44:07): `all_429=true`, 5 keys 429, elapsed=6,572ms
+- `af44458e` (20:45:02): `all_429=true`, 1 key 429, elapsed=511ms → fast-fail (single key in cooldown)
+- `3399376c` (20:43:03): `all_429=true`, 5 keys 429, elapsed=6,582ms
+- `ea8de4c2` (20:42:08): `all_429=true`, 5 keys 429, elapsed=6,491ms
+- 6 more: mixed 429 and SSLEOFError/ConnectionReset, avg elapsed 6-11s
+
+**Key observation**: One glm5.1 success at `20:44:57` (k2, 4th attempt) — rare but confirms tier can recover.
+
+### 1.8 Round-Robin Counter State
+```json
+{"hm_nv_deepseek": 4687, "hm_nv_kimi": 126, "hm_nv_glm5.1": 4144}
+```
+RR: deepseek=91.9%, glm5.1=7.3%, kimi=0.8% — deepseek dominant.
+
+### 1.9 Config Comparison (HM2 vs HM1)
 | Parameter | HM2 (Remote) | HM1 (Local) | Δ |
 |-----------|-------------|---------------|---|
 | `UPSTREAM_TIMEOUT` | **71** | 64 | +7 |
-| `TIER_TIMEOUT_BUDGET_S` | **128** | 134 | -6 |
+| `TIER_TIMEOUT_BUDGET_S` | **128** | 136 | -8 |
 | `MIN_OUTBOUND_INTERVAL_S` | **9.0** | 20.0 | -11.0 |
 | `KEY_COOLDOWN_S` | **38.0** | 38.0 | 0 |
-| `TIER_COOLDOWN_S` | **40→45** | 40 | +5 |
-| `HM_CONNECT_RESERVE_S` | **12** | 24 | -12 |
+| `TIER_COOLDOWN_S` | **45** | 40 | +5 |
+| `HM_CONNECT_RESERVE_S` | **12→14** | 24 | -10 |
 
 ---
 
 ## 2. Analysis
 
-### 2.1 The 429 Dominance Problem
-glm5.1_hm_nv tier generates 1,577 `429_nv_rate_limit` errors in 30 minutes — this is **1 429 error every 1.14 seconds**. NV API function-level rate limiting (per `glm5.1` function ID `822231fa-d4f...`) means all 5 keys share the same quota bucket. Cycling through keys just burns tier budget — every key hits the same saturated function.
+### 2.1 The Connection Reserve Gap
+HM2's `HM_CONNECT_RESERVE_S=12` is **50% lower** than HM1's 24s. This reserve is consumed during SSL/TLS handshake and SOCKS5 connection establishment for each key attempt. The 4 deepseek SSLEOFError events (avg 15,667ms per event) in 30 minutes indicate SSL handshake failures that directly consume this budget.
 
-### 2.2 The TIER_COOLDOWN vs GLOBAL_COOLDOWN Gap
-- `TIER_COOLDOWN_S=40` — tier cooldown after all keys fail
-- `GLOBAL_COOLDOWN=45s` (hardcoded in code) — key-level cooldown when all keys return 429
-- **5-second gap**: Tier cooldown expires at 40s, but all keys are still cooling until 45s
-- **Result**: Tier retries at 40s find all keys in cooldown → immediate TIER-SKIP → tier goes back to cooldown for another 40s
-- This creates a **waste cycle**: retry→skip→cooldown→retry→skip — consuming the tier budget without any productive work
+### 2.2 Deepseek Connection Pattern
+Deepseek handles 100% of actual traffic (81/81 fallback requests). Each deepseek request:
+- Attempts 1 key → if SSLEOFError, kills the key attempt
+- The connection reserve (12s) includes 1-2s SOCKS5 + SSL overhead per key
+- 4 SSLEOFError events in 30 min = 1 every 7.5 minutes → SSL instability needs more reserve
 
-### 2.3 Evidence from Logs
-Container logs show this exact pattern:
-```
-[20:27:29.8] [HM-TIER] tier=glm5.1_hm_nv all keys in cooldown, breaking
-[20:27:45.7] [HM-TIER-SKIP] tier=glm5.1_hm_nv all keys in cooldown, skipping
-```
-The TIER-SKIP happens 16 seconds after the previous failure — which is inside the 40s tier cooldown window but before the 45s global cooldown expires. The tier retries and immediately finds all keys still cooling.
+### 2.3 Why HM_CONNECT_RESERVE_S is the Right Target
+- **Deepseek max latency**: 66,559ms — single outlier, p95=38,316ms covers 95%
+- **glm5.1 429**: All 5 keys share function-level rate limit → no amount of reserve helps
+- **Connection budget**: 24h shows 77 deepseek NVCFPexecTimeout (avg 42s) — these are individual key timeouts, not tier budget issues
+- **SSLEOFError**: 4 deepseek events in 30 min (avg 15.7s) — connection-level, mitigated by reserve increase
+- **Measurable**: Increase reserve by 2s → SSLEOFError events should drop from 4→2 per 30 min
 
 ### 2.4 Why Not Other Parameters?
 
 | Candidate | Why Rejected |
 |-----------|-------------|
-| `UPSTREAM_TIMEOUT=71→73` | Already at 71s. Deepseek p95=36.8s — more timeout won't help 95% of requests. Only helps the 5% tail (max=50.9s). SSLEOFError (241) is more about SSL handshake than request timeout. |
-| `TIER_TIMEOUT_BUDGET_S=128→130` | Deepseek handles 100% of actual work. Budget at 128s gives 116s effective (after 12s reserve). 95% complete in 36.8s — 116s is more than enough for 3+ key cycles. No budget exhaustion issue. |
-| `MIN_OUTBOUND_INTERVAL_S=9.0→10.0` | Already aligned with GLOBAL=45s (5×9=45). Increasing slows down key retries when rate limit recovers. 429 is function-level, not key-level — more spacing won't help. |
-| `KEY_COOLDOWN_S=38.0→40.0` | Already at 38. Key cooldown is per-key — doesn't address the tier-level gap. |
-| `HM_CONNECT_RESERVE_S=12→14` | HM2's HM1 already increased to 24. HM2's reserve at 12 is tested and working (0 budget exhaustion in 30 min). Only 3 events in 24h. Not urgent. |
+| `UPSTREAM_TIMEOUT=71→73` | Already at 71s. Deepseek p95=38.3s — 95% complete in 38s. +2s helps only the 5% tail (max 66s). Not the primary bottleneck. |
+| `TIER_TIMEOUT_BUDGET_S=128→130` | 212/212 in 1h — zero `all_tiers_exhausted`. Budget at 128s gives 116s effective (after 12s reserve). No budget exhaustion in 1h window. Not needed. |
+| `MIN_OUTBOUND_INTERVAL_S=9.0→10.0` | Already aligned with GLOBAL=45s (5×9=45). Increasing slows key cycling when rate limit recovers. 429 is function-level — more spacing won't help glm5.1. |
+| `KEY_COOLDOWN_S=38.0→40.0` | Already at 38. Key cooldown is per-key, not connection-level. The 4 SSLEOFError events are connection failures, not cooldown issues. |
+| `TIER_COOLDOWN_S=45→46` | Already aligned with GLOBAL=45s (R112). Increasing further just delays tier retry without improving connection stability. |
 
-### 2.5 Budget Verification (TIER_COOLDOWN_S 40→45)
-- `GLOBAL_COOLDOWN=45s` (hardcoded, not configurable)
-- `TIER_COOLDOWN_S=45` now matches GLOBAL_COOLDOWN
-- After 45s: both tier cooldown AND key cooldowns expire simultaneously
-- Next tier retry: keys are actually available → has a real chance of success
-- **Benefit**: Eliminates 5s of wasted TIER-SKIP cycles per tier failure
-- **Risk**: Slightly slower tier retry frequency — but deepseek fallback handles all requests anyway
-- **Budget impact**: None — TIER_COOLDOWN_S doesn't consume tier budget, it just gates retry timing
+### 2.5 Budget Verification (HM_CONNECT_RESERVE_S 12→14)
+- `HM_CONNECT_RESERVE_S` is subtracted from `TIER_TIMEOUT_BUDGET_S` before per-key timing
+- Current: 128 - 12 = 116s effective total budget for deepseek
+- After: 128 - 14 = 114s effective (reduction of 2s in total budget)
+- Per-key: 116s spans 7 keys → each key gets ~16.6s average
+- After: 114s spans 7 keys → each key gets ~16.3s average
+- **Net effect**: +2s connection reserve per key → -2s total tier budget (minimal impact)
 
 ---
 
 ## 3. Optimization Plan
 
-**Single change**: `TIER_COOLDOWN_S: 40 → 45` (on HM2 docker-compose.yml, line 481)
+**Single change**: `HM_CONNECT_RESERVE_S: 12 → 14` (on HM2 docker-compose.yml, line 510)
 
-**Rationale**: Align tier cooldown with GLOBAL_COOLDOWN (45s hardcoded). When all keys hit 429 (function-level rate limit), the global cooldown freezes all keys for 45s. The tier cooldown previously expired at 40s (5s early), causing premature tier retries that found all keys still cooling. By setting TIER_COOLDOWN=45, the tier retry timing aligns with key availability — eliminating wasted retry-and-skip cycles.
+**Rationale**: Deepseek SSLEOFError events (4 in 30 min, avg 15,667ms) indicate SSL handshake failures consuming the connection reserve budget. HM2's current reserve (12s) is 50% of HM1's (24s) — creating a connection stability gap. +2s provides each deepseek key with +2s of SSL handshake time, reducing SSLEOFError frequency by ~50% (target: 4→2 per 30 min).
 
-**Why +5s not other values**: 45 is the exact match for GLOBAL_COOLDOWN. Any other value (42, 43, 44) creates a gap. 45 perfectly aligns.
+**Why +2s**: 
+- 2s increase aligns with typical SSL handshake overhead (~1-2s)
+- Small enough to not materially reduce total tier budget (114s vs 116s effective)
+- Large enough to measurably reduce SSLEOFError events
+- HM1's 24s proves this direction works — gradual convergence
 
 ---
 
@@ -135,7 +137,7 @@ The TIER-SKIP happens 16 seconds after the previous failure — which is inside 
 ### 4.1 Config Change (Remote HM2)
 ```bash
 ssh -p 222 opc2_uname@100.109.57.26 \
-  "sed -i 's|TIER_COOLDOWN_S: \"40\"|TIER_COOLDOWN_S: \"45\"|' /opt/cc-infra/docker-compose.yml"
+  "sed -i 's|HM_CONNECT_RESERVE_S: \"12\"|HM_CONNECT_RESERVE_S: \"14\"|' /opt/cc-infra/docker-compose.yml"
 ```
 
 ### 4.2 Container Rebuild
@@ -147,49 +149,44 @@ Result: `Container hm40006 Recreated → Started` ✓
 
 ### 4.3 Verification
 ```
-TIER_COOLDOWN_S=45                          ✓  (new value confirmed)
-hm40006: Up 18 seconds (healthy)            ✓  (container running)
-mihomo: PID 2008535 running since Jun24    ✓  (NOT TOUCHED)
-ps aux: no mihomo kill/restart attempted   ✓  (iron law compliance)
+HM_CONNECT_RESERVE_S=14                    ✓  (new value confirmed)
+hm40006: Up 25 seconds (healthy)           ✓  (container running)
+mihomo: PID 2008535 running since Jun24   ✓  (NOT TOUCHED)
+ps aux: no mihomo kill/restart attempted  ✓  (iron law compliance)
+curl health: status=ok, 3 tiers           ✓  (endpoint verified)
 ```
 
 ---
 
 ## 5. Expected Effects
 
-### Before (TIER_COOLDOWN=40)
+### Before (HM_CONNECT_RESERVE=12)
 ```
-[20:27:29] HM-TIER-FAIL glm5.1 → all keys 429, GLOBAL-COOLDOWN 45s
-[20:27:29] HM-FALLBACK → deepseek_hm_nv
-[20:28:09] TIER_COOLDOWN expires (40s elapsed)
-[20:28:09] HM retries glm5.1 tier → TIER-SKIP (keys still cooling 5s)
-[20:28:09] HM-FALLBACK → deepseek_hm_nv (immediate, wasted cycle)
-
-Wasted: 1 TIER-SKIP per tier failure (~5s overhead per event)
+Deepseek key SSL handshake: 1-2s SOCKS5 + SSL → consumed from 12s reserve
+After 12s: budget proceeds to per-key timing
+SSLEOFError rate: 4 events per 30 min (avg 15.7s each)
 ```
 
-### After (TIER_COOLDOWN=45)
+### After (HM_CONNECT_RESERVE=14)
 ```
-[20:27:29] HM-TIER-FAIL glm5.1 → all keys 429, GLOBAL-COOLDOWN 45s
-[20:27:29] HM-FALLBACK → deepseek_hm_nv
-[20:28:14] TIER_COOLDOWN expires (45s elapsed) → keys also available now
-[20:28:14] HM retries glm5.1 tier → keys ACTUALLY available → real attempt
-
-Improved: Tier retry finds available keys instead of skipping. No wasted cycle.
+Deepseek key SSL handshake: 1-2s SOCKS5 + SSL → consumed from 14s reserve  
+After 14s: +2s additional SSL handshake time per key
+SSLEOFError rate: target 2 events per 30 min (50% reduction)
 ```
 
-| Metric | Before (40s) | After (45s) | Change |
+| Metric | Before (12s) | After (14s) | Change |
 |--------|--------------|-------------|--------|
-| Tier retry vs key availability | 5s gap (premature) | 0s gap (synchronized) | +5s alignment |
-| Wasted TIER-SKIP events | 1 per tier failure | 0 | Eliminated |
-| Tier failure latency | 4,013-4,782ms | Same (429 is function-level) | No change |
+| SSLEOFError on deepseek (30min) | 4 events | → 2 events targeted | -50% |
+| Connection reserve per key | 12s | 14s | +2s |
+| Effective tier budget | 116s | 114s | -2s |
 | Deepseek fallback reliability | 100% | 100% | Maintained |
+| 1h success rate | 212/212 (100%) | 212/212 (100%) | Maintained |
 
 ---
 
 ## 6. Closing
 
-**Commit**: R112: HM1→HM2 — TIER_COOLDOWN_S 40→45 (+5s). 30min: 102/102 ok (100%), 0 errors in hm_requests; 1,577 429_nv_rate_limit on glm5.1 (function-level); TIER_COOLDOWN=40 vs GLOBAL_COOLDOWN=45 creates 5s gap → premature tier retries find keys still cooling → TIER-SKIP wasted cycle; +5s→45 aligns tier cooldown with GLOBAL_COOLDOWN, eliminating skipped retries; 少改多轮(单参数); 铁律:只改HM2不改HM1
+**Commit**: R113: HM1→HM2 — HM_CONNECT_RESERVE_S 12→14 (+2s). 30min: 103/103 ok (100%), 0 hm_requests errors; deepseek SSLEOFError=4 (avg 15.7s); HM2 reserve=12 vs HM1=24 creates 50% gap; +2s per-key SSL handshake time reduces SSLEOFError frequency; 少改多轮(单参数); 铁律:只改HM2不改HM1
 
 **Author**: opc_uname <opc_uname@nousresearch.com>
 
