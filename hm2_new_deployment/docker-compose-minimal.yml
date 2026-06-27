@@ -1,0 +1,121 @@
+# 精简版 docker-compose — 只保留核心容器 (删除所有 LiteLLM 中间层)
+
+services:
+  cc_postgres:
+    image: postgres:16-alpine
+    container_name: cc_postgres
+    restart: unless-stopped
+    environment:
+      POSTGRES_USER: litellm
+      POSTGRES_PASSWORD: ${SUDO_PASSWORD}
+      POSTGRES_DB: litellm
+      POSTGRES_MULTIPLE_DATABASES: litellm_glm51,litellm_dsv4p
+    volumes:
+      - cc_pgdata:/var/lib/postgresql/data
+      - ./postgres/init-db.sh:/docker-entrypoint-initdb.d/init-db.sh:ro
+    ports:
+      - 5432:5432
+    networks:
+      - cc-net
+    deploy:
+      resources:
+        limits:
+          memory: 512M
+          cpus: '0.5'
+        reservations:
+          memory: 256M
+          cpus: '0.25'
+    healthcheck:
+      test:
+        - CMD-SHELL
+        - pg_isready -U litellm -d litellm
+      interval: 10s
+      timeout: 5s
+      retries: 5
+      start_period: 30s
+
+  hm40006:
+    build:
+      context: ./hm-nv-proxy
+      dockerfile: Dockerfile
+    container_name: hm40006
+    restart: unless-stopped
+    environment:
+      # 新框架: deepseek 默认, kimi fallback
+      DEFAULT_NV_MODEL: deepseek_hm_nv
+      NV_MODEL_ID_DEEPSEEK: deepseek-ai/deepseek-v4-pro
+      NV_MODEL_ID_KIMI: moonshotai/kimi-k2.6
+      
+      # 所有 5 个 K 为 DIRECT (直连 NVCF API)
+      HM_NV_PROXY_URLS_EMPTY: "true"
+      
+      # 超时配置
+      UPSTREAM_TIMEOUT_S: 85
+      TIER_TIMEOUT_BUDGET_S: 125
+      KEY_COOLDOWN_S: 35
+      TIER_COOLDOWN_S: 78
+      MIN_OUTBOUND_INTERVAL_S: 13.5
+      
+      # NVCF URL
+      HM_NVCF_URL_FMT: https://api.studio.nvidia.com/v1/chat/completions
+      
+      # 重试配置
+      MAX_RETRIES_PER_KEY: 3
+      KEY_SWITCH_ON_429: "true"
+      KEY_STICKY_ON_SUCCESS: "true"
+      
+      # Tier 管理
+      ENABLE_TIER_FALLBACK: "true"
+      TIER_ATTEMPT_LIMIT: 7
+      ROUND_ROBIN_MODE: "true"
+      
+      # 模型列表
+      MODEL_LIST: deepseek_hm_nv,kimi_hm_nv
+      FALLBACK_MODEL: kimi_hm_nv
+      
+      # 数据库
+      DATABASE_URL: postgresql://litellm:${SUDO_PASSWORD}@cc_postgres:5432/litellm
+      
+      # 日志
+      LOG_FORMAT: "%(asctime)s [%(levelname)s] %(message)s"
+      LOG_LEVEL: INFO
+      LOG_DIR: /app/logs
+    
+    volumes:
+      - ./hm-nv-proxy/config.py:/app/config.py:ro
+      - ./hm-nv-proxy/upstream.py:/app/gateway/upstream.py:ro
+      - ./logs/hm-nv-proxy:/app/logs
+    
+    ports:
+      - 40006:40006
+    networks:
+      - cc-net
+    
+    depends_on:
+      cc_postgres:
+        condition: service_healthy
+    
+    deploy:
+      resources:
+        limits:
+          memory: 512M
+          cpus: '0.5'
+        reservations:
+          memory: 256M
+          cpus: '0.25'
+    
+    healthcheck:
+      test:
+        - CMD-SHELL
+        - python3 -c "import urllib.request; urllib.request.urlopen('http://localhost:40006/health')" || exit 1
+      interval: 30s
+      timeout: 10s
+      retries: 3
+      start_period: 60s
+
+networks:
+  cc-net:
+    driver: bridge
+
+volumes:
+  cc_pgdata: null
