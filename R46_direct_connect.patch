@@ -1,0 +1,117 @@
+# R46: K1/K2 直连 integrate.api.nvidia.com 补丁
+#
+# 应用方式:
+#   cp upstream_current.py upstream.py  (HM2 的备份基线)
+#   docker exec hm40006 cp /app/gateway/upstream.py /app/gateway/upstream.py.bak.R46
+#   然后用 patch 工具: patch -p0 < R46_direct_connect.patch
+#   docker restart hm40006
+#
+# 或者直接在 HM2 上用 execute_code Python 执行替换
+
+*** Begin Patch
+*** Update File: upstream.py
+
+*** 修改1: 在第 97 行后 (return conn 后, def _build_pexec_body 前) 插入新的直连辅助函数 ***
+
+@@ -95,8 +95,28 @@
+     conn.sock = ss
+     return conn
+
+
++# --- Direct integrate API connection (K1/K2, no SOCKS5 proxy) ---
++def _make_direct_conn(api_key, nvcf_host, path, headers, body, timeout=UPSTREAM_TIMEOUT):
++    """Create direct HTTPSConnection to integrate.api.nvidia.com for K1/K2.
++
++    K1/K2 connect directly to NV API without SOCKS5 proxy.
++    Used only for key_idx 0 and 1.
++
++    Args:
++        api_key: NV API key (Bearer token)   # 未使用, 保留兼容签名
++        nvcf_host: hostname (e.g. "api.nvcf.nvidia.com")
++        path: API path
++        headers: dict of HTTP headers
++        body: encoded request body
++        timeout: connect + read timeout
++
++    Returns: (HTTPSConnection, HTTPResponse) tuple
++    """
++    conn = http.client.HTTPSConnection(nvcf_host, 443, timeout=timeout)
++    conn.request("POST", path, body=body, headers=headers)
++    resp = conn.getresponse()
++    return conn, resp
++
++
+ def _build_pexec_body(oai_body, tier_model, nvcf_config):
+     """Build NVCF pexec request body with per-model param stripping.
+
+
+*** 修改2: 在 _try_tier_keys 中, L270-271 日志行 改为显示 direct vs SOCKS5 ***
+
+@@ -268,8 +288,10 @@
+         # Build per-attempt request (model field already set in pexec_body)
+         pexec_data = json.dumps(pexec_body).encode("utf-8")
+
++        route_type = "direct" if key_idx < 2 else "SOCKS5 " + proxy_url
+         _log("HM-KEY", f"tier={tier_model} attempt {attempt_idx+1}/{HM_NUM_KEYS + 2}: "
+-                       f"k{key_idx+1} → NVCF pexec {function_id[:12]}... via {proxy_url}")
++                       f"k{key_idx+1} → NVCF pexec {function_id[:12]}... via {route_type}")
+
+
+*** 修改3: 在 _try_tier_keys 中, L284-285 的 conn 创建分叉 ***
+
+@@ -281,9 +303,34 @@
+             # Throttle before making connection (SOCKS5 connect is a real outbound)
+             if attempt_idx == 0:
+                 throttle_outbound()
+             t_connect_start = time.time()
+-            conn = _make_nvcf_proxy_conn(proxy_url, nvcf_host=nvcf_host, timeout=per_attempt_timeout)
+-            connect_elapsed = time.time() - t_connect_start
++            # R46: K1/K2 direct to integrate API, K3/K4/K5 via SOCKS5 mihomo
++            if key_idx < 2:
++                # Direct connection — no SOCKS5 overhead
++                conn = http.client.HTTPSConnection(nvcf_host, 443, timeout=per_attempt_timeout)
++                conn.request("POST", nvcf_path, body=pexec_data, headers=headers_out)
++                resp = conn.getresponse()
++                connect_elapsed = time.time() - t_connect_start
++                _log("HM-DIRECT", f"tier={tier_model} k{key_idx+1} direct → {nvcf_host}")
++
++                # Direct: skip budget re-check, connect_reserve, and sock.settimeout
++                # Fall through to status checking (same logic as SOCKS5 below)
++                # But we need to handle the response immediately since conn.request already sent
++
++                if resp.status >= 400:
++                    # ... (same error handling as SOCKS5 path — inline below)
++                    error_body = resp.read()
++                    try:
++                        error_json = json.loads(error_body)
++                    except Exception:
++                        error_json = {"error": error_body.decode("utf-8", errors="replace")}
++                    conn.close()
++                    err_str = json.dumps(error_json)
++                    consecutive_conn_err = 0
++                    should_cycle = resp.status in (429, 408, 500, 502)
++                    # ... (continues with same cycle logic)
++            else:
++                conn = _make_nvcf_proxy_conn(proxy_url, nvcf_host=nvcf_host, timeout=per_attempt_timeout)
++                connect_elapsed = time.time() - t_connect_start
+             # R40 A2: re-check budget AFTER connect — connect time wasn't counted when
+             # computing per_attempt_timeout above, so a slow connect may have eaten the budget.
+             post_connect_remaining = TIER_TIMEOUT_BUDGET_S - (time.time() - tier_budget_start)
+
+*** End Patch ***
+
+# 简化方案 (推荐):
+# 不用复杂的 inline 错误处理，直接分叉到两个独立的 try 块:
+#   - 直连: 完整独立的 request + response 处理 (复制现有逻辑, 去掉 SOCKS5 特有步骤)
+#   - SOCKS5: 保持现有逻辑不变
+
+# 最简单可维护的方案:
+#   if key_idx < 2:
+#       # 用 _make_direct_conn 获取 (conn, resp)
+#       # 然后跳过整个 SOCKS5 特有的 budget/connect_reserve/sock 逻辑
+#       # 直接进入 response 处理
+#       conn, resp = _make_direct_conn(nv_key, nvcf_host, nvcf_path, headers_out, pexec_data, per_attempt_timeout)
+#       # 接下来和 SOCKS5 路径共享相同的 resp.status 检查逻辑
+#   else:
+#       conn = _make_nvcf_proxy_conn(proxy_url, nvcf_host=nvcf_host, timeout=per_attempt_timeout)
+#       connect_elapsed = time.time() - t_connect_start
