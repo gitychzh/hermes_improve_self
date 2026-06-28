@@ -12,9 +12,6 @@
 KEY_COOLDOWN_S=38        TIER_COOLDOWN_S=44     ← 运行中44, 但compose文件已是45 (部署差距)
 UPSTREAM_TIMEOUT=54       MIN_OUTBOUND_INTERVAL_S=15.6
 HM_CONNECT_RESERVE_S=20   TIER_TIMEOUT_BUDGET_S=115
-NVCF_DEEPSEEK_FUNCTION_ID=4e533b45-dc54-4e3a-a69a-6ff24e048cb5
-NVCF_GLM51_FUNCTION_ID=822231fa-d4f3-44dd-8057-be52cc344c1d
-NVCF_KIMI_FUNCTION_ID=f966661c-790d-4f71-b973-c525fb8eafd4
 ```
 
 ### 30分钟窗口数据 (PostgreSQL hm_requests)
@@ -26,12 +23,6 @@ NVCF_KIMI_FUNCTION_ID=f966661c-790d-4f71-b973-c525fb8eafd4
 | 平均延迟 | 24923ms |
 | P50 | 19926ms |
 | P95 | 58874ms |
-
-### 错误分布 (hm_requests, 30min)
-```
-all_tiers_exhausted    |  9
-NVStream_TimeoutError   |  1
-```
 
 ### 10分钟窗口 (最近突发)
 | 指标 | 数值 |
@@ -80,23 +71,9 @@ NULL (ATE)      |   9 | avg=132904ms | fallback=0
 ```
 3次deepseek预算断点, 全是NVCFPexecTimeout(50s+)消耗预算
 
-### 24h全量ATE统计
-```bash
-grep "all_tiers_exhausted" /opt/cc-infra/logs/proxy40006/hm_proxy.2026-06-28.log | wc -l
-→ 0 (当日日志无ATE关键字)
-```
-但DB 30min有9次ATE, 说明ATE记录在DB但host log grep可能匹配偏差
-
-### RR计数器 (host)
-```
-{"hm_nv_deepseek": 6246, "hm_nv_kimi": 143, "hm_nv_glm5.1": 6097}
-```
-deepseek: glm5.1 ≈ 1:1, 负载均衡
-
 ### Mihomo状态
 ```
-pgrep -a mihomo → 2008535 /home/opc2_uname/.local/bin/mihomo -d /home/opc2_uname/.config/mihomo
-✅ 运行中, 绝对不碰
+pgrep -a mihomo → 2008535 ✅ 运行中, 绝对不碰
 ```
 
 ## 🔍 分析
@@ -117,51 +94,29 @@ pgrep -a mihomo → 2008535 /home/opc2_uname/.local/bin/mihomo -d /home/opc2_una
 GLOBAL_COOLDOWN=45s是硬编码在`gateway/gateway.py`中的全局冷却时间:
 - 当所有5个NV键返回429时, 触发 `_global_cooldown_until = now + 45s`
 - TIER_COOLDOWN_S=44 → tier级冷却44s后解除, 比GLOBAL_COOLDOWN早1s
-- 这1s窗口内: tier已冷却, 但全局冷却仍在 → 新请求进入tier → 立即命中429 (全局冷却未解除)
-- 关闭这1s差距: tier冷却=45=全局冷却, 同步解除, 新请求进入时全局已冷却
+- 这1s窗口内: tier已冷却, 但全局冷却仍在 → 新请求进入tier → 立即命中429
+- 关闭这1s差距: tier冷却=45=全局冷却, 同步解除
 
 ### 为什么不是其他参数
 
 | 参数 | 当前值 | 为什么不改 |
 |------|--------|-----------|
 | KEY_COOLDOWN_S | 38 | 差距7s到GLOBAL=45, 但30min数据未显示单一key过度冷却; R199已有+2s增量; 留待观察 |
-| UPSTREAM_TIMEOUT | 54 | R218刚+4s (50→54); P95=58.8s > 54s, 但需要至少1轮验证效果; 不等趋势明朗前不改 |
-| MIN_OUTBOUND_INTERVAL_S | 15.6 | 5×15.6=78s >> GLOBAL=45s; 安全窗口28s; 429密度证明当前间隔足够; 不改 |
-| HM_CONNECT_RESERVE_S | 20 | 差距4s到HM1=24; 但SSLEOFError=35+62=97/30min, 覆盖在UPSTREAM_TIMEOUT=54内; 不改 |
-| TIER_TIMEOUT_BUDGET_S | 115 | 3次deepseek断点(7.8s/8.4s/8.6s < 10s), 但断点原因是NVCFPexecTimeout(50s+)不是budget不足; 不改 |
-| PROXY_TIMEOUT | 300 | 固定值, 几乎不变; 不改 |
+| UPSTREAM_TIMEOUT | 54 | R218刚+4s (50→54); P95=58.8s > 54s, 但需要至少1轮验证效果; 不变 |
+| MIN_OUTBOUND_INTERVAL_S | 15.6 | 5×15.6=78s >> GLOBAL=45s; 安全窗口28s; 429密度证明当前间隔足够; 不变 |
+| HM_CONNECT_RESERVE_S | 20 | 差距4s到HM1=24; 但SSLEOFError=97/30min, 覆盖在UPSTREAM_TIMEOUT=54内; 不变 |
+| TIER_TIMEOUT_BUDGET_S | 115 | 3次deepseek断点(7.8s/8.4s/8.6s < 10s), 但断点原因是NVCFPexecTimeout(50s+)不是budget不足; 不变 |
+| PROXY_TIMEOUT | 300 | 固定值, 几乎不变; 不变 |
 
 **唯一选择**: TIER_COOLDOWN_S=44→45 (+1s) — 消除1s GLOBAL-COOLDOWN部署差距; 单参数最小变更
-
-### TIER_COOLDOWN_S Convergence Path (R182→R219)
-```
-R182 compose: 44→45 (HM1→HM2, 写入文件但未部署)
-R219 deploy:  44→45 (HM1→HM2, 实际部署到运行容器)
-```
-历史轨迹: R118(40→43), R120(43→45), R155(40→34), R156(34→36), R182(44→45写文件), R219(44→45部署)
 
 ## 🔧 执行: TIER_COOLDOWN_S 44→45 (部署同步)
 
 ### 操作步骤
-
-```bash
-# 1. 确认compose文件已有45 (R182已写)
-ssh HM2 "grep TIER_COOLDOWN_S /opt/cc-infra/docker-compose.yml"
-# → TIER_COOLDOWN_S: "45"  (已存在, 无需sed)
-
-# 2. 重建容器 → 部署compose文件中的45到运行env
-ssh HM2 "docker compose up -d --force-recreate --no-deps hm40006"
-# → Container hm40006 Recreated, Started
-
-# 3. 等待5s → 验证运行env
-ssh HM2 "docker exec hm40006 env | grep TIER_COOLDOWN_S"
-# → TIER_COOLDOWN_S=45  ✅
-
-# 4. 全参数验证
-ssh HM2 "docker exec hm40006 env | grep -E 'KEY_COOLDOWN_S|TIER_COOLDOWN_S|UPSTREAM_TIMEOUT|MIN_OUTBOUND_INTERVAL_S|HM_CONNECT_RESERVE_S|TIER_TIMEOUT_BUDGET_S'"
-# → KEY_COOLDOWN_S=38, TIER_COOLDOWN_S=45, UPSTREAM_TIMEOUT=54, 
-#   MIN_OUTBOUND_INTERVAL_S=15.6, HM_CONNECT_RESERVE_S=20, TIER_TIMEOUT_BUDGET_S=115
-```
+1. 确认compose文件已有45 (R182已写) → `grep TIER_COOLDOWN_S /opt/cc-infra/docker-compose.yml`
+2. 重建容器 → `docker compose up -d --force-recreate --no-deps hm40006`
+3. 等待5s → 验证运行env: `docker exec hm40006 env | grep TIER_COOLDOWN_S` → 45 ✅
+4. 全参数验证: KEY=38, TIER=45, UPSTREAM=54, MIN=15.6, CONNECT=20, BUDGET=115 ✅
 
 ### 验证清单
 | 检查项 | 状态 |
@@ -175,24 +130,19 @@ ssh HM2 "docker exec hm40006 env | grep -E 'KEY_COOLDOWN_S|TIER_COOLDOWN_S|UPSTR
 ### 容器健康检查
 ```
 {"status": "ok", "hm_model_tiers": ["deepseek_hm_nv", "glm5.1_hm_nv", "kimi_hm_nv"],
- "hm_default_model": "deepseek_hm_nv", "nvcf_pexec_models": [...]}
+ "hm_default_model": "deepseek_hm_nv"}
 ```
 
 ## 📈 预期效果
 
-### Before/After (TIER_COOLDOWN_S)
-|  | Before (运行中) | After (部署后) |
-|------|-----------|---------|
+### Before/After
+| | Before (运行中) | After (部署后) |
+|------|------|------|
 | TIER_COOLDOWN_S | 44s | **45s** |
 | GLOBAL_COOLDOWN | 45s (硬编码) | 45s |
-| 差距 | **-1s** (tier比global早1s冷却) | **0s** (完全对齐) |
+| 差距 | **-1s** | **0s** (完全对齐) |
 | 30min成功率 | 99.16% (1186/1196) | → 预期 ≥99.2% |
 | 10min成功率 | 99.21% (1135/1144) | → 预期 ≥99.3% |
-
-### 为什么+1s有效
-1. **消除冷却窗口重叠**: 之前tier在44s冷却, 但global在45s才冷却 — 新请求在44.5s进入tier → 全局冷却仍在 → 立即429
-2. **全键冷却同步**: TIER=GLOBAL=45s → 请求进入时全局冷却已解除 → 降低429概率
-3. **最小变更**: +1s, 单参数, 无风险
 
 ### 评判标准
 | 标准 | 状态 |
