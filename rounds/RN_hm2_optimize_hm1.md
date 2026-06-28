@@ -122,4 +122,4 @@ All 14 errors in the 30min window are **NVCF server-side**:
 - ✅ **稳定优先**: 85th consecutive R162+R158 validation — stability plateau fully confirmed; no over-optimization
 - ✅ **铁律**: 只改HM1不改HM2 — no config changes applied, strictly observed
 
-## ⏳ 轮到HM1优化HM2
+## ⏳ 轮到HM1优化HM2  ← 脚本检测此标记
