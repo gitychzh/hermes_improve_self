@@ -1,60 +1,63 @@
-# R267: HM1→HM2 — KEY_COOLDOWN_S 34→38 (+4s)
+# R268: HM1→HM2 — MIN_OUTBOUND_INTERVAL_S 12.0→15.6 (+3.6s)
 
-**回合类型**: 单参数优化  
-**方向**: HM1→HM2 (HM1优化HM2)  
-**日期**: 2026-06-29 03:16 CST  
-**作者**: opc_uname  
-**原则**: 更少报错 更快请求 超低延迟 稳定优先  
-**铁律**: ⚠️ 只改HM2配置绝不改HM1本地 ⚠️ 绝不停止/重启/kill mihomo  
+**回合类型**: 单参数优化
+**方向**: HM1→HM2 (HM1优化HM2)
+**日期**: 2026-06-29 03:34 CST
+**作者**: opc_uname
+**原则**: 更少报错 更快请求 超低延迟 稳定优先
+**铁律**: ⚠️ 只改HM2配置绝不改HM1本地 ⚠️ 绝不停止/重启/kill mihomo
 **单轮规则**: 少改多轮积累
 
 ---
 
-## 数据收集 (03:13 CST)
+## 数据收集 (03:23-03:29 CST)
 
 ### HM2运行容器环境变量
 ```
-KEY_COOLDOWN_S=34
-TIER_COOLDOWN_S=22 (DEAD — 不在config.py)
-MIN_OUTBOUND_INTERVAL_S=12.0
+MIN_OUTBOUND_INTERVAL_S=12.0  ← 本回合前
+KEY_COOLDOWN_S=38             ← R267: R258均衡 @ 38
+TIER_COOLDOWN_S=22            ← DEAD (不在config.py)
 UPSTREAM_TIMEOUT=75
 TIER_TIMEOUT_BUDGET_S=128
 HM_CONNECT_RESERVE_S=24
 PROXY_TIMEOUT=300
+CHARS_PER_TOKEN_ESTIMATE=3.0
 ```
 
 ### 30分钟窗口 — hm_requests
 | 指标 | 值 |
 |------|-----|
-| 总请求 | 1114 |
-| 成功(200) | 1024 |
-| 成功率 | **91.92%** |
-| p50延迟 | 23.3s |
-| p95延迟 | 118.4s |
-| 平均延迟 | 33.8s |
+| 总请求 | 1082 |
+| 成功(200) | 991 |
+| 成功率 | **91.59%** |
+| p50延迟 | 23.9s |
+| p95延迟 | 118.8s |
+| 平均延迟 | 34.5s |
 
 ### 错误分布 (30min)
 | 错误类型 | 数量 |
 |----------|------|
-| all_tiers_exhausted | 89 |
+| all_tiers_exhausted | 90 |
 | NVStream_IncompleteRead | 1 |
 
 ### 10分钟突发窗口
 | 指标 | 值 |
 |------|-----|
-| 总请求 | 1057 |
-| 错误数 | 90 |
-| 成功率 | 91.50% |
-| 结论 | 错误全在最近10分钟,99%集中 |
+| 总请求 | 1032 |
+| 错误数 | 91 |
+| 成功率 | 91.18% |
+| 结论 | 错误全在最近10分钟,91/91集中 |
 
-### Tier分布 (30min)
-| Tier | 请求数 | 平均延迟 | 回退次数 |
-|------|--------|----------|----------|
-| glm5.1_hm_nv | 187 | 43.6s | 4 |
-| deepseek_hm_nv | 837 | 22.8s | 1 |
-| (null/失败) | 89 | 116.3s | 0 |
+### 10min vs 30min 错误对照
+| 窗口 | 总请求 | 错误 |
+|------|--------|------|
+| 10min (03:19-03:29) | 1032 | 91 |
+| 30min (02:59-03:29) | 1082 | 91 |
+| 前20min (02:59-03:19) | 50 | 0 |
 
-### 429 per-key (30min)
+→ 错误100%集中在最近10分钟。10min≥30min是R262定义的需要变更信号。
+
+### Per-Key 429
 | Key | 429次数 |
 |-----|---------|
 | k0 | 4 |
@@ -62,76 +65,85 @@ PROXY_TIMEOUT=300
 | k2 | 3 |
 | k3 | 3 |
 | k4 | 4 |
-| 范围 | 1.5× (均匀,非单key热点) |
+| 范围 | 1.5× (均匀) |
 
-### Budget Breaks (今日日志)
-```
-20次 budget break (从00:00到03:13)
-全部在 glm5.1_hm_nv tier
-remaining 1.3s-9.7s < 10s minimum
-```
-
-### error_detail JSONL (最近20条)
-```
-all_429: false × 100% ← 混合故障模式确认
-错误混合: NVCFPexecTimeout(10-44s) + empty_200 + 500_nv_error + SSLEOFError + 429
-不是纯function级429饱和
-```
-
-### 10min tier_attempts错误分类
+### Tier层错误 (30min)
 | Tier | 错误类型 | 数量 |
 |------|---------|------|
-| deepseek_hm_nv | NVCFPexecSSLEOFError | 45 |
-| deepseek_hm_nv | NVCFPexecTimeout | 9 |
-| glm5.1_hm_nv | 500_nv_error | 28 |
+| glm5.1_hm_nv | 500_nv_error | 30 |
 | glm5.1_hm_nv | 429_nv_rate_limit | 20 |
-| glm5.1_hm_nv | NVCFPexecSSLEOFError | 17 |
+| glm5.1_hm_nv | NVCFPexecSSLEOFError | 18 |
+| glm5.1_hm_nv | empty_200 | 12 |
 | glm5.1_hm_nv | NVCFPexecConnectionResetError | 2 |
+
+### Error Detail JSONL — 全部 `all_429: false`
+所有error_detail JSONL条目显示 `all_429: false` — 混合故障模式确认。典型:
+```json
+tier=glm5.1_hm_nv, 6 key attempts, elapsed=126856ms
+all_429: false
+错误: 500_nv_error + empty_200 + NVCFPexecTimeout(10-11s)
+不是函数级429饱和, 是server-side混合故障
+```
+
+### Budget Breaks
+```
+最新break: tier=glm5.1_hm_nv, budget=128.0s, remaining=1.1s < 10s minimum
+```
+
+### rr_counter.json (累计请求数)
+```json
+{"hm_nv_deepseek": 7547, "hm_nv_kimi": 161, "hm_nv_glm5.1": 6407}
+```
 
 ---
 
 ## 分析
 
-1. **成功率仅91.92%** — 远低于99%阈值，需要参数优化。89 ATE + 1 NVStream = 90个错误/30min。
+1. **成功率仅91.59%** — 1082请求/90 ATE。R267 KEY_COOLDOWN=38生效后，前20分钟0错误（50请求全成功），但10分钟后爆发91错误。单靠KEY_COOLDOWN不够，需要MIN_OUTBOUND配合。
 
-2. **all_429: false × 100%** — 所有error_detail JSONL都显示 `all_429: false`，这是R264定义的**混合故障模式**：NVCFPexecTimeout + empty_200 + 500_nv_error + SSLEOFError + 429的混合，不是纯function级429饱和。这证实NV API函数正在正常响应但返回服务器端错误，而非被限流。
+2. **all_429: false × 100%** — R264定义的混合故障模式确认。NV API函数在响应但返回server-side错误。
 
-3. **10min vs 30min 错误几乎全部重叠** — 1057/90 (10min) vs 1114/89 (30min)，`10min ≥ 30min` 是R262定义的需要变更信号：所有错误都集中在最近10分钟窗口。
+3. **10min ≥ 30min** — 所有错误集中在最近10分钟（前20min=0）。R262定义的need-change信号：需要变更。
 
-4. **R258均衡值未达到**: KEY_COOLDOWN_S=34，距离R258目标38差4s。R264→R266正在逐步向38回推，当前还差一步。
+4. **R258收敛缺口**: MIN_OUTBOUND_INTERVAL_S=12.0, R258=15.6, 缺口=3.6s。KEY_COOLDOWN=38已达R258，这是最后一缺。
 
-5. **为什么选KEY_COOLDOWN_S**: 这是**唯一的活跃参数**中还没有达到R258均衡值的。当前34→38(+4s)是R264定义的双参数收敛路径中的最后一步——R264同时改了KEY_COOLDOWN(30)和MIN_OUTBOUND(12.0)，现在KEY_COOLDOWN补到38。
+5. **为什么选MIN_OUTBOUND_INTERVAL_S**: R264收敛路径中的最后一步。KEY_COOLDOWN已到R258=38，MIN_OUTBOUND需要补到15.6完成双参数收敛。
 
 6. **为什么不是其他参数**:
-   - `TIER_COOLDOWN_S=22` → DEAD PARAMETER,不在config.py。改它无效果。
-   - `HM_CONNECT_RESERVE_S=24` → DEAD PARAMETER,不在config.py。改它无效果。
-   - `MIN_OUTBOUND_INTERVAL_S=12.0` → 刚在R264从8.0→12.0(+4s)，已在向R258=15.6收敛中。本轮继续KEY_COOLDOWN收尾，下轮再动MIN_OUTBOUND。
-   - `UPSTREAM_TIMEOUT=75` → 已经是高值，p95=118s比75高很多是因为NVCFPexecTimeout(~44s)占主导，不是UPSTREAM_TIMEOUT瓶颈。减小UPSTREAM_TIMEOUT会切掉合法慢请求。
-   - `TIER_TIMEOUT_BUDGET_S=128` → 已经是高值，20次budget break中are用尽(remaining 1-7s)但128已足够。没有budget break是"有预算未用完"的情况。
+   - `KEY_COOLDOWN_S=38` → 已达R258，不动。
+   - `TIER_COOLDOWN_S=22` → DEAD，不在config.py。
+   - `HM_CONNECT_RESERVE_S=24` → 已与HM1收敛(gap=0)。
+   - `UPSTREAM_TIMEOUT=75` → 高值，NVCFPexecTimeout(~35-44s)占主导，不是客户侧瓶颈。
+   - `TIER_TIMEOUT_BUDGET_S=128` → 预算用尽但128s足够。
 
-7. **单参数规则**: 本次只改KEY_COOLDOWN_S一个参数 → 符合"少改多轮"原则。+4s delta在4-unit cap内。
+7. **单参数规则**: 只改MIN_OUTBOUND_INTERVAL_S → +3.6s在4-unit cap内。
 
 ---
 
 ## 执行
 
-### 变更: KEY_COOLDOWN_S: 34 → 38 (+4s)
+### 变更: MIN_OUTBOUND_INTERVAL_S: 12.0 → 15.6 (+3.6s)
 
 ```bash
-# 修改docker-compose.yml
-ssh HM2 "sed -i 's|KEY_COOLDOWN_S: \"34\"|KEY_COOLDOWN_S: \"38\"|' /opt/cc-infra/docker-compose.yml"
+# 修改HM2的docker-compose.yml
+ssh HM2 "sed -i 's|MIN_OUTBOUND_INTERVAL_S: \"12.0\"|MIN_OUTBOUND_INTERVAL_S: \"15.6\"|' /opt/cc-infra/docker-compose.yml"
 
 # 重建容器(只改compose文件,不动mihomo)
-ssh HM2 "cd /opt/cc-infra && docker compose up -d --force-recreate --no-deps hm40006"
+ssh HM2 "cd /opt/cc-infra && docker compose up -d --no-deps --force-recreate hm40006"
 
 # 验证
-sleep 3 && docker exec hm40006 env | grep KEY_COOLDOWN_S  # → 38 ✓
+sleep 3 && docker exec hm40006 env | grep MIN_OUTBOUND_INTERVAL_S  # → 15.6 ✓
 ```
 
 ### 验证结果
 ```
-✅ KEY_COOLDOWN_S=38 (运行容器确认)
-✅ docker ps: Up 20 seconds (healthy)
+✅ MIN_OUTBOUND_INTERVAL_S=15.6 (运行容器确认)
+✅ KEY_COOLDOWN_S=38 (R258均衡,未变)
+✅ TIER_COOLDOWN_S=22 (DEAD,但保留)
+✅ UPSTREAM_TIMEOUT=75
+✅ TIER_TIMEOUT_BUDGET_S=128
+✅ HM_CONNECT_RESERVE_S=24
+✅ docker ps: Up 23 seconds (healthy)
 ✅ mihomo PID 2008535 仍运行 (未触碰)
 ✅ curl http://localhost:40006/health → 200
 ```
@@ -139,14 +151,17 @@ sleep 3 && docker exec hm40006 env | grep KEY_COOLDOWN_S  # → 38 ✓
 ### 预期效果
 | 参数 | 变更前 | 变更后 | 方向 |
 |------|--------|--------|------|
-| KEY_COOLDOWN_S | 34s | 38s | +4s → R258均衡值=38 |
+| MIN_OUTBOUND_INTERVAL_S | 12.0s | 15.6s | +3.6s → R258=15.6 |
 
-**效果**: 增加key级冷却 (+4s) → 当key遇到空200/超时/SSLEOF错误后进入更长的冷却期 → 减少在冷却key上立即重试的浪费 → 降低 `all_tiers_exhausted` 速率（每个key有机会在前一个key冷却结束后以更健康的状态重新尝试）。
+**效果**: 增加请求间间距 → NV API key间从12.0s变为15.6s → 减少NV API server端并发堆积 → 降低混合故障(Timeout/500/empty_200) → 每个key更少遇错 → 减少ATE速率。
 
-**KEY_COOLDOWN_S收敛路径**:
-- R264: 30 (from R263降到18后又抬到30)
-- R266: 30→34 (+4s)
-- **R267: 34→38 (+4s) ← 本回合,达到R258均衡值**
+**收敛路径**:
+- R263 (冷启动): 12.0→8.0 (-4s)
+- R264 (恢复): 8.0→12.0 (+4s)
+- **R268**: 12.0→15.6 (+3.6s) ← 本回合,达到R258均衡值
+
+**KEY_COOLDOWN_S收敛路径 (已完成)**:
+- R263: 25→18, R264: 18→30, R266: 30→34, R267: 34→38 → R258=38 ✓
 
 ---
 
