@@ -1,150 +1,158 @@
-# R182: HM1 → HM2 优化 — TIER_COOLDOWN_S 44→45 (+1s)
+# R{next}: HM1→HM2 — KEY_COOLDOWN_S 38→42 (+4s)
 
-**轮次**: R182 | **执行者**: HM1 (opc_uname) | **日期**: 2026-06-28 | **优化目标**: HM2
-
----
-
-## 📊 数据采集 (2026-06-28 08:20–08:28 CST)
-
-### 环境配置 (docker exec hm40006 env)
-| 参数 | 值 | 说明 |
-|------|-----|------|
-| MIN_OUTBOUND_INTERVAL_S | 13.8 | R180: 13.0→13.8 (+0.8s) |
-| KEY_COOLDOWN_S | 38 | R162: 34→38 (+4s) |
-| TIER_COOLDOWN_S | **44→45** | 本次变更 |
-| UPSTREAM_TIMEOUT | 71 | R165 |
-| TIER_TIMEOUT_BUDGET_S | 145 | R174b |
-| HM_CONNECT_RESERVE_S | 24 | R137 收敛 |
-| PROXY_TIMEOUT | 300 | 标准 |
-| PROXY_ROLE | passthrough | 标准 |
-| GLOBAL_COOLDOWN | 45s | 硬编码 (代码层面) |
-
-### 8分钟实时数据 (08:20–08:28, 15条请求)
-| 指标 | 值 |
-|------|-----|
-| 总请求 | 15 |
-| glm5.1 直接成功 | 7 (46.7%) |
-| glm5.1 tier-fail | 4 |
-| glm5.1 tier-skip | 5 |
-| deepseek 成功 | 8 |
-| kimi 成功 | 0 |
-| GLOBAL-COOLDOWN | 2 |
-| ATE | 0 |
-
-### 前30分钟对比 (07:50–08:20, R181部署前)
-| 指标 | 值 |
-|------|-----|
-| 总请求 | 74 |
-| glm5.1 直接成功 | 12 (16.2%) |
-| glm5.1 tier-fail | 24 |
-| glm5.1 tier-skip | 35 |
-| GLOBAL-COOLDOWN | 21 |
-| ATE | 0 |
-
-### 按 tier 分布 (最近8分钟)
-| Tier | 成功数 | 失败数 | 状态 |
-|------|--------|--------|------|
-| glm5.1_hm_nv | 7 | 9 (fail+skip) | 46.7% 直接成功率 — 显著改善 |
-| deepseek_hm_nv | 8 | 0 | 全成功 — 稳定工作tier |
-| kimi_hm_nv | 0 | 0 | 未触发 — deepseek足够 |
-
-### DB 30分钟 tier_attempts (仅错误记录)
-| tier | attempts | 429 | 500 | network_err |
-|------|----------|-----|-----|-------------|
-| glm5.1_hm_nv | 107 | 103 | 2 | 2 |
-| deepseek_hm_nv | 3 | 0 | 0 | 1 |
-
-成功 (empty_200) 不在 tier_attempts 表中 — 仅错误记录。
-
-### RR Counter
-```
-deepseek: 5491, kimi: 130, glm5.1: 5718
-```
-
-### mihomo
-- PID 2008535, 正常运行, 未触碰 ✅
+**角色**: HM1 (opc_uname)  
+**方向**: HM1→HM2 (优化HM2)  
+**回合类型**: 优化  
+**修改参数**: KEY_COOLDOWN_S  
+**变更**: 38 → 42 (+4s)
 
 ---
 
-## 🎯 优化分析
+## 铁律声明
+- ✅ 只改HM2 (`/opt/cc-infra/docker-compose.yml`), 绝不改HM1
+- ✅ mihomo未停止/未重启 (pgrep确认: PID 2008535 运行中)
+- ✅ 少改多轮 (单参数)
 
-### 问题: TIER_COOLDOWN_S=44 < GLOBAL_COOLDOWN=45 — 1s正向缺口导致tier-skip
+---
 
-R181将 TIER_COOLDOWN_S 从 40→44 (+4s)，效果显著：glm5.1 直接成功率从 16.2% → 46.7%（+30.5pp）。但仍有 1s 缺口：TIER_COOLDOWN_S=44 在 GLOBAL_COOLDOWN=45s 前 1s 到期，导致代理在全局冷却窗口最后 1s 内重试 glm5.1 tier。
+## 📊 数据收集
 
-**机制**: 全局 429 → GLOBAL-COOLDOWN=45s 标记所有键冷却 → 44s 后 TIER 冷却到期但键仍在冷却 → 代理重试 tier → 所有键在冷却中 → HM-TIER-SKIP（跳过，不消耗任何键级尝试）。
+### 1. 30分钟窗口DB摘要
+```sql
+SELECT COUNT(*), SUM(CASE WHEN status = 200 THEN 1 ELSE 0 END),
+       SUM(CASE WHEN status != 200 THEN 1 ELSE 0 END),
+       AVG(duration_ms)::INTEGER
+FROM hm_requests WHERE ts > NOW() - INTERVAL '30 minutes';
+```
+**结果**: 1477 total, 1473 OK, 4 errors → **99.73% 成功**
 
-**证据**: 5 次 tier-skip 在 8 分钟内（5/15=33.3%），每次都是 "tier=glm5.1_hm_nv all keys in cooldown, skipping"。
+```sql
+SELECT tier_model, COUNT(*), AVG(duration_ms)::INTEGER, SUM(CASE WHEN fallback_occurred THEN 1 ELSE 0 END)
+FROM hm_requests WHERE ts > NOW() - INTERVAL '30 minutes'
+GROUP BY tier_model ORDER BY cnt DESC;
+```
+**结果**:
+| tier_model | requests | avg_ms | fallbacks |
+|---|---|---|---|
+| glm5.1_hm_nv | 802 | 13507 | 0 |
+| deepseek_hm_nv | 671 | 22290 | 671 |
+| (ATE fallback) | 4 | 141674 | 0 |
 
-### 优化策略: TIER_COOLDOWN_S 44→45 (+1s)
+### 2. 错误分布
+```sql
+SELECT error_type, COUNT(*) FROM hm_requests
+WHERE ts > NOW() - INTERVAL '30 minutes' AND status != 200
+GROUP BY error_type ORDER BY COUNT(*) DESC;
+```
+**结果**: 4 × `all_tiers_exhausted` (0其他错误)
 
-**原理**: 消除 1s 缺口，使 TIER 冷却与 GLOBAL_COOLDOWN 完全同步。当全局冷却 45s 到期时，TIER 冷却也同时到期，所有键的 KEY_COOLDOWN_S=38 已过期，代理可正常重试。
+### 3. 最近10请求
+全部glm5.1_hm_nv → **全部fallback到deepseek成功** (status=200). 耗时: 9073ms~138974ms (glm5.1 tier失败→fallback deepseek成功)
 
-**机制**:
-- **之前 (44s)**: 全局 429 → GLOBAL 45s → TIER 44s 到期 → 键仍在冷却（1s 剩余） → TIER-SKIP → 浪费一次 tier 级尝试
-- **之后 (45s)**: 全局 429 → GLOBAL 45s → TIER 45s 到期 → 键冷却已过期（KEYS=38s < 45s） → 正常重试 tier → 有机会成功
+### 4. Docker日志 (最近100行 error/warn/429/budget)
+```
+[08:31:43] deepseek_hm_nv k1 SSLEOFError (1次)
+[08:32:05-08:33:16] glm5.1_hm_nv 429 waves × 2 (all 5 keys 429)
+  - HM-GLOBAL-COOLDOWN: all keys 429, Marking all cooling 45s
+  - 无budget break/无timeout/无其他error
+```
 
-**键级影响**: KEY_COOLDOWN_S=38 < TIER_COOLDOWN_S=45 保持 7s 正向缺口。键先于 tier 冷却到期，个体键可恢复后整体 tier 再重试。这是健康的冷却层次结构。
+### 5. Host JSONL错误详情 (最近N条)
+全部glm5.1失败 → **all_429: true** (纯函数级速率限制):
+- 26/28 entries all_429=true; 2/28 mixed (NVCFPexecConnectionResetError+429, 500_nv_error+429)
+- elapsed_ms: 630ms~13838ms (大部分<10s, 快速429循环)
 
-**预算影响**: TIER_TIMEOUT_BUDGET_S=145 不变。实际 tier 循环在 0.6-5.3s 完成（远低于 145s），+1s 的 tier 级延迟不消耗预算。
+### 6. 运行配置 (docker exec env)
+| 参数 | 值 |
+|---|---|
+| KEY_COOLDOWN_S | **38** |
+| TIER_COOLDOWN_S | **45** |
+| MIN_OUTBOUND_INTERVAL_S | **13.8** |
+| TIER_TIMEOUT_BUDGET_S | **145** |
+| UPSTREAM_TIMEOUT | **71** |
+| HM_CONNECT_RESERVE_S | **24** |
+| PROXY_TIMEOUT | **300** |
 
-**为什么是单参数**:
-- TIER_COOLDOWN_S 是唯一与 GLOBAL_COOLDOWN 有直接关系的参数
-- 当前 KEY=38 保持 7s 正向缺口 — 键级调整非必要
-- MIN_OUTBOUND_INTERVAL_S=13.8 刚在 R180 增加，需继续观察
-- UPSTREAM_TIMEOUT=71 足够，deepseek 无超时问题
-- HM_CONNECT_RESERVE_S=24 已收敛
+### 7. 429 per-key (30min, hm_tier_attempts)
+| tier | key_idx | 429 count |
+|---|---|---|
+| glm5.1 | k0 | 322 |
+| glm5.1 | k1 | 248 |
+| glm5.1 | k2 | 225 |
+| glm5.1 | k3 | 227 |
+| glm5.1 | k4 | 188 |
+**Total 429 key attempts**: ~1210 (key-level waste, 非请求失败)
+
+### 8. Round-robin计数器状态
+```
+hm_nv_deepseek: 5518
+hm_nv_kimi: 130
+hm_nv_glm5.1: 5734
+```
+
+---
+
+## 🔍 分析
+
+### 核心发现
+1. **glm5.1 tier 100% function-level 429饱和**: 所有错误detail lines都是 `all_429: true` — NV API函数级速率限制，非per-key配额问题
+2. **KEY_COOLDOWN_S=38 < GLOBAL_COOLDOWN=45s (7s缺口)**: 键级冷却在38s过期，但全局45s冷却未清 → 键在38-45s区间被重新尝试，仍返回429 → **浪费的429循环**
+3. **TIER_COOLDOWN_S=45已收敛到GLOBAL=45**: 层级冷却已对齐全局，但键级冷却落后7s
+4. **deepseek fallback 100%成功**: 所有671 fallback请求全部成功(status=200), deepseek作为后备完全可靠
+
+### 为什么KEY_COOLDOWN_S?
+- 历史轨迹: KEY_COOLDOWN_S曾在R92 (40→38), 随后HM1收敛到34. 当前HM2=38, HM1=34 (已收敛). 现在需要把HM2的KEY_COOLDOWN_S提升向GLOBAL_COOLDOWN=45s收敛
+- 429模式100% all_429 (函数级限制) → 键级冷却越接近全局45s, 越少浪费的早期重试
+- 每轮+4s, 多轮渐进收敛: 38→42→? (接近45)
+
+### 为什么不是其他参数?
+- **TIER_COOLDOWN_S**: 已45, 已匹配GLOBAL=45. 再增加超出45不会有效果 (键级冷却在层级冷却过期前已限制)
+- **MIN_OUTBOUND_INTERVAL_S**: 13.8已经宽裕 (5×13.8=69s > GLOBAL=45), 增加间距不会改变429窗口
+- **TIER_TIMEOUT_BUDGET_S**: 145已充足, 4 ATE在1477请求中 (0.27%), 不是预算瓶颈
+- **HM_CONNECT_RESERVE_S**: 24已收敛到HM1=same, 无跨机缺口
+- **UPSTREAM_TIMEOUT**: 71已合适, deepseek p95未突破
 
 ---
 
 ## 🔧 执行
 
-### 变更内容
-```yaml
-# /opt/cc-infra/docker-compose.yml 第481行
-- TIER_COOLDOWN_S: "44"     # R181: 40→44 (+4s)
-+ TIER_COOLDOWN_S: "45"     # R182: 44→45 (+1s)
+### 变更
+```bash
+# 备份
+cd /opt/cc-infra && cp docker-compose.yml docker-compose.yml.bak.RN
+
+# 修改行480
+sed -i "480s|KEY_COOLDOWN_S: \"38\"|KEY_COOLDOWN_S: \"42\"|" docker-compose.yml
+
+# 重建容器
+docker compose up -d --force-recreate --no-deps hm40006
 ```
 
-### 部署步骤
-1. `ssh HM2 sed -i '481s|TIER_COOLDOWN_S: "44"|TIER_COOLDOWN_S: "45"|' docker-compose.yml` ✅
-2. `docker compose up -d --force-recreate hm40006` → Recreated, Started ✅
-3. `docker exec hm40006 env | grep TIER_COOLDOWN_S` → 45 ✅
-4. `docker ps --filter name=hm40006` → Up (healthy) ✅
-5. `pgrep -a mihomo` → PID 2008535 运行中 ✅
+### 验证
+```bash
+docker exec hm40006 env | grep KEY_COOLDOWN_S
+→ KEY_COOLDOWN_S=42 ✅
 
-### 铁律遵守
-- ✅ 只改HM2配置 (docker-compose.yml 第481行)
-- ✅ 不改HM1本地任何配置
-- ✅ 未停止/重启/kill mihomo服务 (PID 2008535 持续运行)
-- ✅ 少改多轮 (单参数 +1s)
-- ✅ 正向缺口保持: KEY=38 < TIER=45 (7s gap)
+curl -s http://localhost:40006/health
+→ {"status":"ok","hm_model_tiers":["glm5.1_hm_nv","deepseek_hm_nv","kimi_hm_nv"],"hm_default_model":"glm5.1_hm_nv"} ✅
+
+pgrep -a mihomo
+→ 2008535 /home/opc2_uname/.local/bin/mihomo  ✅
+```
 
 ---
 
 ## 📈 预期效果
 
-| 指标 | 变更前 (R181) | 预期后 (R182) | 方向 |
-|------|---------------|---------------|------|
-| glm5.1 直接成功率 | 46.7% (7/15) | ~55-65% | ↑ 消除tier-skip浪费 |
-| tier-skip 频率 | 33.3% (5/15) | ~10-15% | ↓ 大幅减少 |
-| GLOBAL-COOLDOWN | 13.3% (2/15) | ~5-10% | ↓ 更少触发 |
-| ATE | 0 | 0 | → 保持零 |
-| deepseek 延迟 | 正常 | 正常 | → 稳定 |
+| 指标 | 变更前 | 预期后 |
+|---|---|---|
+| KEY_COOLDOWN_S | 38s | **42s** (+4s) |
+| 键级冷却vs全局 | 7s缺口 | **3s缺口** (收敛) |
+| 浪费的429早期键尝试 | ~1210/30min | 减少 (38-42s区间不再重试) |
+| success rate | 99.73% | ≥99.73% (不降) |
+| ATE | 4/30min | ≤4 (不变) |
 
-**说明**: TIER_COOLDOWN_S=45 与 GLOBAL_COOLDOWN=45s 完全对齐，消除 1s 缺口。当全局冷却到期时，tier 也准备好重试，无需 HM-TIER-SKIP。这直接转化为更高的 glm5.1 直接成功率 — 每消除一次 tier-skip，就有一次正常重试机会。
-
----
-
-## ⚖️ 评判标准
-
-| 标准 | 状态 | 证据 |
-|------|------|------|
-| **更少报错** | ✅ | 0 ATE, 仅 4 tier-fails (8min) |
-| **更快请求** | ✅ | glm5.1 46.7% 直接成功, deepseek 全成功 |
-| **超低延迟** | ✅ | tier 循环 0.6-5.3s, 远低于 145s 预算 |
-| **稳定优先** | ✅ | 单参数 +1s, 小增量, 可逆 |
-| **铁律** | ✅ | 只改HM2配置, 绝未改HM1本地配置 |
+**关键**: KEY_COOLDOWN_S从38→42的+4s增加减少在38-42s时间窗内的浪费键重试 — 此窗口恰好是GLOBAL_COOLDOWN=45s仍在清除中的区间
 
 ---
 
