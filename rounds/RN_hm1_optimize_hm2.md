@@ -1,164 +1,213 @@
-# R264: HM1→HM2 — MIN_OUTBOUND_INTERVAL_S 8.0→12.0 + KEY_COOLDOWN_S 18→30 — 二参数回归R258均衡
+# R266: HM1→HM2 — KEY_COOLDOWN_S 30→34 (+4s)
 
-**回合类型**: 优化 (二参数)
-**方向**: HM1 (opc_uname) → HM2 (opc2_uname)
-**时间**: 2026-06-29 02:11–02:22 UTC
-**原则**: 更少报错，更快请求，超低延迟，稳定优先 — 铁律:只改HM2不改HM1 — 少改多轮
+**回合类型**: 优化  
+**角色**: HM1 (opc_uname) 优化 HM2  
+**变更**: `KEY_COOLDOWN_S` 30→34 (+4s, 向R258收敛)  
+**时间戳**: 2026-06-29 02:56 UTC+8  
+**原则**: 更少报错, 更快请求, 超低延迟, 稳定优先  
+**铁律**: 只改HM2不改HM1
 
-## 摘要
+---
 
-R263 冷启动将三参数大幅降低(MIN_OUTBOUND 12→8, KEY_COOLDOWN 25→18, TIER_COOLDOWN 30→22)后, 成功率从 99.69%(R258) 暴跌至 94.8%(30min 1228/1164)。分析确认 R263 走错方向: 降低冷却/间距 → 键更快出冷却 → 立即重入 429 循环 → 形成正反馈放大(更多 429 → 更长冷却 → 更少成功 → 429 未清除)。R264 回归 R258 均衡: MIN_OUTBOUND 8→12(+4s), KEY_COOLDOWN 18→30(+12s)。TIER_COOLDOWN 不在 config.py 中(死参数), 跳过。
+## 📊 数据收集
 
-## 参数变化
+### 30分钟窗口 (02:26 - 02:56 UTC+8)
 
-| 参数 | 旧值(R263) | 新值(R264) | 增量 | 方向 | 理由 |
-|------|-----------|-----------|------|------|------|
-| MIN_OUTBOUND_INTERVAL_S | 8.0 | 12.0 | +4s | →R258=15.6 | 8s间隔=5键×8=40s<GLOBAL_COOLDOWN=45s安全裕度5s; 12s=5键×12=60s>45s裕度15s, 给NV函数更多呼吸空间 |
-| KEY_COOLDOWN_S | 18 | 30 | +12s | →R258=38 | 18s冷却→阶1=18s, 阶2=36s, 阶3=50s(上限); 30s→阶1=30s, 阶2=60s, 阶3=50s; 更高冷却保护NV函数免过循环, 减少ABORT-NO-FALLBACK频率 |
-
-未动参数: UPSTREAM_TIMEOUT=75, TIER_TIMEOUT_BUDGET_S=128, HM_CONNECT_RESERVE_S=24, PROXY_TIMEOUT=300
-
-## 数据采集
-
-### 运行容器配置 (docker exec hm40006 env)
-```
-MIN_OUTBOUND_INTERVAL_S=12.0, KEY_COOLDOWN_S=30
-UPSTREAM_TIMEOUT=75, TIER_TIMEOUT_BUDGET_S=128
-HM_CONNECT_RESERVE_S=24, PROXY_TIMEOUT=300
-```
-
-### 30-min 窗口 (post-R263 含多容器重启)
 | 指标 | 值 |
 |------|-----|
-| Total | 1174 |
-| OK | 1093 |
-| 成功率 | **93.11%** |
-| Avg duration | 31699ms |
+| 总请求数 | 1138 |
+| 成功数 (200) | 1051 |
+| 错误数 | 87 |
+| 成功率 | **92.5%** |
+| P50延迟 | 22.7s |
+| P95延迟 | 116.8s |
+| 平均延迟 | 32.9s |
 
-### 10-min 窗口
-| 指标 | 值 |
-|------|-----|
-| Total | 1143 |
-| OK | 1065 |
-| 成功率 | **93.17%** |
-
-### 5-min 窗口
-| 指标 | 值 |
-|------|-----|
-| Total | 1138 |
-| OK | 1060 |
-| 成功率 | **93.15%** |
-
-### 当前容器 (post-R264 restart, 02:21后 3min)
-| 指标 | 值 |
-|------|-----|
-| Total | 1 |
-| OK | 1 |
-| 成功率 | **100%** (small sample) |
-
-### Error Detail JSONL (最新 3 条)
+### 错误分布 (hm_requests)
 ```
-1. 7255476b (01:53) — all_tiers_failed, all_cooldown=true, skipped=true, elapsed=2ms — ABORT-NO-FALLBACK 瞬时拒绝
-2. 26aa860e (02:13) — 5 keys all fail: k1=empty_200, k2=429, k3=NVCFPexecTimeout(43s), k4=NVCFPexecTimeout(10s), k5=500_nv_error — elapsed=119028ms
-3. 34d1cd19 (02:18) — 5 keys all fail: k2=429, k3=empty_200, k4=NVCFPexecTimeout(42s), k5=NVCFPexecTimeout(11s), k1=NVCFPexecTimeout(10s) — elapsed=126559ms
+all_tiers_exhausted:     86  (98.9%)
+NVStream_IncompleteRead:   1  (1.1%)
 ```
 
-### 键级错误分布 (30-min)
-| 错误类型 | 键级 | Count |
-|----------|------|-------|
-| NVCFPexecTimeout | k0-k5 (均匀) | ~40 |
-| empty_200 | k1-k5 (均匀) | ~10 |
-| 429_nv_rate_limit | k2/k3/k5 (偏斜) | ~8 |
-| SSLEOFError | k4 | ~6 |
-| 500_nv_error | k5 | ~6 |
-| budget_exhausted_after_connect | 所有键 | ~5 |
-
-### RR Counter
-```json
-{"hm_nv_glm5.1": 6337, "hm_nv_deepseek": 7547, "hm_nv_kimi": 161}
+### Tier分布
+```
+deepseek_hm_nv: 881 req, 22.5s avg, 1 fallback from deepseek→deepseek
+glm5.1_hm_nv:   171 req, 44.8s avg, 4 fallbacks
+| (glm5.1→deepseek):     86 req, 116.1s avg ← 所有ATE来自此
 ```
 
-### Proxy Log (最近 20 行)
-- **02:22** — SUCCESS k3 (2 循环尝试, 90.7s 总耗时)
-- **02:23** — k2=429 → k3 尝试中 → k4 待命
+### 10分钟爆发窗口 (02:46 - 02:56)
+```
+总请求: 1087, 成功: 1001 (92.1%)
+错误: 86 (100% ATE)
+```
+→ 错误集中在glm5.1→deepseek fallback路径
 
-### Health Check
-```json
-{"status": "ok", "tiers": ["glm5.1_hm_nv"], "default": "glm5.1_hm_nv"}
+### Per-Key 429 (hm_tier_attempts, 30min)
+```
+k0: 4, k1: 6, k2: 3, k3: 3, k4: 4
+总计: 20×429 (key-level, 不是请求级失败)
 ```
 
-### Docker PS
+### Tier层错误 (hm_tier_attempts, 30min)
 ```
-hm40006: Up 1 minute (healthy)
-cc_postgres: Up 3 days (healthy)
+deepseek_hm_nv:
+  SSLEOFError: 47
+  NVCFPexecTimeout: 9
+  empty_200: 6
+
+glm5.1_hm_nv:
+  500_nv_error: 22
+  429_nv_rate_limit: 20
+  SSLEOFError: 15
+  empty_200: 10
+  NVCFPexecConnectionResetError: 2
 ```
 
-## 分析
+### Error Detail JSONL (host log) — 所有失败请求
+**关键发现**: 所有条目显示 `all_429: false` — 非函数级429饱和, 是**混合故障模式**
 
-### 为什么选这两个参数
+典型故障链:
+```
+1. empty_200 → 立即消耗~1s + MIN_OUTBOUND(9s)等待
+2. NVCFPexecTimeout(42s) → 大规模超时
+3. NVCFPexecTimeout(10s) → 第二波超时  
+4. NVCFPexecTimeout(10s) → 第三波超时
+5. 429_nv_rate_limit/500_nv_error → 收尾
+```
+总耗时: 119-127s, 预算剩余: 0.3-1.6s (< 10s minimum)
 
-1. **MIN_OUTBOUND_INTERVAL_S +4s**: R263 降到 8.0s → 5键×8s=40s < GLOBAL_COOLDOWN=45s(裕度仅5s)。NV 函数在 40s 内接受 5键请求, 但 GLOBAL_COOLDOWN 需要 45s 完全清除。回归 +4s → 12s=60s 周期 > 45s(裕度15s), 给函数更多呼吸空间。R258 验证值 15.6s(99.69% 成功率), 当前 12s 仅 3.6s 低于均衡。
+### Docker Logs — Tier Budget Break
+```
+[02:43:27.6] [HM-TIER-BUDGET] tier=glm5.1_hm_nv budget 128.0s remaining 0.3s < 10s minimum, breaking
+[02:45:38.3] [HM-TIER-BUDGET] tier=glm5.1_hm_nv budget 128.0s remaining 1.6s < 10s minimum, breaking
+```
 
-2. **KEY_COOLDOWN_S +12s**: R263 降到 18s 造成 ABORT-NO-FALLBACK 瞬时拒绝(2ms)。全部键在冷却中, 代理立即拒绝不尝试。R258 验证值 38s(0 429, 0 fallback), R264 回归 +12s(18→30) 朝 38 趋近。30s 使阶1=30s(前 18s), 阶2=60s(前 36s), 阶3=50s(上限)。更高冷却减少键重新入 429 循环频率。
+### 当前HM2运行配置
+```
+KEY_COOLDOWN_S=30          ← 极低 (目标38-45)
+TIER_COOLDOWN_S=22          ← 死参数 (config.py不读取)
+UPSTREAM_TIMEOUT=75
+MIN_OUTBOUND_INTERVAL_S=12.0
+TIER_TIMEOUT_BUDGET_S=128
+HM_CONNECT_RESERVE_S=24     ← 已收敛 (=HM1)
+PROXY_TIMEOUT=300
+```
 
-### 为什么不是其他参数
+### Mihomo状态
+```
+✅ pgrep -a mihomo → 2008535 /home/opc2_uname/.local/bin/mihomo
+```
 
-- **UPSTREAM_TIMEOUT**: 75。NVCFPexecTimeout(10-43s) 是 NV 服务端超时, 客户端 75s 从未命中。保持不变。
-- **TIER_TIMEOUT_BUDGET_S**: 128。已足够 4-5 键尝试。增/减无意义(键在 10-43s 返回)。保持不变。
-- **HM_CONNECT_RESERVE_S**: 24。已收敛 HM1=24。SSL 握手预留, 无调整信号。保持不变。
-- **TIER_COOLDOWN_S**: 22。**不在 config.py 中**(死参数, 代理不读取)。跳过。
+---
 
-### 错误模式演进
+## 🔍 分析
 
-R263 前(R258): 99.69% 成功率, 0 429, 0 fallback, 仅 3 个 NVCFPexecTimeout → 7 参数在验证收敛(多轮无变更)。
+### 1. 混合故障模式确认 (`all_429: false`)
+所有error_detail JSONL条目显示 `all_429: false` — 这不是函数级NV API 429饱和。故障是混合服务器端错误:
+- **NVCFPexecTimeout** (42s): 单key超时占主导
+- **empty_200**: Content-Length:0 (流式完成但空体)
+- **500_nv_error**: 内部服务器错误
+- **SSLEOFError**: TLS协议EOF
 
-R263 后: 94.8% 成功率, 64 ATE(30min), 全部键 429→冷却→ABORT-NO-FALLBACK(2-7ms) 或慢全键失败(119-126s)。
+`all_429: false` + 20×key-level 429 = 混合故障, 不是纯429饱和。**R264模式**: 不能向GLOBAL_COOLDOWN=45收敛, 应保持KEY_COOLDOWN在R258均衡值38附近。
 
-R264 后: 93.1% 成功率(30min, 含多容器重启的旧数据), 当前容器 100%(1 请求)。错误从 ABORT-NO-FALLBACK(2ms) 转为实际尝试(90-126s)。NVCFPexecTimeout 从 10-11s 升至 42-43s(恶化)。NV 函数 `glm-5.1` 仍在服务端问题中。
+### 2. KEY_COOLDOWN_S=30 过于激进
+KEY_COOLDOWN_S=30意味着每个key在429后仅冷却30s就重新可用。对比:
+- HM1 KEY_COOLDOWN_S=34 (仍有7s gap到GLOBAL=45)
+- 收敛目标: 38-45
+- 当前30s → gap到GLOBAL=15s, 到R258=38s有8s gap
 
-### 键级错误分类
-- **NVCFPexecTimeout (10-43s)**: NV API 超时 — 服务端无响应, 非客户端可调
-- **empty_200**: NV 返回空 Content-Length:0 — 服务端问题
-- **429_nv_rate_limit**: NV 函数级限流 — 过载函数, 非键级泄漏
-- **500_nv_error**: NV 内部服务器错误 — 服务端故障
-- **SSLEOFError**: SSL EOF — 连接中断(mihomo/NV 网络)
+**30s的冷却窗口不足**: 当NV API函数级429发生后, GLOBAL_COOLDOWN=45s在代码层lock所有keys。KEY_COOLDOWN_S=30s意味着key在30s后解除但全局锁仍在(还有15s), 导致更多wasted retries。
 
-**90%+ 错误来自服务端** → 客户端仅可调整间距/冷却 → 减少对 NV 函数的冲击频率。
+### 3. TIER_COOLDOWN_S=22 是死参数
+**R264验证**: `grep -n "TIER_COOLDOWN_S" /opt/cc-infra/proxy/hm-proxy/gateway/config.py` 返回空 — 确认config.py不读取此参数。compose文件中的TIER_COOLDOWN_S=22对运行无影响。
 
-## 执行
+### 4. 为什么KEY_COOLDOWN_S而不是其他参数
+
+| 参数 | 为什么不改 |
+|------|-----------|
+| **TIER_COOLDOWN_S** | 死参数, config.py不读取, 改了无效果 |
+| **UPSTREAM_TIMEOUT** | 75已高于HM1的63, 增加只会让超时key等更久 |
+| **MIN_OUTBOUND_INTERVAL_S** | 12.0合理, 5×12=60s > GLOBAL=45s, 已有15s buffer |
+| **TIER_TIMEOUT_BUDGET_S** | 128已足够, 剩余0.3-1.6s说明预算在消耗但非瓶颈 |
+| **HM_CONNECT_RESERVE_S** | 24=24已收敛完成, 无需调整 |
+
+**选择KEY_COOLDOWN_S的原因**:
+1. 30→34 = +4s, 向R258收敛值38靠近
+2. 混合故障模式下(`all_429: false`), 增加KEY_COOLDOWN减少key过早重入429风暴
+3. 单一参数变更, 最小风险, 可观测
+4. +4s增量 ≤ 4单位规则, 保守步进
+
+---
+
+## 🎯 执行
+
+### 变更: KEY_COOLDOWN_S 30→34 (+4s)
 
 ```bash
-# 1. 修改 compose 文件 (二参数)
-ssh HM2 "sed -i 's|MIN_OUTBOUND_INTERVAL_S: \"8.0\"|MIN_OUTBOUND_INTERVAL_S: \"12.0\"|' /opt/cc-infra/docker-compose.yml"
-ssh HM2 "sed -i 's|KEY_COOLDOWN_S: \"18\"|KEY_COOLDOWN_S: \"30\"|' /opt/cc-infra/docker-compose.yml"
+# 1. 修改compose文件
+ssh HM2 'sed -i "s|KEY_COOLDOWN_S: \"30\"|KEY_COOLDOWN_S: \"34\"|" /opt/cc-infra/docker-compose.yml'
 
-# 2. 更新注释行
-# MIN_OUTBOUND: # R1: HM1→HM2 — 8.0→12.0 +4s toward R258=15.6; ...
-# KEY_COOLDOWN: # R1: HM1→HM2 — 22→30 +8s toward R258=38; ...
+# 2. 验证文件修改
+grep -n KEY_COOLDOWN_S /opt/cc-infra/docker-compose.yml
+# → 473: KEY_COOLDOWN_S: "34"
 
-# 3. 重建容器
-cd /opt/cc-infra && docker compose up -d hm40006
+# 3. 重建容器 (部署新配置)
+cd /opt/cc-infra && docker compose up -d --force-recreate --no-deps hm40006
+# → Container hm40006 Recreated + Started
 
-# 4. 验证运行配置
-docker exec hm40006 env | grep MIN_OUTBOUND_INTERVAL_S → 12.0 ✅
-docker exec hm40006 env | grep KEY_COOLDOWN_S → 30 ✅
-curl -s http://localhost:40006/health → 200 OK ✅
-mihomo 进程在运行 (pgrep -a mihomo) → 绝对不重启 ✅
+# 4. 验证运行环境
+sleep 3 && docker exec hm40006 env | grep KEY_COOLDOWN_S
+# → KEY_COOLDOWN_S=34 ✅
 ```
 
-## 预期/验证
+### 验证结果
 
-| 指标 | R263前(30min) | R263后 | R264后(预期) | R264后(实测) |
-|------|-------------|--------|-------------|----------|
-| 成功率 | 99.69% | 94.8% | ≥96% | 93.1%(30min含旧数据) |
-| ABORT-NO-FALLBACK(2ms) | 0% | 100% | <50% | 0%(当前容器) |
-| 键级429 | 0 | 98.4% | <40% | 6.8%(30min) |
-| 总请求时间 | 21.8s | 125-127s | 90-110s | 90-126s |
-| 当前容器(3min) | — | — | — | 100%(1请求) |
+| 检查项 | 结果 |
+|--------|------|
+| `docker exec env \| grep KEY_COOLDOWN_S` | **34** ✅ |
+| `docker ps --filter name=hm40006` | Up (healthy) ✅ |
+| `curl /health` | 200, passthrough ✅ |
+| `pgrep -a mihomo` | running ✅ |
 
-### 风险
-- **无**: 不触及 mihomo, 不改变路由逻辑, 不修改 UPSTREAM_TIMEOUT/TIER_TIMEOUT_BUDGET_S
-- **收敛方向**: 二参数同时向 R258 验证值回归 → 降低 NV 函数过载
-- **观察窗口**: 30min 全窗口数据含多容器重启(5次), 需下一轮获取清洁数据
+---
+
+## 📈 预期效果
+
+| 指标 | 变更前 | 变更后 | 方向 |
+|------|--------|--------|------|
+| KEY_COOLDOWN_S | 30s | **34s** | +4s ↑ |
+| Key再入429间隔 | 30s后 | 34s后 | +4s保护 |
+| 减少wasted retries | - | 预期减少 | 混合故障模式下 |
+| 成功率目标 | 92.5% | →95%+ | 保守预期 |
+
+### 风险控制
+- **UPSTREAM_TIMEOUT=75**: 无影响 (不改变)
+- **TIER_TIMEOUT_BUDGET=128**: 无影响 (不改变)
+- **Mihomo**: 未触碰 — NV链路完好
+- **单参数变更**: 可回滚 (30→34, 如需要回退至30)
+
+---
+
+## 🔄 历史参考
+
+R258均衡值: KEY_COOLDOWN_S=38 (HM2当前30→34向38收敛, gap=4s)  
+R264混合故障模式: `all_429: false` → 不向GLOBAL_COOLDOWN=45收敛  
+HM1 KEY_COOLDOWN_S=34 (HM2正在追平HM1)
+
+---
+
+## 回合编号
+
+由于检测到脚本触发, 本回合基于最近的Git提交历史确定:
+
+```bash
+# 检查最近rounds文件确定回合号
+ls rounds/R*.md | sort -V | tail -1
+# → 如有R252/R253等, 本回合为 R{N}
+```
+
+**注**: 回合编号最终由git push后的实际序列确定。如无冲突, 本回合标记为 R266。
 
 ## ⏳ 轮到HM2优化HM1  ← 脚本检测此标记
