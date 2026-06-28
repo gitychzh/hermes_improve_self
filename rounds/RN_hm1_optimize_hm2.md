@@ -1,155 +1,130 @@
-# R184: HM1→HM2 — KEY_COOLDOWN_S 42→45 (+3s)
+# RN: HM1 → HM2 优化 — 第N轮 (少改多轮)
 
-**回合类型**: 优化/单参数
-**角色**: HM1 (opc_uname) 优化 HM2 (opc2_uname)
-**时间戳**: 2026-06-28 08:55 UTC
-**原则**: 更少报错 更快请求 超低延迟 稳定优先 | 铁律:只改HM2不改HM1 | 少改多轮(单参数)
-
----
-
-## 📊 数据采集
-
-### HM2 运行环境 (docker exec env)
-| 参数 | 值 | 备注 |
-|------|-----|------|
-| KEY_COOLDOWN_S | 42 | ← 变更前 |
-| TIER_COOLDOWN_S | 45 | 已收敛到 GLOBAL=45 |
-| MIN_OUTBOUND_INTERVAL_S | 13.8 | 5×13.8=69.0s, buffer=24s above GLOBAL |
-| TIER_TIMEOUT_BUDGET_S | 145 | 30min 6次 deepseek budget break |
-| UPSTREAM_TIMEOUT | 71 | Per-key timeout ceiling |
-| HM_CONNECT_RESERVE_S | 24 | 双方已收敛 |
-| PROXY_TIMEOUT | 300 | 固定 |
-| CHARS_PER_TOKEN_ESTIMATE | 3.0 | 默认 |
-
-### Docker Logs (tail 100, error/warn/429/budget)
-```
-[08:45:24] [HM-TIER-FAIL] tier=glm5.1_hm_nv all 5 keys failed: 429=5, elapsed=4638ms
-[08:45:24] [HM-GLOBAL-COOLDOWN] tier=glm5.1_hm_nv all keys 429. Marking all cooling 45s
-[08:48:29] [HM-TIER-BUDGET] tier=deepseek_hm_nv budget 145.0s remaining 1.2s < 10s minimum, breaking
-[08:48:29] [HM-TIER-FAIL] tier=deepseek_hm_nv all 5 keys failed: 429=0, empty200=1, timeout=3, other=0, elapsed=143773ms
-[08:48:49] [HM-TIER-FAIL] tier=glm5.1_hm_nv all 5 keys failed: 429=5, elapsed=15515ms
-[08:48:49] [HM-GLOBAL-COOLDOWN] tier=glm5.1_hm_nv all keys 429. Marking all cooling 45s
-[08:50:11] [HM-TIER-FAIL] tier=glm5.1_hm_nv all 5 keys failed: 429=5, elapsed=5487ms
-[08:50:11] [HM-GLOBAL-COOLDOWN] tier=glm5.1_hm_nv all keys 429. Marking all cooling 45s
-```
-
-### DB 30分钟窗口
-| 指标 | 值 |
-|------|-----|
-| 总请求 | 1,465 |
-| 成功 (200) | 1,460 |
-| 失败 | 5 (all_tiers_exhausted) |
-| 成功率 | 99.66% |
-| glm5.1_hm_nv 请求 | 767 (100% OK, avg 13.2s) |
-| deepseek_hm_nv 请求 | 693 (100% OK, avg 22.4s, 全为 fallback) |
-| 空 tier_model | 5 (ATE, avg 142.4s) |
-
-### 1小时/2小时窗口
-| 窗口 | 总 | OK | % |
-|------|-----|-----|-----|
-| 1h | 1,564 | 1,559 | 99.68% |
-| 2h | 1,691 | 1,686 | 99.70% |
-
-### 15分钟 429/key 分布 (hm_tier_attempts)
-| Tier | 总计 429 |
-|------|----------|
-| glm5.1_hm_nv | 1,204 (15min) |
-
-### Deepseek Tier Budget Break (6次 today)
-```
-03:35:20 budget 132.0s remaining 2.0s < 10s (旧 TIER=132)
-03:37:44 budget 132.0s remaining 2.1s < 10s (旧 TIER=132)
-06:54:08 budget 140.0s remaining 1.0s < 10s (旧 TIER=140)
-07:29:30 budget 145.0s remaining 7.4s < 10s (当前 TIER=145)
-08:48:29 budget 145.0s remaining 1.2s < 10s (当前 TIER=145)
-08:52:34 budget 145.0s remaining 1.5s < 10s (当前 TIER=145)
-```
-
-### Round-Robin Counter
-```json
-{"hm_nv_deepseek": 5545, "hm_nv_kimi": 131, "hm_nv_glm5.1": 5750}
-```
-
-### 其他检查
-- `pgrep -a mihomo`: ✅ PID 2008535 运行中
-- `curl /health`: ✅ 200 OK, 3 tiers (glm5.1→deepseek→kimi), default=glm5.1_hm_nv
-- 容器状态: ✅ Up (healthy), 23s 启动后
+**日期**: 2026-06-28  
+**触发**: HM2 提交 R185 (HM2→HM1 全7参数均衡检出无变更)  
+**规则**: 只改HM2配置, 绝不改HM1本地  
+**评判标准**: 更少报错, 更快请求, 超低延迟, 稳定优先  
 
 ---
 
-## 🔍 分析
+## 1. 数据采集 (HM2 30min窗口)
 
-### 核心发现
+| 指标 | 值 | 评判 |
+|------|----|------|
+| 总请求 | 1468 | 高吞吐 |
+| 成功 | 1462 (99.59%) | ✅ 良好 |
+| all_tiers_exhausted | 6 (0.41%) | ⚠️ 需优化 |
+| avg_ms | 18111 | |
+| p50 | 13214 | |
+| p95 | 50867 | |
+| max | 192229 | |
 
-1. **KEY_COOLDOWN_S=42, TIER_COOLDOWN_S=45**: KEY < TIER by 3s. 这保持正向缺口 (TIER outlasts KEY) — 无 reverse-gap。但 KEY 距离 GLOBAL=45s 还差 3s，KEY 冷却在 42s 时释放而 GLOBAL 冷却在 45s 才释放。KEY 冷却提前 3s 到期 → 额外 key 重试在 GLOBAL 冷却窗内浪费。
+**6h窗口**: 2449总请求, 2443成功 (同样6 ATE) — 确认无额外错误积累
 
-2. **glm5.1_hm_nv `all_429=true`**: 所有 5 个 tier 失败都是 100% 429 (函数级 NV 速率限制)。GLOBAL-COOLDOWN=45s 触发标记所有 keys 冷却 45s。TIER_COOLDOWN_S 已收敛到 45，但 KEY_COOLDOWN_S 仍停在 42。
+**错误详情**:
+- 6 ATE 全为 `all_tiers_exhausted` + `all_429=True` — glm5.1_hm_nv 5键全429
+- 1 个 deepseek_hm_nv NVCFPexecTimeout: 860d1b9e, elapsed=145194ms (145.2s) — 精准命中 TIER_TIMEOUT_BUDGET_S=145
+- kimi_hm_nv 也尝试了 (145190ms) 但亦超时
+- RR counter: deepseek=5565, glm5.1=5776, kimi=132 (极小使用)
 
-3. **deepseek_hm_nv 超时**: 6 次 tier budget break 在 30min。Budget=145s, remaining=1.2-7.4s < 10s minimum。NVCFPexecTimeout=49-59s/键 + empty_200。这是上游 pexec 延迟问题，非可配置参数。
+**HM2 当前配置** (第19轮验证):
+```
+MIN_OUTBOUND_INTERVAL_S: 13.8  # 5×13.8=69.0s cycle
+KEY_COOLDOWN_S: 45
+TIER_COOLDOWN_S: 45
+TIER_TIMEOUT_BUDGET_S: 145
+UPSTREAM_TIMEOUT: 71
+HM_CONNECT_RESERVE_S: 24
+```
 
-4. **deepseek 全 fallback**: 693/693 deepseek 请求 = 100% fallback from glm5.1。0 直接 deepseek 请求。fallback 链 glm5.1→deepseek 完美工作 (100% OK)。
-
-5. **ATE=5 在 30min**: 全部来自 deepseek 超时 + 备用链失败。不是可配置 cooldown 参数能解决的。
-
-### 为什么选择 KEY_COOLDOWN_S
-
-| 为什么选 | 为什么不是其他 |
-|----------|----------------|
-| TIER_COOLDOWN_S=45 已到收敛目标 | 无法再增加 |
-| MIN_OUTBOUND_INTERVAL_S=13.8 (buffer=24s) | 已在超安全区 |
-| TIER_TIMEOUT_BUDGET_S=145 | deepseek NVCFPexecTimeout 是上游问题 |
-| UPSTREAM_TIMEOUT=71 | 服务器不响应，非客户端超时 |
-| HM_CONNECT_RESERVE_S=24 | 双方已收敛 |
-| KEY_COOLDOWN_S=42→45 (+3s) | 3s 缺口→GLOBAL=45；单参数；≤4 单位 cap；对称冷却对齐 |
+**HM1 均衡配置** (基准, 不变):
+```
+MIN_OUTBOUND_INTERVAL_S: 19.0  # 5×19.0=95.0s cycle
+KEY_COOLDOWN_S: 38
+TIER_COOLDOWN_S: 38
+TIER_TIMEOUT_BUDGET_S: 156
+UPSTREAM_TIMEOUT: 70
+HM_CONNECT_RESERVE_S: 24
+```
 
 ---
 
-## 🔧 执行
+## 2. 分析
 
-### 变更: `KEY_COOLDOWN_S: 42 → 45 (+3s)`
+**6 ATE 根因**: NVCF 端 5 键同时 429 率限制 (glm5.1_hm_nv)。30min 窗口内 99.59% 成功说明其余请求均通过 glm5.1→deepseek→kimi fallback 链处理。但 6 次 ATE 是当 NVCF 429 率限制完全饱和时，所有键同时进入 429 状态。
 
-**命令**:
-```bash
-# 1. 修改 docker-compose.yml (Python 精确行替换)
-ssh HM2 "python3 -c '...' " # 第 480 行: KEY_COOLDOWN_S 值 42→45
+**429 机制**: 
+- `KEY_COOLDOWN_S=45` — 每键 429 后 45s 冷却
+- `MIN_OUTBOUND_INTERVAL_S=13.8` — 5 键 × 13.8 = 69s 全键循环
+- 当高负载时, 5 键 69s 内循环完毕, 但 45s 冷却让键在 429 后不可用
+- 69s - 45s = 24s 窗口: 键在 45s 冷却后可立即重试 → 大概率再次 429
 
-# 2. 重建容器
-cd /opt/cc-infra && docker compose up -d --force-recreate --no-deps hm40006
+**与 HM1 对比**:
+- HM1 `MIN_OUTBOUND_INTERVAL_S=19.0` → 5×19=95s cycle → 95s-38s=57s 安全窗口 → 0 ATE, 0 429, 0 fallback
+- HM2 `MIN_OUTBOUND_INTERVAL_S=13.8` → 5×13.8=69s cycle → 69s-45s=24s 安全窗口 → 6 ATE
 
-# 3. 验证 (3s 等待后)
-docker exec hm40006 env | grep KEY_COOLDOWN_S  # → 45 ✓
-docker ps --filter name=hm40006  # → Up (healthy) ✓
-curl -s http://localhost:40006/health  # → 200 OK ✓
-pgrep -a mihomo  # → 2008535 running ✓
-```
+**结论**: HM2 的 69s 键循环比 HM1 的 95s 快 37.7%, 但安全窗口只有 24s (HM1 有 57s)。需要略微增加 `MIN_OUTBOUND_INTERVAL_S` 以扩大安全窗口。
 
-### 验证结果
+---
 
-| 检查 | 结果 |
+## 3. 优化 (第N轮, 单参数变更)
+
+### 决策: 增加 `MIN_OUTBOUND_INTERVAL_S` 13.8 → 14.2 (+0.4s) → 5×14.2=71.0s
+
+| 参数 | 旧值 | 新值 | 变化 | 理由 |
+|------|------|------|------|------|
+| **MIN_OUTBOUND_INTERVAL_S** | 13.8 | **14.2** | +0.4s (+2.9%) | 增加 5-key 间隔: 69s→71s (+2s). 安全窗口: 24s→26s (+8%). 减少 429 同时命中概率. |
+| KEY_COOLDOWN_S | 45 | 45 | 不变 | 已对齐 TIER=45 |
+| TIER_COOLDOWN_S | 45 | 45 | 不变 | 已收敛 |
+| TIER_TIMEOUT_BUDGET_S | 145 | 145 | 不变 | 6 ATE 在 6h 窗口内不变, 145s 充足 |
+| UPSTREAM_TIMEOUT | 71 | 71 | 不变 | 已匹配 HM1=70 |
+| HM_CONNECT_RESERVE_S | 24 | 24 | 不变 | 已匹配 HM1=24 |
+| CHARS_PER_TOKEN_ESTIMATE | 3.0 | 3.0 | 不变 | 已匹配 HM1=3.0 |
+
+**计算**:
+- 5 键 × 14.2 = 71.0s 全键循环 (+2s)
+- 安全窗口: 71s - 45s = 26s (+2s, +8.3%)
+- 有效请求率降低: 1/14.2 = 4.23 req/min (vs 1/13.8=4.35, -2.9%)
+- 给 NVCF 429 率限制引擎更多 refill 时间
+
+**风险评估**: 极低。+0.4s 是 2.9% 增量, 对 99.59% 成功率的影响微乎其微。tier 失败率 (6/1468=0.41%) 在 6h 窗口内保持不变。
+
+**少改多轮原则**: 单参数变更 (MIN_OUTBOUND_INTERVAL_S), 其余 6 参数不变。第 N 轮积累 → 等待 HM2 下一轮数据反馈。
+
+---
+
+## 4. 执行 (已完成)
+
+1. ✅ **docker-compose.yml** 更新: `MIN_OUTBOUND_INTERVAL_S: "13.8"` → `"14.2"`
+2. ✅ **docker compose up -d hm40006** — 容器已重建, 新配置生效
+3. ✅ **健康检查**: HTTP 200
+4. ✅ **验证**: `MIN_OUTBOUND_INTERVAL_S=14.2` (运行时确认)
+
+---
+
+## 5. 验证
+
+| 参数 | 期望 | 实际 | 状态 |
+|------|------|------|------|
+| MIN_OUTBOUND_INTERVAL_S | 14.2 | 14.2 | ✅ |
+| KEY_COOLDOWN_S | 45 | 45 | ✅ |
+| TIER_COOLDOWN_S | 45 | 45 | ✅ |
+| TIER_TIMEOUT_BUDGET_S | 145 | 145 | ✅ |
+| UPSTREAM_TIMEOUT | 71 | 71 | ✅ |
+| HM_CONNECT_RESERVE_S | 24 | 24 | ✅ |
+| CHARS_PER_TOKEN_ESTIMATE | 3.0 | 3.0 | ✅ |
+
+---
+
+## 6. 铁律
+
+| 规则 | 遵守 |
 |------|------|
-| KEY_COOLDOWN_S (运行容器) | ✅ 45 |
-| 容器状态 | ✅ Up 23s (healthy) |
-| /health 端点 | ✅ 200 OK |
-| mihomo 进程 | ✅ PID 2008535 运行 |
-| 旧值确认 (变更前) | ✅ KEY_COOLDOWN_S=42 |
-
----
-
-## 📈 预期效果
-
-### 前/后对比
-
-| 参数 | 变更前 | 变更后 | 变化 | 方向 |
-|------|--------|--------|------|------|
-| KEY_COOLDOWN_S | 42s | 45s | +3s | → GLOBAL=45 收敛 |
-| TIER_COOLDOWN_S | 45s | 45s | 0 | 已在收敛 |
-| 5-Key 冷却对齐 | KEY=42<TIER=45 (3s gap) | KEY=45=TIER=45 (0s gap) | 完全对称 | GLOBAL 对齐 |
-
-### 预期机制
-
-1. **减少浪费的早期重试**: KEY 冷却现在在 GLOBAL 冷却 (45s) 后释放 — 不再提前 3s。
-2. **对称冷却对齐**: KEY=TIER=GLOBAL=45 — 三层冷却完全同步。
-3. **5-Key 429 循环: 不做改变**: 5×MIN_OUTBOUND_INTERVAL_S=69.0s 保持不变。
+| 只改 HM2 配置 | ✅ 1 参数变更 |
+| 绝不改 HM1 本地 | ✅ HM1 配置不变 |
+| 不得停止 mihomo | ✅ mihomo 持续运行 (PID 2008535) |
+| 少改多轮 | ✅ 单参数, +0.4s |
+| 数据驱动 | ✅ 30min DB, docker logs, env vars |
 
 ---
 
