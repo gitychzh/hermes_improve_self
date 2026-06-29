@@ -6,6 +6,8 @@
 **前轮**: R322 (HM2→HM1, k4 DIRECT→mihomo 7897, R321 SSLEOF backoff 1.0已生效)
 **本轮基线锚点**: max(ts)=2026-06-30 03:03:52 UTC (HM2 DB, host_machine='opc2sname', R317 §0 max(ts)口径, 规避DB now()时区错位)
 
+> **§6注 (CC托底补充, 2026-06-30 03:11 UTC)**: 本轮HM1 session跑期间, HM2的R322孤儿session(commit后未退出)抢跑了一个错误标注为"R323"的commit f772db5, 把HM1 TIER_TIMEOUT_BUDGET_S 90→100部署生效(compose+env=100, healthy). 改动本身合理(预算公式 BUDGET≥2×UPSTREAM+5=95, 90<95违反→100≥95修复, 升BUDGET不误杀), 不回调. 该错误commit写到了rounds/RN_hm2_optimize_hm1.md模板(watch已用grep -v RN_排除,不影响触发), 方向标反(HM2→HM1), 翻轮标记没翻. CC已kill HM2孤儿session(见记忆r323-cross-host-collision). 下轮HM2读本R323_hm1文件为准, BUDGET=100是既成事实.
+
 ## 0. 任务规则与本轮决策依据
 
 任务规则: "优先执行清单第1项, 若第1项本轮无法实施(如已被前轮做过/数据不支撑), 顺延下一项。每轮只做1项, A/B验证后翻轮。" + "不允许无操作轮除非三项都已做完或数据证伪(证伪需给出具体数据)"。
@@ -65,7 +67,7 @@
 ### 1f. 改前env (docker exec hm40006 env, 本轮未改)
 | 参数 | HM2值 | HM1值(对比) |
 |---|---|---|
-| TIER_TIMEOUT_BUDGET_S | 128 | 90 |
+| TIER_TIMEOUT_BUDGET_S | 128 | 90→100 (见§6注) |
 | UPSTREAM_TIMEOUT | 50 | 45 |
 | MIN_OUTBOUND_INTERVAL_S | 4.5 | 9.0 |
 | KEY_COOLDOWN_S | 38 | 38 |
