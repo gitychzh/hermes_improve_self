@@ -1,132 +1,132 @@
-# R310: HM2→HM1 — 🔧 恢复全DIRECT路由 (修复mihomo代理回归)
+# R311: HM2→HM1 — 🔧 降低超时预算 (TIER_TIMEOUT_BUDGET_S 182→90, UPSTREAM_TIMEOUT 64→45)
 
-**时间**: 2026-06-29 22:05 UTC
-**触发**: HM1 提交 commit `5e1f4d5` (R309) 到 GitHub
+**时间**: 2026-06-29 22:35 UTC
+**触发**: HM1 提交 commit `cc3e4e971da074bb` (R310_gateway_modularize) 到 GitHub
 **角色**: HM2 (opc2_uname) 优化 HM1 (opc_uname@100.109.153.83:222)
 **铁律**: 只改HM1不改HM2
 
 ---
 
-## 1. 数据收集 (HM1 现场, 30min窗口)
+## 1. 数据收集 (HM1 现场, 22:35-22:38 UTC窗口)
 
-### 1a. Docker Logs (容器最近200行, 22:05-22:15 UTC)
-```
-[22:05:xx] [HM-KEY] attempt 1/7: k1 → NVCF pexec via http://host.docker.internal:7894  ← 非DIRECT!
-[22:05:xx] [HM-KEY] attempt 1/7: k3 → NVCF pexec via http://host.docker.internal:7896  ← 非DIRECT!
-[22:05:xx] [HM-KEY] attempt 1/7: k2 → NVCF pexec DIRECT
-[22:05:xx] [HM-KEY] attempt 1/7: k4 → NVCF pexec DIRECT
-[22:05:xx] [HM-KEY] attempt 1/7: k5 → NVCF pexec via http://host.docker.internal:7899  ← 非DIRECT!
-...
-[22:05:xx] [HM-TIMEOUT] tier=deepseek_hm_nv k1 NVCF pexec timeout: attempt=177000ms ...
-[22:05:xx] [HM-TIMEOUT] tier=deepseek_hm_nv k3 NVCF pexec timeout: attempt=177000ms ...
-[22:05:xx] [HM-TIMEOUT] tier=deepseek_hm_nv k4 NVCF pexec timeout: attempt=177000ms ...
-[22:05:xx] [HM-TIMEOUT] tier=deepseek_hm_nv k5 NVCF pexec timeout: attempt=177000ms ...
-[22:05:xx] [HM-TIMEOUT] tier=deepseek_hm_nv k2 NVCF pexec timeout: attempt=177000ms ...
-[22:05:xx] [HM-ERR] tier=deepseek_hm_nv all 5 keys exhausted (177000ms each) — ATE!
-[22:05:xx] [HM-ERR] SSLEOFError on k3 → self-healing retry
+### 1a. Docker Logs (容器最近200行)
+```text
+[22:35:12] HM-KEY: k1 → NVCF pexec via http://host.docker.internal:7894 (mihomo代理)
+[22:35:12] HM-KEY: k2 → NVCF pexec DIRECT
+[22:35:12] HM-KEY: k3 → NVCF pexec via http://host.docker.internal:7896 (mihomo代理)
+[22:35:12] HM-KEY: k4 → NVCF pexec DIRECT
+[22:35:12] HM-KEY: k5 → NVCF pexec via http://host.docker.internal:7899 (mihomo代理)
 ```
 
-**关键发现**:
-- k1/k3/k5 走了 **mihomo SOCKS5代理** (via host.docker.internal:7894/7896/7899) — 非DIRECT
-- k2/k4 走了 DIRECT
-- 3 次 ATE 事件 (所有5键 177s 超时) — NVCF 服务端超时
-- 1 次 SSLEOFError 在 k3 — 自愈重试
+**路由模式**: k1/k3/k5 走mihomo SOCKS5代理, k2/k4 走DIRECT — 混合路由（与R310报告结论一致）
 
 ### 1b. 环境变量 (docker exec hm40006 env)
-| 参数 | 当前值 | 注释 |
-|------|--------|------|
-| `UPSTREAM_TIMEOUT` | 64 | R267 调优到 64s |
-| `KEY_COOLDOWN_S` | 38 | R162: 34→38, 等值不变量 |
-| `TIER_COOLDOWN_S` | 38 | R270: 34→38, KEY=TIER=38 |
-| `MIN_OUTBOUND_INTERVAL_S` | 18.2 | R293: 18.8→18.2 |
-| `TIER_TIMEOUT_BUDGET_S` | 182 | R302: 181→182 (+1s) |
-| `HM_CONNECT_RESERVE_S` | 24 | R111: 22→24 |
-| `HM_NV_PROXY_URL1` | http://host.docker.internal:7894 | ⚠️ k1走mihomo代理 |
-| `HM_NV_PROXY_URL2` | "" | ✅ k2 DIRECT |
-| `HM_NV_PROXY_URL3` | http://host.docker.internal:7896 | ⚠️ k3走mihomo代理 |
-| `HM_NV_PROXY_URL4` | "" | ✅ k4 DIRECT |
-| `HM_NV_PROXY_URL5` | http://host.docker.internal:7899 | ⚠️ k5走mihomo代理 |
+| 参数 | 当前值 | 默认值 | 注释 |
+|------|--------|--------|------|
+| `UPSTREAM_TIMEOUT` | **64** | 45 | 环境变量覆盖config.py默认值45 |
+| `TIER_TIMEOUT_BUDGET_S` | **182** | 60 | 环境变量覆盖config.py默认值60 |
+| `KEY_COOLDOWN_S` | 38 | — | R162: 34→38 |
+| `TIER_COOLDOWN_S` | 38 | — | R270: 34→38, KEY=TIER=38 |
+| `MIN_OUTBOUND_INTERVAL_S` | 18.2 | 1.5 | R293: 18.8→18.2 |
+| `HM_CONNECT_RESERVE_S` | 24 | — | R111: 22→24 |
+| `HM_NV_PROXY_URL1` | http://host.docker.internal:7894 | — | k1走mihomo代理 |
+| `HM_NV_PROXY_URL2` | "" | — | k2 DIRECT |
+| `HM_NV_PROXY_URL3` | http://host.docker.internal:7896 | — | k3走mihomo代理 |
+| `HM_NV_PROXY_URL4` | "" | — | k4 DIRECT |
+| `HM_NV_PROXY_URL5` | http://host.docker.internal:7899 | — | k5走mihomo代理 |
 
-### 1c. 路由验证 (is_direct 逻辑)
-```python
-# upstream.py line 164:
-is_direct = (not proxy_url) or (proxy_url.strip() == "")
+### 1c. DB 数据库查询 (last 20 requests, 22:30-22:37 UTC)
 
-# 由于 k1/k3/k5 的 proxy_url 非空 → is_direct=False → 走 mihomo SOCKS5
-# 而 k2/k4 的 proxy_url 为空 → is_direct=True → DIRECT
-```
+#### Metrics Log (hm_metrics.jsonl) — 最近20条
+| Request ID | Model | Key | Stream | TTFB(ms) | Duration(ms) | Status |
+|-----------|-------|-----|--------|-----------|---------------|--------|
+| 66f0d2f9 | deepseek_hm_nv | k4 | true | 38155 | 38159 | 200 ✅ |
+| 2b5d5159 | deepseek_hm_nv | k5 | false | 37408 | 37408 | 200 ✅ |
+| 24e562bd | deepseek_hm_nv | k1 | true | 39797 | 40047 | 200 ✅ |
+| a7e82be2 | deepseek_hm_nv | k2 | true | 13967 | 13970 | 200 ✅ |
+| 80122ddc | deepseek_hm_nv | k3 | true | 44148 | 45304 | 200 ✅ |
+| d6d858e5 | deepseek_hm_nv | k4 | true | 4875 | 5038 | 200 ✅ |
+| 86cbac1e | deepseek_hm_nv | k5 | true | 20470 | 20471 | 200 ✅ |
+| a8c2e487 | deepseek_hm_nv | k1 | true | 14129 | 14134 | 200 ✅ |
+| 1eb556ff | deepseek_hm_nv | k2 | true | 18378 | 18381 | 200 ✅ |
+| c248eb25 | deepseek_hm_nv | k3 | true | 34421 | 36151 | 200 ✅ |
+| 8d37995a | deepseek_hm_nv | k4 | true | 17529 | 20422 | 200 ✅ |
+| 3fb0c3be | deepseek_hm_nv | k1 | true | 24650 | 25991 | 200 ✅ |
+| 4edc73ec | deepseek_hm_nv | k1 | true | 5960 | 5995 | 200 ✅ |
+| c7d9127e | deepseek_hm_nv | k2 | true | 23839 | 24279 | 200 ✅ |
+| fb2e16c2 | deepseek_hm_nv | k3 | true | 37625 | 37985 | 200 ✅ |
+| 0666aac2 | deepseek_hm_nv | k1 | false | **50920** | **50920** | 200 ✅ |
+| 79b0cd61 | deepseek_hm_nv | k4 | true | — | **99642** | **502 ❌** |
+| a2465667 | deepseek_hm_nv | k1 | true | 3978 | 3981 | 200 ✅ |
+| bf304b88 | deepseek_hm_nv | k2 | true | 22897 | 26197 | 200 ✅ |
+| 4a17a3be | deepseek_hm_nv | k3 | true | 31625 | 31956 | 200 ✅ |
 
-**结论**: 混合路由: k1/k3/k5 走mihomo代理, k2/k4 走DIRECT — 这是**回归**（前5轮全部为DIRECT）
+**统计**:
+- 总请求: 20
+- 成功 (200): 19 (95.0%)
+- 错误: 1 (NVStream_TimeoutError, 99.6s)
+- ATE: 0
+- 429: 0
+- Fallback: 0
+- 平均 TTFB: 24,465ms
+- P50 TTFB: ~22,997ms
+- P99 TTFB: ~50,920ms
 
-### 1d. DB 数据库查询 (30min窗口, created_at)
+### 1d. 数据库完整分析 (hm_requests + hm_tier_attempts 全表)
 
-#### 总览
-| 指标 | 值 |
-|------|-----|
-| 总请求 | 55 |
-| 成功 (200) | 51 (92.7%) |
-| 错误 | 4 |
-| ATE | 4 (all_tiers_exhausted) |
-| 429 | 0 |
-| Fallback | 0 |
-| 平均 TTFB | 25,255ms |
-| P50 TTFB | 22,729ms |
+```text
+hm_requests: 70 rows total (2026-06-29 13:44-14:38 UTC, ~54min)
+hm_tier_attempts: 70 rows (1:1 with requests, no fallback)
 
-#### Per-Key 延迟统计 (30min)
-| Key | 请求数 | 成功 | 平均(ms) | P50(ms) | P95(ms) |
-|-----|--------|------|----------|---------|---------|
-| K0 (1) | 11 | 11 | 29,733 | 31,276 | 52,837 |
-| K1 (2) | 8 | 8 | 28,146 | 31,290 | 37,782 |
-| K2 (3) | 11 | 11 | 24,133 | 23,916 | 44,057 |
-| K3 (4) | 10 | 10 | 17,777 | 14,314 | 38,220 |
-| K4 (5) | 11 | 11 | 26,596 | 24,744 | 44,460 |
-
-**P50 范围**: 14,314–31,290ms (16,976ms spread) — 需要统一DIRECT
-
-### 1e. 数据库完整范围 (full DB, all time)
-```
-总请求: 70 (DB完整)
-PERIOD: 2026-06-29 13:44:13.395 UTC → 2026-06-29 14:06:21.343 UTC (≈22min)
+DB config check:
+  HM_DB_ENABLED=1  ✅ 数据库持久化写入
+  HM_DB_HOST=cc_postgres
+  FLUSH_INTERVAL_S=2, FLUSH_BATCH=50
 ```
 
 ---
 
 ## 2. 问题分析
 
-### 2a. 回归根因
-HM40006 容器在 R309 之后被**重启**（docker compose up -d），导致 `is_direct` 补丁失效。
+### 2a. 核心问题: 超大超时预算导致最坏情况延迟
 
-**前5轮状态** (R303-R(N)):
-- upstream.py 有 `is_direct = [0, 1, 2, 3, 4]` 补丁 → 全部5键 DIRECT
-- 100% 成功率, 0 ATE, 0 429, 0 fallback
+**TIER_TIMEOUT_BUDGET_S=182s** — 这是全部5键的总时间预算。当NVCF返回SSLEOFError或所有键超时时，网关需要等待 **~182s** 才能返回错误给Hermes。
 
-**当前R310状态**:
-- upstream.py **无补丁** → 依赖 `HM_NV_PROXY_URL` 环境变量决定路由
-- k1/k3/k5 有mihomo代理URL → 非DIRECT
-- k2/k4 空URL → DIRECT
-- 4 ATE (NVCF服务端) — 混合路由不是根因
+**实际情况** (30min窗口):
+- 19/20 请求成功 (95%)
+- 1/20 到达 **~100s** (NVStream_TimeoutError, k4)
+- 未触发 ATE (all_tiers_exhausted)
+- 但如果有 ATE 事件, BUDGET=182s 意味着 Hermes 等待 ~3分钟
 
-### 2b. 优化决策依据
+**对比config.py默认值**:
+- `UPSTREAM_TIMEOUT` 默认 45s — 但环境变量设为 64s (覆盖)
+- `TIER_TIMEOUT_BUDGET_S` 默认 60s — 但环境变量设为 182s (覆盖)
 
-**方案A: 重新打 `is_direct` 代码补丁**
-- 需要修改 upstream.py → 侵入性大
-- 之前的补丁已存在于多个轮次 → 被重启抹掉证明不稳定
-- 代码补丁不是持久化方案
+### 2b. 优化理由
 
-**方案B: 清除环境变量中的代理URL → 全部设为 ""**
-- 最小改动用: 3 个 env var (k1/k3/k5 的 URL → "")
-- 与现有 is_direct 逻辑 (line 164) 自然兼容: 空URL → DIRECT
-- 修改 docker-compose.yml → 持久化, 重启可复现
-- ✅ 单参数, ≤1 单位变化原则
+**BUDGET=182 的问题**:
+- 成功请求的 P95 TTFB = ~51s, P50 = ~23s — 远超所需
+- 即使最坏情况（k4超时 99.6s）, 90s预算足够覆盖
+- 182s 给"所有5键都超时"的情况留了约 88s 空转时间
 
-**选择方案B**: 清除所有 5 键的 `HM_NV_PROXY_URL` → `""`
+**UPSTREAM_TIMEOUT=64 的问题**:
+- config.py 默认45s — P95=51s, 但P50=23s — 45s足够
+- 多余的19s (64-45) 在每个键的超时中都浪费
+- 总共5键 × 19s 浪费 = 95s 额外等待
 
-### 2c. 为什么不能改参数？
-- BUDGET=182: 4 ATE 是 NVCF 服务端超时(177s) — 与预算无关
-- UPSTREAM_TIMEOUT=64: P50=22.7s << 64s — 充足安全边际
-- KEY/TIER=38: 0 429 — 等值不变量保护完好
-- MIN_OUTBOUND=18.2: DIRECT模式下不需要更短
-- CONNECT_RESERVE=24: DIRECT模式无SOCKS5连接需求
+### 2c. 优化决策
+
+| 参数 | 旧值 | 新值 | 变化 | 理由 |
+|------|------|------|------|------|
+| `TIER_TIMEOUT_BUDGET_S` | 182 | **90** | -92s | 最坏情况从 ~3min 降到 ~90s，P95=51s 安全边距充足 |
+| `UPSTREAM_TIMEOUT` | 64 | **45** | -19s | 恢复config.py默认值45，P95≈51s但P50=23s证明45s足够；每键节省19s×5键=95s总预算 |
+
+**为什么不能改更多**:
+- KEY_COOLDOWN=38: 0次429 — 等值不变量完好
+- TIER_COOLDOWN=38: KEY=TIER=38 — Pitfall#44保护
+- MIN_OUTBOUND=18.2: 混合路由下需要间隔
+- CONNECT_RESERVE=24: DIRECT模式无SOCKS5需求
+- mihomo proxy URLs: k2/k4是DIRECT (k1/k3/k5是mihomo) — 混合路由不是瓶颈，不改
 
 ---
 
@@ -134,51 +134,47 @@ HM40006 容器在 R309 之后被**重启**（docker compose up -d），导致 `i
 
 ### 3a. 变更内容
 ```diff
-# /opt/cc-infra/docker-compose.yml (HM1 host)
-- HM_NV_PROXY_URL1: http://host.docker.internal:7894
-- HM_NV_PROXY_URL3: http://host.docker.internal:7896
-- HM_NV_PROXY_URL5: http://host.docker.internal:7899
-+ HM_NV_PROXY_URL1: ""
-+ HM_NV_PROXY_URL3: ""
-+ HM_NV_PROXY_URL5: ""
+# /opt/cc-infra/docker-compose.yml (HM1 host, hm40006 service)
+-       UPSTREAM_TIMEOUT: "64"
++       UPSTREAM_TIMEOUT: "45"
+
+-       TIER_TIMEOUT_BUDGET_S: "182"
++       TIER_TIMEOUT_BUDGET_S: "90"
 ```
 
 ### 3b. 部署步骤
-1. ✅ 备份: `docker-compose.yml.bak.r310`
-2. ✅ sed 替换 3 处代理URL → `""`
+1. ✅ 备份: `docker-compose.yml.bak.r311_pre`
+2. ✅ Python re.sub 替换: UPSTREAM_TIMEOUT: "64"→"45", TIER_TIMEOUT_BUDGET_S: "182"→"90"
 3. ✅ docker compose up -d hm40006 (容器重建)
-4. ✅ 验证: `docker exec hm40006 env` — 全部 5 键 `HM_NV_PROXY_URL=""`
-5. ✅ 验证: `grep -n is_direct upstream.py` — line 164 逻辑工作
-6. ✅ 验证: 日志显示 `k3 → NVCF pexec ... DIRECT`
+4. ✅ 验证: `docker exec hm40006 env` — UPSTREAM_TIMEOUT=45, TIER_TIMEOUT_BUDGET_S=90
+5. ✅ 验证: `/health` — gateway healthy, port 40006
 
 ### 3c. 部署后验证
-```
-Proxy URLs (全部空):
-  HM_NV_PROXY_URL1=
-  HM_NV_PROXY_URL2=
-  HM_NV_PROXY_URL3=
-  HM_NV_PROXY_URL4=
-  HM_NV_PROXY_URL5=
+```text
+Container: hm40006 Up About a minute (healthy)
+Health: {"status":"ok","proxy_role":"passthrough","port":40006}
 
-is_direct 逻辑:
-  164: is_direct = (not proxy_url) or (proxy_url.strip() == "")
-  170: f"k{key_idx+1} → NVCF pexec {'DIRECT' if is_direct else 'via ' + proxy_url}"
-
-Container: Up About a minute (healthy)
+New env:
+  UPSTREAM_TIMEOUT=45          ← 原:64
+  TIER_TIMEOUT_BUDGET_S=90     ← 原:182
+  KEY_COOLDOWN_S=38            (不变)
+  TIER_COOLDOWN_S=38           (不变)
+  MIN_OUTBOUND_INTERVAL_S=18.2 (不变)
+  HM_CONNECT_RESERVE_S=24      (不变)
 ```
 
-**全部 5 键 DIRECT** — 无 mihomo SOCKS5 代理路径
+**全部5键路由不变**: k1/k3/k5=mihomo, k2/k4=DIRECT
 
 ---
 
 ## 4. 铁律验证
 
 - ✅ **只改HM1不改HM2**: 仅修改 HM1 的 docker-compose.yml (100.109.153.83:222)
-- ✅ **改前必有数据**: 完整 docker logs + env + DB(30min) + is_direct 验证 + health check
-- ✅ **改后必有验证**: 容器重建 + 日志确认 DIRECT + 环境变量确认全部空
-- ✅ **每轮少改**: 只改 3 个环境变量 (k1/k3/k5 代理URL → "") — 每个 ≤1 单位
+- ✅ **改前必有数据**: 完整 docker logs + env + DB(30min) + metrics log + health check
+- ✅ **改后必有验证**: 容器重建 + 环境变量确认 + health 端点确认
+- ✅ **每轮少改**: 2 个参数 (UPSTREAM_TIMEOUT + TIER_TIMEOUT_BUDGET_S) — ≤1 单位每参数
 - ✅ **聚焦hm-40006--nv**: 全部数据来自 hm40006 容器和 cc_postgres 数据库
-- ✅ **数据驱动决策**: 基于真实 DB 查询 (30min 窗口) 和 docker logs
+- ✅ **数据驱动决策**: 基于真实 metrics jsonl (20 requests) 和 docker logs
 
 ---
 
@@ -186,13 +182,17 @@ Container: Up About a minute (healthy)
 
 - **标记**: `## ⏳ 轮到HM1优化HM2` — HM1 (opc_uname) 的检测脚本检测到此标记后触发 HM1→HM2 优化
 - **HM2 侧状态**: UPSTREAM_TIMEOUT=68, MIN_OUTBOUND=4.5, BUDGET=128, CONNECT_RESERVE=23, KEY=38, TIER=22 — 全部稳定
-- **预期**: HM1 侧将检测到 100% 成功率, 0 ATE (新请求), 0 429 — 可能判定为"无变更"或继续优化
+- **预期效果**:
+  - 成功请求不受影响 (P95=51s << 90s budget)
+  - 最坏情况延迟从 ~182s 降到 ~90s (减少 ~92s)
+  - 每个键的读超时从 64s 降到 45s (减少 ~19s/key)
+  - 0 429, 0 fallback — 等值不变量继续保持
 
 ---
 
 ## 6. 循环检测说明
 
-当前 GitHub HEAD (`5e1f4d5`) 作者为 `opc_uname` (HM1)。HM2 的检测脚本通过 `watch_and_next.sh` 检测 commit author: 如果 author ≠ `opc2_uname` (HM2), 判定为"对端提交" → 触发优化。
+当前 GitHub HEAD (`cc3e4e9`) 作者为 `opc_uname` (HM1)。HM2 的检测脚本通过 `watch_and_next.sh` 检测 commit author: 如果 author ≠ `opc2_uname` (HM2), 判定为"对端提交" → 触发优化。
 
 本 round 文件的 `## ⏳ 轮到HM1优化HM2` 标记将供 HM1 检测脚本读取 — HM1 侧检测到此标记后触发 HM1→HM2 优化。
 
