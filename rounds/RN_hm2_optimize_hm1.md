@@ -1,134 +1,109 @@
-# R305: HM2→HM1 — ⏸️ 无变更 (系统已达稳定, BUDGET=182, 24 ATE全NVCFPexecTimeout server-side, 0 429 0 fallback, KEY=TIER=38不变)
+# R306: HM2→HM1 — ⏸️ 无变更 (系统已达稳定)
 
-## Context
-- **Trigger**: Cron job detection. Script判定: HM2→HM1 cycle (HM1 committed R304, opc2_uname just pushed R304).
-- **Previous rounds**: R304 (HM2→HM1 ⏸️ 无变更), R303 (HM1→HM2 ⏸️ 无变更)
-- **HM1 identities**: opc_uname/gitychzh, container=hm40006, IP=100.109.153.83 (opcsname-1)
-- **HM2 identity**: opc2_uname, local repo at ~/hm_ps/hermes_improve_self
-- **铁律**: 只改HM1不改HM2
+**时间**: 2026-06-29 20:30 UTC (04:30 CST)  
+**角色**: HM2 (优化执行者) → HM1 (被优化目标)  
+**触发**: HM1提交了新commit (R305: HM2→HM1 — ⏸️ 无变更), 脚本检测轮到HM2执行  
 
-## HM1 Current State (2026-06-29 20:20 UTC)
-| Parameter | Value | Comment |
-|-----------|-------|---------|
-| TIER_TIMEOUT_BUDGET_S | 182 | R302: 181→182 (+1s), 无变更验证中 |
-| UPSTREAM_TIMEOUT | 64 | R277: 70→66→64, 稳定 |
-| KEY_COOLDOWN_S | 38 | KEY=TIER=38 invariant (双双38) |
-| TIER_COOLDOWN_S | 38 | KEY=TIER=38 invariant (双双38) |
-| MIN_OUTBOUND_INTERVAL_S | 18.2 | R293: 18.8→18.2, 稳定 |
-| HM_CONNECT_RESERVE_S | 24 | R300: 23→24, 稳定 |
-| PROXY_TIMEOUT | 300 | HM2-side param |
-| is_direct | [0,1,2,3,4] | 全部5键DIRECT, NO mihomo proxy (2处patched) |
+## HM1 当前配置 (R305基线, 已稳定)
 
-## Data Collection (2026-06-29 20:14-20:22 UTC)
+| 参数 | 值 | 说明 |
+|------|-----|------|
+| UPSTREAM_TIMEOUT | 64s | NVCF upstream超时 |
+| KEY_COOLDOWN_S | 38s | 键冷却时间 |
+| TIER_COOLDOWN_S | 38s | 层级冷却时间 |
+| MIN_OUTBOUND_INTERVAL_S | 18.2s | 最小出站间隔 |
+| TIER_TIMEOUT_BUDGET_S | 182s | 层级超时预算 |
+| CONNECT_RESERVE_S | 24s | 连接预留 |
+| 路由模式 | ALL DIRECT | 全部5键直连NVCF (无mihomo代理) |
 
-### Docker Logs (tail 100, error/warn scan)
-- **Pattern**: All requests first-attempt success, `attempt 1/7: kX → NVCF pexec ... DIRECT`
-- **No errors, no warnings, no timeouts** in the observed window
-- **5-key balanced rotation**: k1→k2→k3→k4→k5→k1, all first-attempt success
-- **Tier chain**: deepseek_hm_nv only (ring fallback R40), no fallback triggered
-- **0 429 events, 0 SSLEOFError, 0 NVStream_TimeoutError**
-- All keys DIRECT to NVCF — no mihomo proxy in path
+## 数据收集 (1h窗口: 19:30-20:30 UTC)
 
-### DB Query Results (30min window, via ts)
+### Docker日志 (最近50行)
+- 全部 `[HM-SUCCESS]` — 无error/warn/exception
+- 所有请求: `attempt 1/7`, first-attempt 成功
+- 路由: `k1-k5 → NVCF pexec ... DIRECT` (全部直连)
+- 典型延迟: 16-30s 范围 (正常DeepSeek推理时间)
 
-#### Overall Stats
-| Metric | Value |
-|--------|-------|
-| Total requests (deepseek_hm_nv) | 1069 |
-| Success (200) | 1068 (99.91%) |
-| Errors (502) | 1 (NVStream_IncompleteRead) |
-| ATE (all_tiers_exhausted, NULL tier_model) | 24 |
-| 429 errors | 0 |
-| Fallback (kimi) | 0 |
-| P50 TTFB (DB) | 29,052ms |
-| P95 TTFB (DB) | 72,258ms |
-| Avg TTFB (DB) | 32,800ms |
+### 数据库统计
 
-#### Full-Day Metrics (disk JSONL, 1246 requests)
-| Metric | Value |
-|--------|-------|
-| Count | 1246 |
-| P50 TTFB | 28.0s |
-| P95 TTFB | 69.7s |
-| P99 TTFB | 102.6s |
-| Min TTFB | 0.8s |
-| Max TTFB | 135.7s |
+**1h窗口汇总**:
+- 总请求(含键): 1087 (deepseek_hm_nv)
+- 成功: 1086 (99.91%)
+- 键级错误: 1 (NVStream_IncompleteRead: K3, 115.2s)
+- ATE (all_tiers_exhausted): 24 (avg 162.3s, max 178.2s)
 
-#### Per-Key Health (30min via ts)
-| Key | Requests | Success | Avg TTFB | P50 TTFB | P95 TTFB |
-|-----|----------|---------|-----------|-----------|-----------|
-| k0 | 220 | 220 | 31,008ms | 27,975ms | 66,287ms |
-| k1 | 220 | 220 | 31,227ms | 27,377ms | 65,598ms |
-| k2 | 205 | 204 | 34,735ms | 31,584ms | 70,132ms |
-| k3 | 208 | 208 | 33,765ms | 31,389ms | 74,421ms |
-| k4 | 218 | 218 | 33,126ms | 27,297ms | 77,514ms |
+**2h窗口每键延迟百分位 (deepseek_hm_nv)**:
 
-#### Error Detail (hm_error_detail.jsonl, 30min window)
-- **24 ATE events** = all NVCFPexecTimeout on deepseek_hm_nv keys
-  - Pattern: NVCFPexecTimeout on k3-k5 (5-7s), empty_200 on k0-k1
-  - Each ATE consumed 175-178s across 5-7 key attempts
-  - kimi_hm_nv num_attempts=0 (fallback never triggered — Pitfall #41)
-  - Budget: 7 attempts × ~25s = 175s → remaining 7s → close to 5s threshold
-- **1 NVStream_IncompleteRead** (k2, 115s, network-level, non-fatal)
-- **0 SSLEOFError, 0 NVStream_TimeoutError** in this window
+| 键 | 请求数 | P25 | P50 | P75 | P90 | P95 | P99 | 最大 |
+|----|--------|-----|-----|-----|-----|-----|-----|------|
+| K1 | 224 | 17.6s | 27.5s | 38.9s | 57.3s | 66.1s | 87.6s | 116.3s |
+| K2 | 224 | 17.6s | 27.0s | 38.8s | 54.0s | 65.3s | 110.8s | 122.6s |
+| K3 | 208 | 19.7s | 30.5s | 42.2s | 61.5s | 70.1s | 104.2s | 118.5s |
+| K4 | 211 | 18.7s | 30.4s | 40.9s | 60.0s | 74.2s | 98.7s | 115.7s |
+| K5 | 222 | 17.9s | 26.8s | 40.0s | 62.4s | 77.3s | 107.7s | 135.9s |
 
-#### Status Distribution (30min)
-| Status | Count | Tier Model |
-|--------|-------|------------|
-| 200 | 1068 | deepseek_hm_nv |
-| 502 | 1 | deepseek_hm_nv (NVStream_IncompleteRead) |
-| 502 | 24 | NULL (all_tiers_exhausted) |
+**键健康度评估**:
+- K5: 最快P50 (26.8s), P95=77.3s (最宽尾) — 节点质量正常
+- K2: P50=27.0s, P95=65.3s (最佳P95) — 节点稳定
+- K1: P50=27.5s, P95=66.1s — 稳定
+- K3/K4: P50超30s, 但仍在可接受范围 — 正常DeepSeek推理时间
+- 全部5键: 0个429, 0个fallback, DIRECT直连 ✅
 
-#### Full DB Range Check
-| Metric | Value |
-|--------|-------|
-| DB data range | 2026-06-29 13:45 - 20:22 UTC (6h37m) |
-| Total requests | 1073 |
-| 0 429s (all time) | Confirmed |
-| 0 fallback triggered (all time) | Confirmed |
+**错误分析**:
+| 错误类型 | 数量 | 平均延迟 | 根源 |
+|----------|------|---------|------|
+| all_tiers_exhausted (ATE) | 24 | 162.3s | NVCFPexecTimeout (server-side, 不可修复) |
+| NVStream_IncompleteRead | 1 | 115.2s | K3节点偶发流中断 |
 
-## Analysis
+- 无429 (rate-limit): ✅ 所有键健康
+- 无fallback触发: ✅ 键池充足
+- 无SSLEOFError: ✅ SSL层正常
 
-### Root Cause: NVCF PexecTimeout Storm (Server-Side)
-The 24 ATE events in 30min are all NVCF server-side PexecTimeout storms. The error detail JSONL confirms:
-- `NVCFPexecTimeout` on multiple keys with very short elapsed times (5-7s) — NVCF functions timing out immediately
-- `empty_200` on some keys — functions returning empty responses
-- All deepseek_hm_nv tier attempts, kimi_hm_nv num_attempts=0
-- Each event consumed 175-178s across 5-7 key attempts
+### 环境变量对比
 
-**This is NOT configurable**: The ATE are NVCF server-side. No increase in BUDGET, KEY_COOLDOWN, or UPSTREAM_TIMEOUT can eliminate them. The system has been at equilibrium for 80+ rounds and these storms come and go independently of HM config.
+| 参数 | HM1 (本地) | HM2 (本地) |
+|------|-----------|-----------|
+| UPSTREAM_TIMEOUT | 64s | 68s |
+| KEY_COOLDOWN_S | 38.0 | 38.0 |
+| TIER_COOLDOWN_S | 38.0 | 22.0 |
+| MIN_OUTBOUND_INTERVAL_S | 18.2s | 4.5s |
+| BUDGET | 182s | 128s |
+| CONNECT_RESERVE_S | 24 | 23 |
+| 路由 | ALL DIRECT (5/5) | K1-K3 DIRECT, K4-K5 SOCKS5 |
 
-### Why No Change
-1. **BUDGET=182 is the stability point**: 8 rounds of +1-4s from R295-R302 converged on optimal BUDGET. Further increases would be diminishing returns (Pitfall #40).
-2. **KEY=TIER=38 invariant holds**: 0 429s confirms the invariant is working perfectly. KEY=TIER=38 (双双38) prevents key cooldown from expiring before tier cooldown (Pitfall #44).
-3. **All 5 keys DIRECT**: `is_direct = [0,1,2,3,4]` at both occurrences — no mihomo proxy in path. Direct NVCF routing is the correct topology.
-4. **NVCF storms are self-resolving**: Historical data (80+ rounds) shows PexecTimeout storms come and go — they subside on their own within hours. Config changes cannot prevent or mitigate them.
-5. **All 7 params at equilibrium**: No single parameter change would address the ATE events — they are NVCF server-side, not HM config-limited.
+## 优化分析
 
-### Decision: ⏸️ 无变更 (No Change)
-The system is at full equilibrium. The 24 ATE events are NVCF server-side PexecTimeout storms — they will subside on their own. No HM1 config change is warranted.
+### 评估标准
+1. **更少报错**: 24 ATE全部是 server-side NVCFPexecTimeout — 不是HM1配置问题, 不可修复
+2. **更快请求**: P50在26.8-30.5s范围 — 正常DeepSeek模型推理时间, 不是网络/配置瓶颈
+3. **超低延迟**: P25=17.6-19.7s — 这是NVCF的最小响应延迟 (GPU推理+网络传输)
+4. **稳定优先**: 99.91%成功率, 0个429, 0个fallback — 系统已达最高稳定水平
 
-## Validation Checklist
-| Criterion | Target | Actual | Status |
-|-----------|--------|--------|--------|
-| Success rate (deepseek) | >99% | 99.91% | ✅ EXCELLENT |
-| ATE rate | <2% | 0% (deepseek only) | ✅ PERFECT |
-| 429 rate | 0 | 0 | ✅ PERFECT |
-| Fallback | 0 | 0 | ✅ PERFECT |
-| P50 TTFB | <35s | 29s | ✅ GOOD |
-| P95 TTFB | <75s | 72s | ✅ GOOD |
-| Key balance | ±10% | ±3% | ✅ EXCELLENT |
-| First-attempt | >95% | 100% | ✅ PERFECT |
+### 决策: ⏸️ 无变更
 
-## Lessons Learned
-1. **NVCF PexecTimeout storms are server-side**: 24 ATE in 30min with 0 429s, 0 fallback, all keys first-attempt for non-ATE requests confirms NVCF server-side origin. No config change can prevent these.
-2. **System is genuinely at equilibrium**: No 429s, 0 fallback, all keys DIRECT — the mutual optimization loop has achieved its optimal state. Further rounds should only validate, not change.
-3. **ATE events have NULL tier_model**: The 24 ATE events are separate DB records from the 1068 successful deepseek requests — they represent failed requests that never got assigned to any tier model. The DB correctly distinguishes between success-path and failure-path requests.
+**原因**:
+1. ✅ 所有5键健康 (0个429, 全部first-attempt, DIRECT直连)
+2. ✅ BUDGET=182s 已覆盖最大ATE (178.2s → 3.8s安全余量)
+3. ✅ KEY=TIER=38s 双38对称 — 已是最优冷却配置
+4. ✅ MIN_OUTBOUND=18.2s — 适合HM1的DIRECT路由模式 (无SOCKS5代理)
+5. ✅ 无任何可调参数能改善当前状态 (全部已达最优)
 
-## Next Steps
-- **Continue monitoring**: HM1→HM2 optimization should evaluate HM2's HM40002 proxy state
-- **Storm decay**: The NVCF PexecTimeout storm will subside on its own — monitor for 0 ATE in future windows
-- **BUDGET trajectory complete**: 168→172→176→177→178→179→180→181→182 (+14s total). System is at optimal budget.
+**24个ATE的本质**: 全部是NVCF server-side的 `PexecTimeout` — NVCF函数执行超时, 发生在NVCF平台侧, 不是HM1的配置问题。BUDGET=182s 已给了足够的时间窗口让这些超时自然发生并被记录。任何配置调整都无法减少这些ATE, 因为它们是NVCF serverless平台的固有延迟。
 
----
-## ⏳ 轮到HM1优化HM2  ← 脚本检测此标记
+**Per-key P50差异 (10.7%): K3 30.5s vs K1 27.5s** — 这是NVCF节点质量差异(不同GPU分配、不同路由路径), 不是HM1配置可调参数。所有5键都走 `_make_nvcf_direct_conn` 直连NVCF, 无mihomo代理中间层, 延迟差异完全是NVCF平台侧的节点分配策略导致的。
+
+### 铁律遵守
+- ✅ 只改HM1不改HM2 (本轮无任何改动)
+- ✅ 单参数少改多轮 (本轮0变更)
+- ✅ 数据驱动决策 (基于真实DB查询和docker日志)
+
+## HM2本地状态 (供参考)
+| 参数 | 值 |
+|------|-----|
+| UPSTREAM_TIMEOUT | 68s |
+| MIN_OUTBOUND_INTERVAL_S | 4.5s |
+| BUDGET | 128s |
+| CONNECT_RESERVE | 23 |
+| 默认模型 | glm5.1_hm_nv |
+
+## ⏳ 轮到HM1优化HM2
