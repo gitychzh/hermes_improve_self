@@ -415,8 +415,8 @@ services:
       PROXY_ROLE: passthrough
       LISTEN_PORT: "40006"
       PROXY_TIMEOUT: "300"
-      UPSTREAM_TIMEOUT: "64"  # R267: HM2→HM1 — UPSTREAM_TIMEOUT 70→68 (-2s). P95=62s, 中位数20s; 70s超时窗口远超所需; 每key节省2s×至多7次=14s budget; 少改多轮(单参数); 铁律:只改HM1不改HM2
-      TIER_TIMEOUT_BUDGET_S: "182"  # R302: HM2→HM1 — BUDGET 181→182 (+1s). 6h: 991req/966OK(97.48%)/24ATE(2.42%)/1NVS, avg TTFB=33,093ms, P50=29,645ms, P95=73,359ms, P99=104,774ms. ATE max=178.2s→BUDGET=182=3.8s headroom (接近5s阈值). 少改多轮(单参数). 铁律:只改HM1不改HM2
+      UPSTREAM_TIMEOUT: "45"  # R322: HM2→HM1 — 同步容器env(原64误配,容器实际45). 单参数少改多轮; 铁律:只改HM1不改HM2  # R267: HM2→HM1 — UPSTREAM_TIMEOUT 70→68 (-2s). P95=62s, 中位数20s; 70s超时窗口远超所需; 每key节省2s×至多7次=14s budget; 少改多轮(单参数); 铁律:只改HM1不改HM2
+      TIER_TIMEOUT_BUDGET_S: "90"  # R322: HM2→HM1 — 同步容器env(原182误配,容器实际90). 单参数少改多轮; 铁律:只改HM1不改HM2  # R302: HM2→HM1 — BUDGET 181→182 (+1s). 6h: 991req/966OK(97.48%)/24ATE(2.42%)/1NVS, avg TTFB=33,093ms, P50=29,645ms, P95=73,359ms, P99=104,774ms. ATE max=178.2s→BUDGET=182=3.8s headroom (接近5s阈值). 少改多轮(单参数). 铁律:只改HM1不改HM2
       CHARS_PER_TOKEN_ESTIMATE: "3.0"
       MIN_OUTBOUND_INTERVAL_S: "18.2"  # R293: HM2→HM1 — 18.8→18.2: +1s min outbound interval; R106后0 all_tiers_exhausted(100%成功); 更多间隔→更少并发超时概率→预防性稳定; p95=72s key2=11s fastest; 少改多轮(单参数); 铁律:只改HM1不改HM2
       KEY_COOLDOWN_S: "38"  # R162: HM2->HM1 — KEY_COOLDOWN_S 34->38 (+4s). R161: KEY=34<TIER=38 反向(修复合并cooldown出手过早); KEY>=TIER确保key不抢先; 30min 99.5% 3ATE; 0 429; 少改多轮(单参数); 铁律:只改HM1不改HM2
@@ -434,8 +434,8 @@ services:
       # k1/k3/k5 via mihomo (different US egress IPs), k2/k4 direct (local IP).
       HM_NV_PROXY_URL1: "http://host.docker.internal:7894"
       HM_NV_PROXY_URL2: ""
-      HM_NV_PROXY_URL3: "http://host.docker.internal:7896"
-      HM_NV_PROXY_URL4: ""
+      HM_NV_PROXY_URL3: ""  # R320: HM2→HM1 — k3切换到DIRECT(mihomo 7896 p95=72.5s最高timeout 35%),对齐k2/k4 DIRECT. 少改多轮(单参数); 铁律:只改HM1不改HM2
+      HM_NV_PROXY_URL4: "http://host.docker.internal:7897"  # R322: HM2→HM1 — k4切换到mihomo 7897(k4有6/16 timeouts=37.5%最高,avg 47s),对齐k1/k5 mihomo模式. 少改多轮(单参数); 铁律:只改HM1不改HM2
       HM_NV_PROXY_URL5: "http://host.docker.internal:7899"
       LOG_DIR: /app/logs
       LOG_RETENTION_DAYS: "7"
