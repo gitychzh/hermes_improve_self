@@ -1,93 +1,110 @@
 #!/bin/bash
 # ============================================================
-# 交替优化轮询脚本 (HM1/HM2 各部署一份)
+# 交替优化轮询脚本 (HM1/HM2 各部署一份, 统一版 R314)
 # 核心:
-#   - 检测远程仓库有 "非本机提交" 的新 commit → 轮到我了
-#   - 一个在操作，另一个必须停止(但可参与计划讨论)
-#   - 双方都有 cron 每5分钟轮询
+#   - 每1min poll远程仓库
+#   - 检测到"非本机提交"且最新round文件标记"轮到我了" → 写trigger文件+醒目日志, 通知CC手动执行
+#   - 不自动改代码(铁律: 改前有数据/改后必验证, 由CC新session手动执行)
+#   - LOCK_FILE防止重复触发: 只在"已通知"后写入该commit hash
+# ============================================================
+# 设计变更(R314):
+#   - 旧版exit 3无人消费(systemd标Failed) → 改exit 0 + 写trigger文件
+#   - 旧版LOCK_FILE在pull时即更新导致吞触发 → 改为只在"确认轮到我并通知后"更新
+#   - 1min周期(原5min)
 # ============================================================
 
 REPO_DIR="$HOME/hm_ps/hermes_improve_self"
-MY_HOSTNAME="$(hostname)"   # opc2sname (HM2) 或 opc_uname (HM1)
-MY_ROLE="${MY_ROLE:-HM1}"   # 通过环境变量传入
-
-# 从主机名推断角色 (如果未设置)
+MY_HOSTNAME="$(hostname)"
+MY_ROLE="${MY_ROLE:-HM1}"
 if [ "$MY_ROLE" = "HM1" ] && [ "$MY_HOSTNAME" = "opc2sname" ]; then
     MY_ROLE="HM2"
 fi
 
-cd "$REPO_DIR" || exit 1
-
-# 获取拉取前的 HEAD commit hash (远程修改前本地状态)
-BEFORE_PULL=$(git rev-parse HEAD 2>/dev/null)
-
-# === 步骤1: 拉取最新 ===
-git pull --ff-only origin main 2>/dev/null
-
-# === 步骤2: 检查是否有新提交 (不是我自己提交的) ===
-AFTER_PULL=$(git rev-parse HEAD 2>/dev/null)
-
-if [ -z "$BEFORE_PULL" ] || [ "$BEFORE_PULL" = "$AFTER_PULL" ]; then
-    echo "[$(date '+%Y-%m-%d %H:%M:%S')] 无新提交, 继续等待"
-    exit 0  # 无变更, 正常退出
-fi
-
-# 有新提交! 检查最新 commit 的作者
-LATEST_AUTHOR=$(git log -1 --format='%an' HEAD)
-LATEST_COMMIT_MSG=$(git log -1 --format='%s' HEAD)
-
-echo "[$(date '+%Y-%m-%d %H:%M:%S')] 检测到新提交: ${LATEST_AUTHOR} → '${LATEST_COMMIT_MSG}'"
-
-# 如果提交者不是本机用户, 说明是对端操作了
-# HM1用户: opc_uname, HM2用户: opc2_uname
 if [ "$MY_ROLE" = "HM1" ]; then
     MY_GIT_USER="opc_uname"
     OPPONENT_USER="opc2_uname"
-elif [ "$MY_ROLE" = "HM2" ]; then
+    LOCK_FILE="$REPO_DIR/.hm1_processed_head"
+    MY_TURN_MARKER="轮到HM1.*优化.*HM2"
+    ROLE_LABEL="HM1"
+else
     MY_GIT_USER="opc2_uname"
     OPPONENT_USER="opc_uname"
+    LOCK_FILE="$REPO_DIR/.hm2_processed_head"
+    MY_TURN_MARKER="轮到HM2.*优化.*HM1"
+    ROLE_LABEL="HM2"
 fi
 
-if [ "$LATEST_AUTHOR" = "$MY_GIT_USER" ]; then
-    echo "[$(date '+%Y-%m-%d %H:%M:%S')] 这是我提交的, 不是交替优化。等待对方行动。"
-    exit 0
-fi
+TRIGGER_FILE="$REPO_DIR/.my_turn_trigger"
+cd "$REPO_DIR" || exit 1
 
-# === 步骤3: 对端提交了! 检查最新 round 文件 ===
-# 找到最新的轮次文件
-LATEST_ROUND=$(ls -1t "$REPO_DIR/rounds"/R*_*.md 2>/dev/null | head -1)
+TS=$(date '+%Y-%m-%d %H:%M:%S')
 
-if [ -z "$LATEST_ROUND" ]; then
-    echo "[$(date '+%Y-%m-%d %H:%M:%S')] 无轮次记录，等待初始化。"
-    exit 0
-fi
+# fetch + fast-forward (不用reset --hard, 避免丢本地未提交改动)
+git fetch origin main 2>&1 >/dev/null
+BEFORE=$(git rev-parse HEAD 2>/dev/null)
+git pull --ff-only origin main 2>/dev/null >/dev/null
+AFTER=$(git rev-parse HEAD 2>/dev/null)
 
-FILENAME=$(basename "$LATEST_ROUND")
-
-echo "[$(date '+%Y-%m-%d %H:%M:%S')] 对端($OPPONENT_USER)提交，最新轮次: $FILENAME"
-
-# 提取最后一行判断是否轮到我了
-LAST_LINE=$(tail -1 "$LATEST_ROUND")
-
-# 检查 "轮到HM2优化HM1" 标记
-if echo "$LAST_LINE" | grep -q "轮到.*优化"; then
-    # 从标记中提取执行者
-    TARGET=$(echo "$LAST_LINE" | grep -oP '(?<=轮到)(HM\d)' | head -1)
-    
-    if [ "$TARGET" = "$MY_ROLE" ]; then
-        echo "=================================================="
-        echo "  ✅ 轮到我了 — $MY_ROLE 立即执行优化！"
-        echo "=================================================="
-        exit 3  # 返回3 = 轮到我了, 触发优化 (cron会执行)
-    else
-        echo "[$(date '+%Y-%m-%d %H:%M:%S')] 当前轮到 $TARGET, 我是 $MY_ROLE, 等待"
-        # 我是质疑者角色, 可以输出参与计划讨论的建议
-        if [ -n "$OPPONENT_USER" ]; then
-            echo "质疑者提示: 我可以参与计划讨论，但等待执行者提交"
-        fi
+# 检查LOCK_FILE: 是否已处理过当前HEAD
+if [ -f "$LOCK_FILE" ]; then
+    PROCESSED=$(cat "$LOCK_FILE" 2>/dev/null)
+    if [ "$AFTER" = "$PROCESSED" ]; then
+        # 已处理过此commit, 静默等待(不打印, 减少日志噪音)
         exit 0
     fi
 fi
 
-echo "[$(date '+%Y-%m-%d %H:%M:%S')] 无明确轮到标记，等待"
+# 无新提交
+if [ "$BEFORE" = "$AFTER" ]; then
+    echo "[$TS] $ROLE_LABEL: 无新提交, 等待"
+    exit 0
+fi
+
+# 有新提交, 检查作者
+LATEST_AUTHOR=$(git log -1 --format='%an' HEAD)
+LATEST_MSG=$(git log -1 --format='%s' HEAD)
+
+if [ "$LATEST_AUTHOR" = "$MY_GIT_USER" ]; then
+    # 是我自己提交的, 标记已处理(避免自己push后自己反复触发)
+    echo "$AFTER" > "$LOCK_FILE"
+    echo "[$TS] $ROLE_LABEL: 这是我提交的($LATEST_MSG), 标记已处理, 等待对端"
+    exit 0
+fi
+
+# 对端提交了! 找最新round文件
+LATEST_ROUND=$(ls -1t "$REPO_DIR/rounds"/R*_*.md 2>/dev/null | head -1)
+if [ -z "$LATEST_ROUND" ]; then
+    echo "[$TS] $ROLE_LABEL: 对端提交但无round文件, 等待"
+    echo "$AFTER" > "$LOCK_FILE"
+    exit 0
+fi
+
+FILENAME=$(basename "$LATEST_ROUND")
+echo "[$TS] $ROLE_LABEL: 对端($OPPONENT_USER)提交 $AFTER, 轮次: $FILENAME"
+
+# 检查是否轮到我了(grep整个文件, 标记可能在文件末尾)
+if grep -qE "$MY_TURN_MARKER" "$LATEST_ROUND"; then
+    echo "=================================================="
+    echo "  ✅[$TS] 轮到我了 — $ROLE_LABEL 执行优化 (CC请介入新session)"
+    echo "  对端提交: $LATEST_MSG"
+    echo "  round文件: $FILENAME"
+    echo "  trigger: $TRIGGER_FILE"
+    echo "=================================================="
+    # 写trigger文件供CC检测 (含commit/round/时间)
+    {
+        echo "role=$ROLE_LABEL"
+        echo "commit=$AFTER"
+        echo "round=$FILENAME"
+        echo "opponent=$OPPONENT_USER"
+        echo "detected_at=$TS"
+        echo "round_file=$LATEST_ROUND"
+    } > "$TRIGGER_FILE"
+    # 写LOCK_FILE: 已通知, 防止重复触发(直到下一个对端commit)
+    echo "$AFTER" > "$LOCK_FILE"
+    exit 0  # 退出码0, 不让systemd标Failed
+fi
+
+# 对端提交但不是轮到我(我是反对者角色)
+echo "[$TS] $ROLE_LABEL: 对端提交但未轮到我(我是反对者), 等待"
+echo "$AFTER" > "$LOCK_FILE"
 exit 0
