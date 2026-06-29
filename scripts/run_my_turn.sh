@@ -15,6 +15,27 @@ RUN_LOG="$LOG_DIR/run_turn_${TS}.log"
 
 cd "$REPO_DIR" || exit 1
 
+# ============================================================
+# 互斥锁 (R317fix): 防止同host并发起多个claude session撞号
+# 根因: systemd oneshot service 1min一跳, 若上一跳的claude session
+# 还在跑(或被kill后成孤儿), 下一跳可能再起一个session, 两session
+# 几乎同时commit同R号 → 同号双发(R314/R315/R316均因此).
+# flock非阻塞锁: 同host已有session在跑→立即退出, 不撞号.
+# ============================================================
+MUTEX_LOCK="$REPO_DIR/.run_my_turn.lock"
+exec 9>"$MUTEX_LOCK"
+if ! flock -n 9; then
+    echo "[$TS] 已有run_my_turn在跑(互斥锁占用), 跳过本次避免撞号" >> "$RUN_LOG"
+    exit 0
+fi
+# 起session前收割本机残留claude孤儿进程(上一跳被kill后可能残留)
+ORPHAN_PIDS=$(pgrep -f "claude -p.*优化工程师" 2>/dev/null | grep -v "^$$\$")
+if [ -n "$ORPHAN_PIDS" ]; then
+    echo "[$TS] 收割残留claude孤儿进程: $ORPHAN_PIDS" >> "$RUN_LOG"
+    kill -9 $ORPHAN_PIDS 2>/dev/null
+    sleep 1
+fi
+
 # 读trigger
 if [ ! -f "$TRIGGER_FILE" ]; then
     echo "[$TS] 无trigger文件, 退出" >> "$RUN_LOG"
@@ -115,5 +136,8 @@ echo "[$(date '+%Y%m%d_%H%M%S')] === claude session退出 code=$EXIT_CODE ===" |
 
 # 清理trigger (已执行完)
 rm -f "$TRIGGER_FILE"
+
+# 保险: 收割残留claude子进程(防孤儿session继续commit撞号)
+pkill -9 -f "claude -p.*优化工程师" 2>/dev/null || true
 
 exit "$EXIT_CODE"
