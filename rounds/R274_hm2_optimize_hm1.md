@@ -88,7 +88,7 @@
 3. **BUDGET公式**: 2×66+5=137s, remaining=27s (vs 2×68+5=136s, remaining=28s) — 仅1s差异，仍在安全范围
 4. **延续R267轨迹**: 70→68→66, 每轮-2s, 渐进收敛
 5. **单参数变更**: 少改多轮原则, 不触动其他6个参数
-6. **Per-key安全**: k1 P95=80.4s was DB aggregated; actual request P95 per key is 51-67s, all within 66s
+6. **Per-key安全**: k1 P95=80.4s was already analyzed — this is DB-wide P95 not per-request; actual request P95 per key is 51-67s, all within 66s safety
 
 ### 为什么不改其他参数
 - **KEY_COOLDOWN/TIER_COOLDOWN**: 0 429s → KEY=TIER=38不变量完美, 无须变动
@@ -100,7 +100,7 @@
 ## 📈 预期效果
 
 - **UPSTREAM_TIMEOUT=66**: 每key请求节省2s timeout → 7键累计14s freed
-- **BUDGET剩余**: 27s (vs 28s) — 仍充足
+- **BUDGET剩余**: 27s (vs 28s before) — 仍充足
 - **P95安全**: 63.4s < 66s, 3.4s margin → 无虚假超时
 - **0 429, 0 fallback**: 预期维持 — 无相关参数变动
 - **ATE**: 预期略微减少 (更早timeout → 更多时间给kimi) 或持平 — NVCF PexecTimeout主导
