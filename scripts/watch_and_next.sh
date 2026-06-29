@@ -76,16 +76,17 @@ fi
 
 FILENAME=$(basename "$LATEST_ROUND")
 
-# 是我自己提交的(且round文件标记不是我轮次) → 标记已处理
+# 是我自己提交的 → 需区分: round提交(翻轮了) vs 非round提交(工具链修复等,没翻轮)
 if [ "$LATEST_AUTHOR" = "$MY_GIT_USER" ]; then
-    # 即使我提交的, 也要看round标记(可能我提交了round标记轮到对端, 此时不应触发我)
-    if tail -5 "$LATEST_ROUND" | grep -qE "$MY_TURN_MARKER"; then
-        # 我提交的但末尾标记说轮到我? 不应发生(我提交应标记轮到对端)。安全起见不触发, 标记已处理
-        :
+    # 判断本次commit是否改动了最新round文件(改了=我提交了round=应已翻轮到对端)
+    if git show --stat "$LATEST_HASH" -- "$(basename "$LATEST_ROUND")" 2>/dev/null | grep -q "rounds/"; then
+        # 我提交了round文件 → 应已翻轮到对端, 标记已处理, 不触发我
+        echo "$LATEST_HASH" > "$LOCK_FILE"
+        exit 0
     fi
-    echo "$LATEST_HASH" > "$LOCK_FILE"
-    # 静默(避免自己push后每分钟打印)
-    exit 0
+    # 我提交的是非round文件(工具链修复/脚本改动等), round标记未变 → 继续往下检查标记
+    # 不exit, 落到下面的标记检查(若仍轮到我, 应触发)
+    :
 fi
 
 # 对端提交了, 检查是否轮到我
