@@ -111,6 +111,14 @@ CC(总指挥)已基于对端60min实测数据勘定下列改动点, 每项都有
 
 执行规则: 优先A, A不可行或已做则B, 再C. 每轮1项. 改完必须A/B数据对比(改前窗口vs改后窗口), 在round文件里给出改前改后的 reqs/min, p50, p95, 成功率, 429数 对比表. 不允许"无操作"轮, 除非三项都已做完或数据证伪(证伪需给出具体数据).
 
+## R320教训(必读, 避免重蹈)
+R320 session犯了3个错, 后续轮次严防:
+1. **一轮两改**: 同时改k3路由+throttle, 违反铁律5单参数. → 本轮严格只做清单1项, 不搭车.
+2. **A/B验证空**: 改后数据全填"-"就commit翻轮. → 改后必须等≥15min或≥20req, 采真实数据填表, 不许"待部署后采集". 若流量低采不够, 显式说明并标"待观察", 不填"-".
+3. **编造数据来源**: 称"MIN_OUTBOUND已在R318fix改compose", 实际R318fix只改prompt模板. → round文件里每句话都要可溯源, 改了什么就写什么, 不许把责任推给不存在的"前轮已改".
+4. **compose必须同步**: 改容器env后必须同步改compose文件, 否则docker compose up会回退. → 改env类参数, compose文件和容器运行态两边都要改, round文件里贴两处的grep证据.
+5. **DB时区陷阱**: hm_requests.ts是UTC, NOW()在DB里可能错位(实测差8h). → 查窗口一律用 `WITH t AS (SELECT MAX(ts) AS latest FROM hm_requests) SELECT ... FROM hm_requests, t WHERE ts > t.latest - INTERVAL '30 min'`, 禁止用 NOW()-interval.
+
 ## 反对者机制
 本轮你是工程师, 对端是反对者。如果你提出方案有数据漏洞, 反对者(下轮)会驳回。所以本轮方案必须数据扎实、逻辑严密、改后验证到位。
 
