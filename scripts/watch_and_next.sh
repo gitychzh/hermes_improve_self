@@ -45,7 +45,7 @@ BEFORE=$(git rev-parse HEAD 2>/dev/null)
 git pull --ff-only origin main 2>/dev/null >/dev/null
 AFTER=$(git rev-parse HEAD 2>/dev/null)
 
-# 检查LOCK_FILE: 是否已处理过当前HEAD
+# 检查LOCK_FILE: 是否已处理过当前HEAD (已通知过则静默等待)
 if [ -f "$LOCK_FILE" ]; then
     PROCESSED=$(cat "$LOCK_FILE" 2>/dev/null)
     if [ "$AFTER" = "$PROCESSED" ]; then
@@ -54,33 +54,35 @@ if [ -f "$LOCK_FILE" ]; then
     fi
 fi
 
-# 无新提交
-if [ "$BEFORE" = "$AFTER" ]; then
-    echo "[$TS] $ROLE_LABEL: 无新提交, 等待"
-    exit 0
-fi
-
-# 有新提交, 检查作者
+# 此时: 要么有新提交, 要么LOCK_FILE不存在/不匹配(首次运行或被重置)
+# 都需要检查最新round文件是否轮到我
 LATEST_AUTHOR=$(git log -1 --format='%an' HEAD)
+LATEST_HASH="$AFTER"
 LATEST_MSG=$(git log -1 --format='%s' HEAD)
-
-if [ "$LATEST_AUTHOR" = "$MY_GIT_USER" ]; then
-    # 是我自己提交的, 标记已处理(避免自己push后自己反复触发)
-    echo "$AFTER" > "$LOCK_FILE"
-    echo "[$TS] $ROLE_LABEL: 这是我提交的($LATEST_MSG), 标记已处理, 等待对端"
-    exit 0
-fi
-
-# 对端提交了! 找最新round文件
 LATEST_ROUND=$(ls -1t "$REPO_DIR/rounds"/R*_*.md 2>/dev/null | head -1)
+
 if [ -z "$LATEST_ROUND" ]; then
-    echo "[$TS] $ROLE_LABEL: 对端提交但无round文件, 等待"
-    echo "$AFTER" > "$LOCK_FILE"
+    echo "[$TS] $ROLE_LABEL: 无round文件, 等待"
+    echo "$LATEST_HASH" > "$LOCK_FILE"
     exit 0
 fi
 
 FILENAME=$(basename "$LATEST_ROUND")
-echo "[$TS] $ROLE_LABEL: 对端($OPPONENT_USER)提交 $AFTER, 轮次: $FILENAME"
+
+# 是我自己提交的(且round文件标记不是我轮次) → 标记已处理
+if [ "$LATEST_AUTHOR" = "$MY_GIT_USER" ]; then
+    # 即使我提交的, 也要看round标记(可能我提交了round标记轮到对端, 此时不应触发我)
+    if grep -qE "$MY_TURN_MARKER" "$LATEST_ROUND"; then
+        # 我提交的但标记说轮到我? 不应发生(我提交应标记轮到对端)。安全起见不触发, 标记已处理
+        :
+    fi
+    echo "$LATEST_HASH" > "$LOCK_FILE"
+    # 静默(避免自己push后每分钟打印)
+    exit 0
+fi
+
+# 对端提交了, 检查是否轮到我
+echo "[$TS] $ROLE_LABEL: 对端($OPPONENT_USER)提交 $LATEST_HASH, 轮次: $FILENAME"
 
 # 检查是否轮到我了(grep整个文件, 标记可能在文件末尾)
 if grep -qE "$MY_TURN_MARKER" "$LATEST_ROUND"; then
