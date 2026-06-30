@@ -100,8 +100,12 @@ echo "[$TS] $ROLE_LABEL: 对端($OPPONENT_USER)提交 $LATEST_HASH, 轮次: $FIL
 if tail -5 "$LATEST_ROUND" | grep -qE "$MY_TURN_MARKER"; then
     # R350/R352撞车根治: 触发前SSH查对端有无claude session在跑, 有则跳过避免跨机并发
     # (抢跑方=对端上一轮session commit后未退出, 本机这跳触发会和它撞号)
+    # 注意 pgrep 自匹配陷阱: ssh远程命令行本身含pattern串会被pgrep匹配到自己.
+    # 修复: 不用pgrep -f带字面pattern, 改用ps过滤. claude优化session真实进程命令行含
+    # "/.npm-global/bin/claude -p" 且 "--allow-dangerously-skip-permissions", 用ps+awk排除
+    # 含"pgrep"/"ssh"/当前shell的行, 只留真实claude进程.
     PEER_PIDS=$(ssh -p 222 -o ConnectTimeout=5 -o BatchMode=yes "$PEER_USER@$PEER_IP" \
-        'pgrep -f "claude -p.*优化工程师" 2>/dev/null' 2>/dev/null)
+        'ps -eo pid,args 2>/dev/null | awk "/[c]laude -p .*--allow-dangerously-skip-permissions/ && !/pgrep|watch_and_next/ {print \$1}" 2>/dev/null' 2>/dev/null)
     if [ -n "$PEER_PIDS" ]; then
         echo "[$TS] $ROLE_LABEL: 轮到我, 但对端($PEER)仍有session在跑(PID=$PEER_PIDS), 跳过本跳避免跨机撞号"
         echo "$AFTER" > "$LOCK_FILE"
