@@ -44,15 +44,14 @@
 - **所有成功请求**: 首次尝试成功 (first attempt) — 无 fallback 触发
 - **请求模式**: 全部 stream=False, 单 tier deepseek_hm_nv, Ring fallback R40
 - **容器状态**: 2026-06-30 09:32 UTC 重启 (docker compose up), 运行约 1h20min
-- **RR counter**: 从  恢复值=465
 
 ### DB 验证 (PostgreSQL hermes_logs)
 - **hm_requests 表**: 454 条记录 (昨日 2026-06-29 13:44–23:43)
   - 状态: 200=430 (94.7%), 502=23 (5.1%), 400=1 (0.2%)
   - Avg OK duration: 24,090ms (yesterday)
-- **今日数据**: DB 仅含昨日数据 (容器重启后无新写入 — DB 可能滞后或日志优先写入文件)
-- **Key errors view (v_hm_key_errors_24h)**: 所有键 NVCFPexecTimeout=3-7次, 分布均匀
-- **Tier health view (v_hm_tier_health_1h)**: deepseek_hm_nv 100% 成功率 (OK_1h=21, fail_1h=0)
+- **今日数据**: DB 仅含昨日数据 (容器重启后无新写入 — DB 可能已归档)
+- **Key errors view**: 所有键 NVCFPexecTimeout=3-7次, 分布均匀
+- **Tier health view**: deepseek_hm_nv 100% 成功率 (OK_1h=21, fail_1h=0)
 
 ## 🎯 优化分析
 
@@ -62,19 +61,16 @@
 - 当前值 6.0s (R328: 9.0→6.0, -3.0s)
 - 0 key_429s 全窗口 — 无速率限制压力
 - 请求率: 203/463min ≈ 0.44 req/min — 极低负荷, 远低于 10 req/min 上限
-- 所有 ATE 的 upstream_type=NULL (NVCF 侧 PexecTimeout, 非速率限制触发)
 - **证伪**: MIN_OUTBOUND_INTERVAL_S 不相关 — 维持 6.0s 最优值
 
 **HM1-B: Per-key 延迟均匀性**
 - 5 键分布均匀: 38-43 请求/键 (标准差 ~2.3)
 - Avg 范围: 20,510–23,976ms — 极度均匀 (仅差 ~3.5s)
-- 所有键均在首次尝试成功 — 无键级瓶颈
 - **证伪**: 无键级瓶颈 — 分布均匀, 延迟源自 NVCF 侧
 
 **HM1-C: ATE 不可防控**
 - 2 ATE 全部 upstream_type=NULL — NVCF 侧 PexecTimeout
 - 每个 ATE 尝试过多个键, 全部 NVCFPexecTimeout — 非 HM1 参数可控
-- 0 key_429s / 0 empty200 — 无代理层可干预错误
 - **证伪**: ATE 不可防 — 全部 NVCF 侧失败
 
 ### 全参数评估表
