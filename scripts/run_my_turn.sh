@@ -158,19 +158,23 @@ if [ ! -x "$CLAUDE_BIN" ]; then
     exit 127
 fi
 cd "$REPO_DIR"
-"$CLAUDE_BIN" -p "$(cat "$PROMPT_FILE")" \
+# R350/R352/R354/R361教训: claude session可能卡住不退出(孤儿), 导致跨机撞车+抢跑下轮.
+# 硬超时25min强制杀(nop轮~5-10min, 真实改动轮<20min, 25min足够). timeout杀claude后run_my_turn继续走pkill兜底.
+SESSION_TIMEOUT_S="${SESSION_TIMEOUT_S:-1500}"
+echo "[$(date '+%Y%m%d_%H%M%S')] 启动claude (硬超时${SESSION_TIMEOUT_S}s)" | tee -a "$RUN_LOG"
+timeout --signal=KILL "$SESSION_TIMEOUT_S" "$CLAUDE_BIN" -p "$(cat "$PROMPT_FILE")" \
     --add-dir "$REPO_DIR" \
     --add-dir "$HOME/cc-infra" \
     --allow-dangerously-skip-permissions \
     2>&1 | tee -a "$RUN_LOG"
 
 EXIT_CODE=${PIPESTATUS[0]}
-echo "[$(date '+%Y%m%d_%H%M%S')] === claude session退出 code=$EXIT_CODE ===" | tee -a "$RUN_LOG"
+echo "[$(date '+%Y%m%d_%H%M%S')] === claude session退出 code=$EXIT_CODE (124=超时) ===" | tee -a "$RUN_LOG"
 
 # 清理trigger (已执行完)
 rm -f "$TRIGGER_FILE"
 
-# 保险: 收割残留claude子进程(防孤儿session继续commit撞号)
+# 保险: 收割残留claude子进程(防孤儿session继续commit撞号). timeout已杀主进程, 此处收割可能的子shell残留.
 pkill -9 -f "claude -p.*优化工程师" 2>/dev/null || true
 
 exit "$EXIT_CODE"
