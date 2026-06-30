@@ -42,7 +42,7 @@ NVCF_DEEPSEEK_FUNCTION_ID=4e533b45-dc54-4e3a-a69a-6ff24e048cb5
 **每key延迟 (1h, 200OK)**:
 | key | 请求数 | avg_dur | 路由 |
 |-----|--------|---------|------|
-| k0 | 8 | 9526ms | — |
+| k0 | 8 | 9526ms | —
 | k1 | 15 | 14893ms | SOCKS5(7894) |
 | k2 | 11 | 8135ms | DIRECT |
 | k3 | 11 | 11073ms | DIRECT |
@@ -58,7 +58,7 @@ NVCF_DEEPSEEK_FUNCTION_ID=4e533b45-dc54-4e3a-a69a-6ff24e048cb5
 
 ### 预算分析
 - BUDGET=100, UPSTREAM=45
-- 2×UT=45, 剩余=10s ≥ 5s 阈值 ✅
+- 2×UT=90, 剩余=10s ≥ 5s 阈值 ✅
 - 3×UT=135 > 100 → 3次batch timeout后预算耗尽, 但当前无ATE
 
 ### 不变量检查
