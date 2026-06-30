@@ -23,12 +23,14 @@ fi
 if [ "$MY_ROLE" = "HM1" ]; then
     MY_GIT_USER="opc_uname"
     OPPONENT_USER="opc2_uname"
+    PEER="HM2"; PEER_USER="opc2_uname"; PEER_IP="100.109.57.26"
     LOCK_FILE="$REPO_DIR/.hm1_processed_head"
     MY_TURN_MARKER="轮到HM1.*优化.*HM2"
     ROLE_LABEL="HM1"
 else
     MY_GIT_USER="opc2_uname"
     OPPONENT_USER="opc_uname"
+    PEER="HM1"; PEER_USER="opc_uname"; PEER_IP="100.109.153.83"
     LOCK_FILE="$REPO_DIR/.hm2_processed_head"
     MY_TURN_MARKER="轮到HM2.*优化.*HM1"
     ROLE_LABEL="HM2"
@@ -59,14 +61,16 @@ fi
 LATEST_AUTHOR=$(git log -1 --format='%an' HEAD)
 LATEST_HASH="$AFTER"
 LATEST_MSG=$(git log -1 --format='%s' HEAD)
-# 找最新round文件: 按R号数字排序(不按mtime, 避免git触碰改序), 排除RN占位文件
-LATEST_ROUND=$(ls "$REPO_DIR/rounds"/R*_*.md 2>/dev/null \
-    | grep -oP 'R\K[0-9]+' \
-    | paste - <(ls "$REPO_DIR/rounds"/R*_*.md 2>/dev/null) \
-    | grep -vP '\t\S*RN_' \
-    | sort -n \
-    | tail -1 \
-    | cut -f2)
+# 找最新round文件: 按R号数字排序取最大号, 同号多个文件时用mtime取最新
+# (R350/R352撞车教训: 抢跑方与正确方同号, 抢跑方commit更早mtime更旧, 取mtime最新=正确方)
+# 排除RN占位文件
+LATEST_ROUND=$(for f in "$REPO_DIR"/rounds/R*_*.md; do
+        [ -e "$f" ] || continue
+        case "$f" in *RN_*) continue;; esac
+        r=$(printf '%s' "$f" | grep -oP 'R\K[0-9]+')
+        m=$(stat -c %Y "$f" 2>/dev/null || echo 0)
+        printf '%s %s %s\n' "$r" "$m" "$f"
+    done | sort -k1,1n -k2,2nr | tail -1 | cut -d' ' -f3-)
 
 if [ -z "$LATEST_ROUND" ]; then
     echo "[$TS] $ROLE_LABEL: 无round文件, 等待"
@@ -94,6 +98,15 @@ echo "[$TS] $ROLE_LABEL: 对端($OPPONENT_USER)提交 $LATEST_HASH, 轮次: $FIL
 
 # 检查是否轮到我了: 只看文件末尾5行(避免正文里引用标记的误匹配)
 if tail -5 "$LATEST_ROUND" | grep -qE "$MY_TURN_MARKER"; then
+    # R350/R352撞车根治: 触发前SSH查对端有无claude session在跑, 有则跳过避免跨机并发
+    # (抢跑方=对端上一轮session commit后未退出, 本机这跳触发会和它撞号)
+    PEER_PIDS=$(ssh -p 222 -o ConnectTimeout=5 -o BatchMode=yes "$PEER_USER@$PEER_IP" \
+        'pgrep -f "claude -p.*优化工程师" 2>/dev/null' 2>/dev/null)
+    if [ -n "$PEER_PIDS" ]; then
+        echo "[$TS] $ROLE_LABEL: 轮到我, 但对端($PEER)仍有session在跑(PID=$PEER_PIDS), 跳过本跳避免跨机撞号"
+        echo "$AFTER" > "$LOCK_FILE"
+        exit 0
+    fi
     echo "=================================================="
     echo "  ✅[$TS] 轮到我了 — $ROLE_LABEL 执行优化 (CC请介入新session)"
     echo "  对端提交: $LATEST_MSG"
