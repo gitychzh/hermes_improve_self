@@ -134,6 +134,9 @@ R322 session犯了4个错, 后续轮次严防:
 
 ## 输出
 全程在终端输出你的思考+操作。完成后round文件commit+push即结束。不要等待人工确认, 自主完成全流程。
+
+## R350教训(必读, 避免重蹈)
+R350 session(HM2)在commit+push R349后**没有退出**,继续跑又做了下一轮R350(commit dce8e80,方向标反HM2→HM1,写到R350_hm2_optimize_hm1.md),与HM1正确触发的R350(83af387)撞号,且末尾标记相反导致watch选错文件误触发HM1 session 640125. CC已删除抢跑文件+杀误触发session. 根因:同一个claude session commit后不退出,自己又跑下一轮. → **本轮铁律: git push成功后必须立即停止, 不得继续执行任何操作(不得再读round文件/不得再改代码/不得再commit). 一轮一session, push完即结束. 反对者下轮会接手, 不需要你继续.** 违反此条=造成跨机撞号.
 PROMPT
 
 PROMPT_FILE="$LOG_DIR/prompt_${TS}.txt"
