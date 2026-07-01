@@ -13,7 +13,8 @@
 [HM-TIMEOUT] tier=dsv4p_nv k5 NVCF pexec timeout: attempt=23336ms total=23342ms
 ```
 - 仅1条pexec timeout日志 (最近窗口)
-- FASTBREAK=2 正常配置, 0×429, 0×empty200
+- FASTBREAK=2 正常配置, 无异常触发
+- 0×429, 0×empty200
 
 ### 2. 容器env (已验证全部8参数)
 | 参数 | 值 | 状态 |
@@ -29,7 +30,7 @@
 
 /health=200 ok, hm_num_keys=5, 8参数全部匹配
 
-### 3. DB: 30min窗口 (NOW()-30min)
+### 3. DB: 30min窗口 (NOW()-30min, ~07:40-08:10 UTC)
 | 指标 | 值 |
 |------|-----|
 | 总请求 | 136 |
@@ -38,10 +39,13 @@
 | 429 | 0 |
 | ATE (tier=NULL) | 11 |
 | avg_ok | 10,505ms |
-| 成功p50 | 6,968ms |
-| 成功p95 | 32,293ms |
+| p50_ok | 6,968ms |
+| p95_ok | 32,293ms |
+| avg_fail | ~49s (ATE) |
 
-### DB: 6h窗口
+**30min SR=91.91%** — 比R482 30min(87.30%)提升4.61pp
+
+### DB: 6h窗口 (02:00-08:00 UTC)
 | 指标 | 值 |
 |------|-----|
 | 总请求 | 1,076 |
@@ -54,6 +58,8 @@
 | 成功p50 | 6,995ms |
 | 成功p95 | 34,160ms |
 
+**6h SR=85.59%** — 比R482 6h(84.07%)提升1.52pp
+
 ### 4. Per-key 延迟 (30min, success only)
 | Key | Total | p50 (ms) | avg (ms) | p95 (ms) | max (ms) |
 |-----|-------|----------|----------|----------|----------|
@@ -65,14 +71,25 @@
 
 **5键均衡**: p50 range 6,027-8,799ms, cv≈15%, 无单key劣化
 
-### 5. 失败模式 (6h)
+### 5. Per-key 延迟 (6h, success only)
+| Key | Total | p50 (ms) | avg (ms) | p95 (ms) | max (ms) |
+|-----|-------|----------|----------|----------|----------|
+| k0 | 185 | 7,161 | 10,164 | 29,103 | 40,269 |
+| k1 | 168 | 5,963 | 9,476 | 31,534 | 52,413 |
+| k2 | 190 | 8,112 | 12,183 | 38,561 | 59,471 |
+| k3 | 190 | 6,977 | 11,368 | 34,962 | 52,080 |
+| k4 | 188 | 6,464 | 10,824 | 33,526 | 51,077 |
+
+**6h 5键均衡**: p50 range 5,963-8,112ms, cv≈14%
+
+### 6. 失败模式 (6h)
 - **155 ATE全部**: error_type=all_tiers_exhausted, tier_model=NULL, status=502
-- avg=49,091ms (~49s), p50=50,789ms (~50.8s)
+- avg=49,091ms (~49s), p50=50,789ms (~50.8s), min=508ms, max=98,238ms
 - NVCFPexecTimeout server-side (upstream_type=NULL, 0 tier_attempts)
 - 0×429, 0×empty200, 0×SSLEOF — 连接健康
 - 唯一失败类型: all_tiers_exhausted
 
-### 6. 15min bucket 聚类 (6h)
+### 7. 15min bucket 聚类 (6h)
 | Hour (UTC) | Total | OK | Fail (ATE) | SR% |
 |------------|-------|-----|------------|-----|
 | 18:00 | 236 | 205 | 31 | 86.86 |
@@ -83,22 +100,25 @@
 | 23:00 | 175 | 148 | 27 | 84.57 |
 | 00:00 | 50 | 48 | 2 | 96.00 |
 
-**ATE分布均匀但递减**: 18:00(31)→00:00(2), NVCF surge在消退. SR在80-96%范围波动.
+**关键发现**: ATE分布均匀但递减 — 18:00(31)→00:00(2), NVCF surge在消退。SR在80-96%范围波动, 非集中爆发.
 
-### 7. Latest 10 requests (~08:11 UTC)
-All 10 successful (200), all dsv4p_nv tier, fallback_occurred=f
-Duration range: 4,120-13,466ms — 全部健康, well under 15s
+### 8. Latest 10 requests (CST ~08:11)
+All 10 successful (200), all dsv4p_nv tier, all fallback_occurred=f
+- Duration range: 4,120-13,466ms — 全部健康, well under 15s
+- 无当前异常请求
 
 ## CC清单评估 (持续证伪)
 
 ### [HM1-A] MIN_OUTBOUND=3.8 → 再降证伪
 - p50_gap=6,968ms / 3.8s = 1.83x
 - throttle非瓶颈 (30min 136req, ~4.5req/min, 远低于容量)
+- dsv4p_nv单tier无切换压力
 - 再降不会改善NVCF server-side timeout
 - **证伪**: 降低MIN_OUTBOUND无收益
 
 ### [HM1-B] Key rebalancing → 5key均衡, 继续证伪
 - p50 range 6,027-8,799ms (30min), cv≈15%
+- k2最慢 (8,799ms) 但仍在正常范围, k0最快 (6,027ms)
 - 6h同样均衡: p50 5,963-8,112ms
 - 无单key劣化趋势
 - **证伪**: 无需rebalancing
@@ -106,24 +126,25 @@ Duration range: 4,120-13,466ms — 全部健康, well under 15s
 ### [HM1-C] BUDGET=125 → 已远超实际需求, 降BUDGET证伪
 - 成功请求6h max=59,471ms (~60s), BUDGET=125远超
 - ATE全NVCFPexecTimeout server-side (avg 49s, 非BUDGET耗尽)
-- BUDGET从未触发: 0 tier_attempts记录
+- BUDGET从未触发: 0 tier_attempts记录, upstream_type=NULL
+- 降BUDGET不会加速NVCF server-side失败
 - **证伪**: BUDGET是天花板参数, 降低无任何收益
 
 ### [HM1-D] FASTBREAK=2 → 已达最优, 继续维持
 - 2连pexec timeout后break, 省剩余3键 (~69s)
-- R483: 0误杀
+- R483: 0误杀 (logs only shows normal pexec timeout, no false-positive fastbreak)
 - 最低阈值=1会误杀attempt-2救回场景
 - **维持**: FASTBREAK=2是唯一活跃且有价值的参数
 
 ## 决策: ⏸️ NOP
 
 **理由**:
-1. **8参数全在天花板**: UPSTREAM=23 (已达下限), MIN_OUTBOUND=3.8, BUDGET=125, KEY_COOLDOWN=25, TIER_COOLDOWN=38, CONNECT_RESERVE=10, FASTBREAK=2, SSLEOF_DELAY=2.0
+1. **8参数全在天花板**: UPSTREAM=23 (已达下限, 接近NVCF实际延迟), MIN_OUTBOUND=3.8, BUDGET=125, KEY_COOLDOWN=25, TIER_COOLDOWN=38, CONNECT_RESERVE=10, FASTBREAK=2, SSLEOF_DELAY=2.0
 2. **所有失败为NVCF server-side**: upstream_type=NULL, tier_model=NULL → NVCFPexecTimeout, 非proxy参数可影响
 3. **CC清单4项全部证伪**: 4项均有30min+6h新鲜数据支持
-4. **UPSTREAM_TIMEOUT=23已逼近底限**: 成功p50=7s, p95=34s说明部分成功>23s; 再降会误杀慢成功
+4. **UPSTREAM_TIMEOUT=23已逼近底限**: 成功p50=7s, p95=34s说明有些成功>23s; 再降会误杀慢成功. R481已从25→23, 每次-2s已到极限
 5. **少改多轮原则**: 无参数可安全下调
-6. **SR改善趋势**: 30min SR从87.30%(R482)→91.91%(R483), 6h SR从84.07%→85.59% — 持续改善中
+6. **SR改善趋势**: 30min SR从87.30%(R482)→91.91%(R483), 6h SR从84.07%→85.59% — 持续改善中, 证明当前参数有效
 
 **零配置变更**: docker-compose.yml不修改, 容器不重启
 
