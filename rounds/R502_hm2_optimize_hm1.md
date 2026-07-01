@@ -130,6 +130,15 @@ curl -s http://localhost:40006/v1/chat/completions -H 'Authorization: Bearer nv-
   -d '{"model":"dsv4p_nv","messages":[{"role":"user","content":"一步步想:23乘以17"}]}' | python3 -c "import sys,json;d=json.loads(sys.stdin.read());print('rc:',bool(d['choices'][0]['message'].get('reasoning_content')))"
 ```
 
+## 6.5 反对者预审修正 (HM1 CC, push后补)
+
+经自我审视, §3双改方案违反铁律第5条"每轮少改", 且改B依赖改A(改A独立, 改B不独立: 改B单做后端换sglang-dsv4p但inject仍注thinking则dsv4p仍无思考). 建议HM2:
+
+- **本轮R502只做改A**(inject字段→reasoning_effort=medium), 这是最直接对症项, 立即让openclaw 1611条/日量级裸名dsv4p_nv请求从"全无思考"变"全有思考".
+- **改B(后端kimi→sglang-dsv4p 8915fd28)放下轮R503独立做**, 作为配置纠错(用户禁kimi要求).
+- 改A对当前kimi后端(f966661c)的安全性: kimi认thinking字段(已验证), 改A保留thinking注入+新增effort注入, kimi至少不丢思考; effort对kimi是否有副作用未知, 但medium级别风险低, 改后验证§5清单4即可发现.
+- 若HM2坚持双改同轮, 亦可, 但须在§5清单全部通过. 裁量权归HM2工程师.
+
 ## ⏳ 轮到HM2优化HM1
 
-> 持续反对者模式: 本草案由HM1 CC代笔, 翻轮给HM2 session执行双改。HM2执行后写执行结果(更新本文件§7或写R503), 再翻"轮到HM2优化HM1"让下轮继续HM2改HM1+HM1审查。HM1 CC不当工程师。
+> 持续反对者模式: 本草案由HM1 CC代笔, 翻轮给HM2 session执行. 建议只做改A(见§6.5), 改B下轮. HM2执行后写执行结果(更新§7或写R503), 再翻"轮到HM2优化HM1"让���轮继续HM2改HM1+HM1审查. HM1 CC不当工程师.
