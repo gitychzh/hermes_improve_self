@@ -1,0 +1,619 @@
+# R38.14: HM tier reorder — glm5.1 primary → deepseek fallback → kimi last-resort
+# 40001 (cc-stable):    CC → Anthropic format → 41001 glm5.1 v×k (pure MS baseline)
+# 40005 (cc-experiment): CC → Anthropic format → 41001 glm5.1 v×k, NV last-resort
+# 40002 (codex):        Codex → Responses API → 41001 glm5.1 v×k
+# 40003 (passthrough):  _ol/_oc/_hm_ms → OpenAI passthrough → 41001 glm5.1 v×k
+# 40006 (hm-proxy):    _hm_nv → NVCF pexec direct (glm5.1/deepseek/kimi, per-model ACTIVE function; glm5.1 primary)
+# 41001: ms_uni41001 LiteLLM (70 glm5.1 dep)
+#
+# Port assignments: 41001=LiteLLM MS, 40000=dispatcher,
+#   40001=proxy(cc), 40002=proxy(codex), 40003=proxy(passthrough), 40005=proxy(cc-experiment), 40006=hm-proxy(NVCF)
+# ulimit nofile: 41001 uses 2048 soft / 65536 hard (70 dep)
+
+# ── Docker official proxy config: YAML anchors (docs.docker.com/network/proxy/) ──
+# All containers needing host access use host.docker.internal (Linux requires extra_hosts).
+# Proxy env vars follow Docker official naming (uppercase + lowercase auto-set by config.json).
+# NO_PROXY prevents proxy loops for inter-container traffic on cc-net.
+
+x-host-access: &host-access
+  extra_hosts:
+    - "host.docker.internal:host-gateway"
+
+x-proxy-env-ms: &proxy-env-ms
+  # MS containers: use mihomo mixed port 7880 for GitHub access (LiteLLM startup fetch)
+  HTTP_PROXY: http://host.docker.internal:7880
+  HTTPS_PROXY: http://host.docker.internal:7880
+  NO_PROXY: localhost,127.0.0.1,cc_postgres,ms_uni41001,auth_to_api_40000,auth_to_api_40001,auth_to_api_40002,auth_to_api_40003,auth_to_api_40005
+
+x-resource-1c1g-host: &resource-1c1g-host
+  # R36.2: Combined resource limits + host access (YAML prohibits multiple << merge keys per mapping)
+  extra_hosts:
+    - "host.docker.internal:host-gateway"
+  deploy:
+    resources:
+      limits:
+        memory: 1G
+        cpus: "1.0"
+      reservations:
+        memory: 256M
+        cpus: "0.1"
+
+x-resource-1c1g: &resource-1c1g
+  deploy:
+    resources:
+      limits:
+        memory: 1G
+        cpus: "1.0"
+      reservations:
+        memory: 256M
+        cpus: "0.1"
+
+x-resource-1c2g-host: &resource-1c2g-host
+  # LiteLLM containers: ms_uni41001 (70 dep only). NV HM via NVCF pexec (no LiteLLM needed).
+  # 1GiB sufficient (actual usage ~500MiB after model cost map loads).
+  extra_hosts:
+    - "host.docker.internal:host-gateway"
+  deploy:
+    resources:
+      limits:
+        memory: 1G
+        cpus: "1.0"
+      reservations:
+        memory: 256M
+        cpus: "0.1"
+
+x-logging: &logging
+  driver: json-file
+  options:
+    max-size: 50m
+    max-file: '5'
+    tag: container/{{.Name}}
+
+services:
+  # ─── PostgreSQL ───
+  cc_postgres:
+    image: postgres:16-alpine
+    container_name: cc_postgres
+    restart: unless-stopped
+    environment:
+      POSTGRES_USER: litellm
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD}
+      POSTGRES_DB: litellm
+      POSTGRES_MULTIPLE_DATABASES: litellm_glm51 litellm_nv_hm hermes_logs
+      TZ: Asia/Shanghai
+    volumes:
+      - cc_pgdata:/var/lib/postgresql/data
+      - ./postgres/init-db.sh:/docker-entrypoint-initdb.sh:ro
+      # R40: hermes_logs schema
+      - ./postgres/hermes-logs-schema.sql:/docker-entrypoint-initdb.d/20-hermes-logs-schema.sql:ro
+      - /etc/localtime:/etc/localtime:ro
+    expose:
+      - "5432"
+    networks:
+      - cc-net
+    <<: *resource-1c1g
+    healthcheck:
+      test:
+        - CMD-SHELL
+        - pg_isready -U litellm -d litellm
+      interval: 10s
+      timeout: 5s
+      retries: 5
+      start_period: 30s
+    logging: *logging
+
+  # ─── R44: ms-gateway — lightweight Python gateway replacing LiteLLM ───
+  # Replaces litellm/litellm:v1.87.0 (1.5GB image, 70 dep config.yaml) with
+  # a ~50MB python:3.11-alpine image that directly calls ModelScope API.
+  # Function: receive model_name (e.g. glm5.1v3k5), resolve variant ID + key,
+  # forward to ModelScope via HTTPS. No routing/retries/cooldown — upstream
+  # proxies (cc-proxy etc.) handle all v×k cycling and error management.
+  # LiteLLM config.yaml kept in repo for rollback reference (not mounted).
+  ms_uni41001:
+    build:
+      context: ./proxy/ms-gateway
+      dockerfile: Dockerfile
+    container_name: ms_uni41001
+    restart: unless-stopped
+    environment:
+      LISTEN_PORT: "4000"
+      UPSTREAM_TIMEOUT: "300"
+      PROXY_TIMEOUT: "300"
+      GATEWAY_KEY: sk-litellm-local
+      MS_BASEURL: https://api-inference.modelscope.cn/v1
+      MS_KEY1: ms-bb4e5bee-ca0e-49be-8de3-2347a57752f5
+      MS_KEY2: ms-b836c297-9cb3-45f7-86b3-a33e1b76f48f
+      MS_KEY3: ms-202e8dc3-b2f0-4aa3-9b56-0fa6798ac5b9
+      MS_KEY4: ms-ed773f9d-9ca1-4fd9-87e4-b6acd0e545ae
+      MS_KEY5: ms-69d3fbc6-6938-4fb1-b403-dfa44a05fb0c
+      MS_KEY6: ms-e392cb51-9637-4766-80aa-490a6044294c
+      MS_KEY7: ms-20761627-ec32-497c-a11a-7ff580617f0b
+      LOG_DIR: /app/logs
+      TZ: Asia/Shanghai
+    <<: *resource-1c1g-host
+    volumes:
+      - ./logs/ms-gateway:/app/logs
+      - /etc/localtime:/etc/localtime:ro
+    ports:
+      - 41001:4000
+    networks:
+      - cc-net
+    # R44: No depends_on cc_postgres — ms-gateway doesn't use DB.
+    # LiteLLM needed DB for its router state; ms-gateway is pure passthrough.
+    healthcheck:
+      test:
+        - CMD-SHELL
+        - python3 -c "import urllib.request; urllib.request.urlopen('http://localhost:4000/health')" || exit 1
+      interval: 30s
+      timeout: 5s
+      retries: 3
+      start_period: 10s
+    logging: *logging
+
+  # ─── 40001: FALLBACK CC proxy (pure MS, stable baseline) ───
+  auth_to_api_40001:
+    build:
+      context: ./proxy/cc-proxy
+      dockerfile: Dockerfile
+    container_name: auth_to_api_40001
+    restart: unless-stopped
+    environment:
+      PROXY_ROLE: cc
+      LITELLM_URL_GLM51: http://ms_uni41001:4000/v1/chat/completions
+      LITELLM_MODELS_URL_GLM51: http://ms_uni41001:4000/v1/models
+      LITELLM_KEY: sk-litellm-local
+      LISTEN_PORT: "40001"
+      PROXY_TIMEOUT: "300"
+      UPSTREAM_TIMEOUT: "60"
+      MAX_TOOL_DESC: "2000"
+      MAX_SCHEMA_DESC: "600"
+      CHARS_PER_TOKEN_ESTIMATE: "3.0"
+      MODEL_INPUT_TOKEN_SAFETY_GLM51: "170000"
+      NUM_KEYS: "7"
+      NUM_VARIANTS_GLM51: "10"
+      MIN_OUTBOUND_INTERVAL_S: "1.5"
+      NV_NUM_KEYS: "0"
+      NV_TIMEOUT: "20"
+      NV_BASEURL: https://integrate.api.nvidia.com/v1
+      NV_KEY1: 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
+      NV_KEY2: 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
+      NV_PROXY_URL: http://host.docker.internal:7894
+      LOG_DIR: /app/logs
+      LOG_RETENTION_DAYS: "7"
+      TZ: Asia/Shanghai
+    <<: *resource-1c1g-host
+    volumes:
+      - ./logs/proxy40001:/app/logs
+      - /etc/localtime:/etc/localtime:ro
+    ports:
+      - 40001:40001
+    networks:
+      - cc-net
+    depends_on:
+      - ms_uni41001
+    healthcheck:
+      test:
+        - CMD-SHELL
+        - python3 -c "import urllib.request; urllib.request.urlopen('http://localhost:40001/health')" || exit 1
+      interval: 30s
+      timeout: 5s
+      retries: 3
+      start_period: 15s
+    logging: *logging
+
+  # ─── 40005: PRIMARY CC proxy (MS-NV alternating, EXPERIMENT) ───
+  auth_to_api_40005:
+    build:
+      context: ./proxy/cc-proxy
+      dockerfile: Dockerfile
+    container_name: auth_to_api_40005
+    restart: unless-stopped
+    environment:
+      PROXY_ROLE: cc
+      LITELLM_URL_GLM51: http://ms_uni41001:4000/v1/chat/completions
+      LITELLM_MODELS_URL_GLM51: http://ms_uni41001:4000/v1/models
+      LITELLM_KEY: sk-litellm-local
+      LISTEN_PORT: "40005"
+      PROXY_TIMEOUT: "300"
+      UPSTREAM_TIMEOUT: "60"
+      MAX_TOOL_DESC: "2000"
+      MAX_SCHEMA_DESC: "600"
+      CHARS_PER_TOKEN_ESTIMATE: "3.0"
+      MODEL_INPUT_TOKEN_SAFETY_GLM51: "170000"
+      NUM_KEYS: "7"
+      NUM_VARIANTS_GLM51: "10"
+      MIN_OUTBOUND_INTERVAL_S: "1.5"
+      # R36: 5 NV keys + strict alternating + per-key proxy + timeout
+      NV_NUM_KEYS: "5"
+      # R36.5: NV_TIMEOUT 40→30 — NV last-resort mode: success p50=13.4s, p80=~30s
+      #   30s captures 80% of viable NV requests while limiting waste per failure.
+      #   With MS-first design, NV is only tried on MS all-429 (rare), so fewer timeouts overall.
+      NV_TIMEOUT: "30"
+      NV_BASEURL: https://integrate.api.nvidia.com/v1
+      NV_KEY1: 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
+      NV_KEY2: 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
+      NV_KEY3: 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
+      NV_KEY4: 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
+      NV_KEY5: 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
+      NV_PROXY_URL: http://host.docker.internal:7894
+      NV_PROXY_URL_MAP: '{"0":"http://host.docker.internal:7894","1":"http://host.docker.internal:7895","2":"http://host.docker.internal:7896","3":"http://host.docker.internal:7897","4":"http://host.docker.internal:7899"}'
+      NV_MAX_CYCLE: "1200000"
+      # R42: Tier reorder — deepseek first (verified fast, 1-3s, 100% rate).
+      # Previously glm-5.1 was Tier 1 but frequently timeouts (30s+ on NVCF),
+      # wasting budget before reaching working models. R42 also removed NV-TIER-SKIP
+      # so all tiers are tried regardless of failure type.
+      # NV_TIER_TIMEOUT_BUDGET_S: total time budget for all NV tiers (R38.7).
+      # R42: With deepseek Tier 1 (1-3s), budget 45s is generous for at least 1-2 tier attempts.
+      NV_FALLBACK_TIERS: '[["deepseek-ai/deepseek-v4-pro","deepseek_nv"],["moonshotai/kimi-k2.6","kimi_nv"],["z-ai/glm-5.1","glm5.1_nv"]]'
+      NV_TIER_TIMEOUT_BUDGET_S: "45"  # R41-1: 90→45 — NV last-resort 24h data: 43 triggers, 8 success (18.6%), 37 fail at attempt 4 (~102s). Front keys timeout→NV unavailable, 45s=1key(30s)+1key(15s), saves ~55s/fail.
+      LOG_DIR: /app/logs
+      LOG_RETENTION_DAYS: "7"
+      TZ: Asia/Shanghai
+    <<: *resource-1c1g-host
+    volumes:
+      - ./logs/proxy40005:/app/logs
+      - /etc/localtime:/etc/localtime:ro
+    ports:
+      - 40005:40005
+    networks:
+      - cc-net
+    depends_on:
+      - ms_uni41001
+    healthcheck:
+      test:
+        - CMD-SHELL
+        - python3 -c "import urllib.request; urllib.request.urlopen('http://localhost:40005/health')" || exit 1
+      interval: 30s
+      timeout: 5s
+      retries: 3
+      start_period: 15s
+    logging: *logging
+
+  # ─── 40000: CC model→endpoint dispatcher ───
+  auth_to_api_40000:
+    build:
+      context: ./proxy/dispatcher
+      dockerfile: Dockerfile
+    container_name: auth_to_api_40000
+    restart: unless-stopped
+    environment:
+      LISTEN_PORT: "40000"
+      DISPATCH_PRIMARY: "http://auth_to_api_40005:40005"
+      DISPATCH_FALLBACK: "http://auth_to_api_40001:40001"
+      UPSTREAM_TIMEOUT: "60"
+      PROXY_TIMEOUT: "600"
+      TZ: Asia/Shanghai
+    ports:
+      - 40000:40000
+    networks:
+      - cc-net
+    depends_on:
+      - auth_to_api_40005
+      - auth_to_api_40001
+    <<: *resource-1c1g
+    healthcheck:
+      test:
+        - CMD-SHELL
+        - python3 -c "import urllib.request; urllib.request.urlopen('http://localhost:40000/health')" || exit 1
+      interval: 30s
+      timeout: 5s
+      retries: 3
+      start_period: 10s
+    logging: *logging
+
+  # ─── 40002: Codex proxy (Responses API → glm5.1 v×k) ───
+  auth_to_api_40002:
+    build:
+      context: ./proxy/codex-proxy
+      dockerfile: Dockerfile
+    container_name: auth_to_api_40002
+    restart: unless-stopped
+    environment:
+      PROXY_ROLE: codex
+      LITELLM_URL_GLM51: http://ms_uni41001:4000/v1/chat/completions
+      LITELLM_MODELS_URL_GLM51: http://ms_uni41001:4000/v1/models
+      LITELLM_KEY: sk-litellm-local
+      LISTEN_PORT: "40002"
+      PROXY_TIMEOUT: "300"
+      UPSTREAM_TIMEOUT: "60"
+      MAX_TOOL_DESC: "2000"
+      MAX_SCHEMA_DESC: "600"
+      CHARS_PER_TOKEN_ESTIMATE: "3.0"
+      MODEL_INPUT_TOKEN_SAFETY_GLM51: "170000"
+      NUM_KEYS: "7"
+      NUM_VARIANTS_GLM51: "10"
+      LOG_DIR: /app/logs
+      LOG_RETENTION_DAYS: "7"
+      TZ: Asia/Shanghai
+    volumes:
+      - ./logs/proxy40002:/app/logs
+      - /etc/localtime:/etc/localtime:ro
+    ports:
+      - 40002:40002
+    networks:
+      - cc-net
+    depends_on:
+      - ms_uni41001
+    <<: *resource-1c1g
+    healthcheck:
+      test:
+        - CMD-SHELL
+        - python3 -c "import urllib.request; urllib.request.urlopen('http://localhost:40002/health')" || exit 1
+      interval: 30s
+      timeout: 5s
+      retries: 3
+      start_period: 15s
+    logging: *logging
+
+  # ─── 40003: Passthrough proxy (OpenAI → pure MS v×k) ───
+  auth_to_api_40003:
+    build:
+      context: ./proxy/passthrough-proxy
+      dockerfile: Dockerfile
+    container_name: auth_to_api_40003
+    restart: unless-stopped
+    environment:
+      PROXY_ROLE: passthrough
+      LITELLM_URL_GLM51: http://ms_uni41001:4000/v1/chat/completions
+      LITELLM_MODELS_URL_GLM51: http://ms_uni41001:4000/v1/models
+      LITELLM_KEY: sk-litellm-local
+      LISTEN_PORT: "40003"
+      PROXY_TIMEOUT: "300"
+      UPSTREAM_TIMEOUT: "60"
+      MAX_TOOL_DESC: "2000"
+      MAX_SCHEMA_DESC: "600"
+      CHARS_PER_TOKEN_ESTIMATE: "3.0"
+      MODEL_INPUT_TOKEN_SAFETY_GLM51: "170000"
+      NUM_KEYS: "7"
+      NUM_VARIANTS_GLM51: "10"
+      MIN_OUTBOUND_INTERVAL_S: "1.8"
+      BURST_COOLDOWN_S: "8"
+      NV_NUM_KEYS: "0"
+      NV_TIMEOUT: "20"
+      NV_BASEURL: https://integrate.api.nvidia.com/v1
+      NV_KEY1: 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
+      NV_KEY2: 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
+      NV_PROXY_URL: http://host.docker.internal:7894
+      LOG_DIR: /app/logs
+      LOG_RETENTION_DAYS: "7"
+      TZ: Asia/Shanghai
+    <<: *resource-1c1g-host
+    volumes:
+      - ./logs/proxy40003:/app/logs
+      - /etc/localtime:/etc/localtime:ro
+    ports:
+      - 40003:40003
+    networks:
+      - cc-net
+    depends_on:
+      - ms_uni41001
+    healthcheck:
+      test:
+        - CMD-SHELL
+        - python3 -c "import urllib.request; urllib.request.urlopen('http://localhost:40003/health')" || exit 1
+      interval: 30s
+      timeout: 5s
+      retries: 3
+      start_period: 15s
+    logging: *logging
+
+
+  # ─── R38.12: hm40006 — Hermes NV proxy (ALL models via NVCF pexec) ───
+  # Hermes → 40006 → NVCF pexec (per-model ACTIVE function) → per-key SOCKS5 proxy → mihomo → NV API
+  # R38.12: dsv4p only via NVCF pexec direct path.
+  #   LiteLLM 41101-41105 no longer used for routing (kept as manual fallback only).
+  #   Per-model strip_params: glm5.1 strips thinking_budget (NVCF rejects it).
+  #   deepseek/kimi pass all params through (NVCF accepts them).
+  # R38.6 critical fixes preserved: sock.settimeout() BEFORE getresponse(), Connection:close
+  hm40006:
+    build:
+      context: ./proxy/hm-proxy
+      dockerfile: Dockerfile
+    container_name: hm40006
+    restart: unless-stopped
+    environment:
+      PROXY_ROLE: passthrough
+      LISTEN_PORT: "40006"
+      PROXY_TIMEOUT: "300"
+      UPSTREAM_TIMEOUT: "25"  # R490: HM2→HM1 — 23→25 (+2s revert R481). 30min SR=72.7% with 15 ATE avg 47.7s≈2×23s ceiling; non-stream 0% SR; 5 success 22-23s near edge; +2s headroom for kimi-k2.6 thinking requests; 少改多轮; 铁律:只改HM1不改HM2
+      TIER_TIMEOUT_BUDGET_S: "100"  # R505: HM2→HM1 — BUDGET 125→80 (-45s). 单tier持久化不再需要125s冗余; 3model各对1func, ATE 3连pexec timeout fastbreak=2已在60s break; 80s给3key富余+防止EDGE dooming. R386: HM2→HM1 — BUDGET 120→125 +5s预算头寸. 30min: 649req/644OK(99.23%)/5ATE(0.77%)/0 429s; P50=7.2s P95=36s; 5 ATE各消耗95-101s后ABORT(remaining 19-25s<UPSTREAM=45s). +5s遨给extra 5s budget让proxy试第3键(6s throttle+45s key=51s), 余量增加26% \(20→26s\) . 少改多轮(单参数). 铁律:只改HM1不改HM2
+      CHARS_PER_TOKEN_ESTIMATE: "3.0"
+      MIN_OUTBOUND_INTERVAL_S: "2.0"  # R442: HM2→HM1 — 4.0→3.8 (-0.2s): 微调throttle, 6h 1165/1176=99.07%, 11 ATE全NVCFPexecTimeout server-side, 5key均衡P50 6.8-8.6s, p50_gap=8.26s>>3.8s, 少改多轮; 铁律:只改HM1不改HM2
+      KEY_COOLDOWN_S: "25"  # R162: HM2->HM1 — KEY_COOLDOWN_S 34->38 (+4s). R161: KEY=34<TIER=38 反向(修复合并cooldown出手过早); KEY>=TIER确保key不抢先; 30min 99.5% 3ATE; 0 429; 少改多轮(单参数); 铁律:只改HM1不改HM2
+      TIER_COOLDOWN_S: "25"  # R492: HM2→HM1 — TIER_COOLDOWN_S 38→25 (-13). 修复KEY(25)<TIER(38)不变量; 单tier架构TIER_COOLDOWN为死参数; KEY=TIER=25恢复等值; 零429; 少改多轮; 铁律:只改HM1不改HM2
+      HM_FORCE_STREAM_UPGRADE: "1"  # R502: non-stream→stream upgrade for thinking requests
+      HM_FORCE_STREAM_UPGRADE_TIMEOUT: "55"  # R502: extended per-attempt timeout for upgraded thinking requests (55s vs 25s normal). 少改多轮 铁律:只改HM1不改HM2
+      HM_PEER_FALLBACK_ENABLED: "1"   # 跨机peer fallback: 本机all_tiers_exhausted时转发对端hm40006同模型 (用户要求两台互备)
+      HM_PEER_FALLBACK_URL: http://100.109.57.26:40006   # HM1→HM2 fallback (对端是opc2)
+      HM_PEER_FALLBACK_TIMEOUT: "120"
+      # 3model (2026-07-01): 三模型各对应一 NVCF function, env overrideable.
+      #   hermes→kimi_nv(KIMI), opencode→dsv4p_nv(DEEPSEEK), openclaw→glm5_1_nv(GLM51).
+      # 历史: R502 时期曾把 DEEPSEEK env 指向 kimi f966661c (单模型坍缩); 3model 回归 deepseek 真值 8915fd28.
+      #       GLM51: R487 曾用 4e533b45 (orion, 现已 INACTIVE), 6155636e (ai-glm-5_1) 替代.
+      # 实测: glm5.1 6155636e 拒收 thinking+reasoning_effort (双 400) → config.py strip_params 含两者.
+      NVCF_BASE_URL: api.nvcf.nvidia.com
+      NVCF_DEEPSEEK_FUNCTION_ID: 8915fd28-fe8f-47d6-a35d-d745d78b35d5  # sglang-deepseek-v4-pro (ACTIVE, opencode→dsv4p_nv)
+      NVCF_KIMI_FUNCTION_ID: f966661c-790d-4f71-b973-c525fb8eafd4  # nvquery-kimi-k2_6 (ACTIVE, hermes→kimi_nv)
+      NVCF_GLM51_FUNCTION_ID: 6155636e-8ca8-4d9a-b4e5-4e8d231dfd3f  # ai-glm-5_1 (ACTIVE, openclaw→glm5_1_nv; 拒 reasoning_effort+thinking)
+      # NV API keys (shared across all models)
+      HM_NV_KEY1: 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
+      HM_NV_KEY2: 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
+      HM_NV_KEY3: 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
+      HM_NV_KEY4: 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
+      HM_NV_KEY5: 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
+      # Per-key SOCKS5 proxy URLs (mihomo mixed ports). empty=direct.
+      # 路由(unify-nv核实2026-06-30): k1/k3 走 mihomo(7894/7896, 美国动态节点IP); k2/k4/k5 直连(本机出口).
+      # mihomo节点IP动态变化,不在注释里固化(曾记134.195.101.193/194,实测已变).实时出口IP查法: curl -x http://127.0.0.1:7894 https://api.ipify.org
+      HM_NV_PROXY_URL1: "http://host.docker.internal:7894"  # k1(idx0)→mihomo 7894(美国节点).海外代理冗余,应对NVCF对中国IP未来可能风控.铁律破例自改(用户授权).
+      HM_NV_PROXY_URL2: ""  # k2(idx1)→直连(本机出口)
+      HM_NV_PROXY_URL3: "http://host.docker.internal:7896"  # k3(idx2)→mihomo 7896(美国节点).详见URL1注释.
+      HM_NV_PROXY_URL4: "http://host.docker.internal:7896"  # R498: HM2→HM1 — ★k4直连→mihomo 7896(k4直连p95=54.4s全键最慢, k3 7896 p95=35s; 同7896出口分时轮转降被rate limit概率); 少改多轮; 铁律:只改HM1不改HM2
+      HM_NV_PROXY_URL5: ""  # k5(idx4)→直连(原mihomo7899已改直连).
+      LOG_DIR: /app/logs
+      LOG_RETENTION_DAYS: "7"
+      TZ: Asia/Shanghai
+      # R40: structured metrics → cc_postgres hermes_logs DB (best-effort, async)
+      HM_DB_ENABLED: "1"
+      HM_DB_HOST: cc_postgres
+      HM_DB_PORT: "5432"
+      HM_DB_USER: litellm
+      HM_DB_PASSWORD: ${POSTGRES_PASSWORD}
+      HM_DB_NAME: hermes_logs
+      HM_HOST_MACHINE: ${HM_HOST_MACHINE:-opc_uname}
+      HM_CONNECT_RESERVE_S: "5"    # R505: HM2→HM1 — 10→5 (-5s). connect实测0.6-2.1s,10=5-17x过度; 5仍2.4x安全边际,每attempt回收5s read逾期→1extra key in budget. R322: HM2→HM1 — 24→16: connect实测0.6-2.1s(5样本),reserve=24是11-40x过度预留,降到16仍7.6x安全边际,每attempt回收8s read余量(R111升24修复budget_exhausted_after_connect无效-该案由MIN_ATTEMPT_TIMEOUT=5触发非reserve); 少改多轮(单参数); 铁律:只改HM1不改HM2
+      HM_SSLEOF_RETRY_DELAY_S: "2.0"  # R429: HM2→HM1 — SSLEOF_RETRY_DELAY 3.0→2.0 (-1s): 30min仅1次SSLEOF全部retry成功; 2s仍1.5x安全边际(TCP connect 0.6-2.1s实测); 每occurrence省1s加快恢复; 少改多轮(单参数); 铁律:只改HM1不改HM2
+      HM_PEXEC_TIMEOUT_FASTBREAK: "2"  # R473: HM2→HM1 — FASTBREAK 3→2 (-1). 60min实测: 49ATE(21个60-95s+19个sub4s), 6次FASTBREAK=3触发(每次3连pexec timeout耗90s), 降=2在第2连timeout(60s)break省30s/次. empty_200穿插的15个60-95s失败计数reset不受影响(局限). 零误杀: 60min内0个2连pexec-timeout后3rd同请求成功(那1个是并发新请求first-attempt). [HM1-C]fast-fail已由R446实现(FASTBREAK=3), 本轮降=2为其单参数延续. 少改多轮; 铁律:只改HM1不改HM2
+    <<: *resource-1c1g-host
+    volumes:
+      - ./proxy/hm-proxy/gateway:/app/gateway   # unify-nv Layer1: 源码挂载(对齐HM2), 改 .py 只需 restart 不再 rebuild
+      - ./logs/proxy40006:/app/logs
+      - /etc/localtime:/etc/localtime:ro
+    ports:
+      - 40006:40006
+    networks:
+      - cc-net
+    # R38.12: No depends_on LiteLLM containers — hm40006 no longer routes through them.
+    # LiteLLM 41101-41105 kept running as manual fallback (can add back depends_on if needed).
+    healthcheck:
+      test:
+        - CMD-SHELL
+        - python3 -c "import urllib.request; urllib.request.urlopen('http://localhost:40006/health')" || exit 1
+      interval: 30s
+      timeout: 5s
+      retries: 3
+      start_period: 15s
+    logging: *logging
+
+  # ==== R40: 5个 LiteLLM glm5.1 容器 ====
+  # K1,K2 直连(无代理); K3,K4,K5 SOCKS5 美国IP出口
+
+  llm_glm51_41101:
+    build:
+      context: ./proxy/llm-glm51/41101
+      dockerfile: Dockerfile
+    container_name: llm_glm51_41101
+    restart: unless-stopped
+    environment:
+      PORT: "41101"
+      LISTEN_HOST: "0.0.0.0"
+      TZ: Asia/Shanghai
+    <<: *resource-1c1g-host
+    ports:
+      - 41101:41101
+    networks:
+      - cc-net
+    healthcheck:
+      test: ["CMD-SHELL", "python3 -c \"import urllib.request; urllib.request.urlopen('http://localhost:41101/health')\" || exit 1"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+      start_period: 15s
+    logging: *logging
+
+  llm_glm51_41102:
+    build:
+      context: ./proxy/llm-glm51/41102
+      dockerfile: Dockerfile
+    container_name: llm_glm51_41102
+    restart: unless-stopped
+    environment:
+      PORT: "41102"
+      LISTEN_HOST: "0.0.0.0"
+      TZ: Asia/Shanghai
+    <<: *resource-1c1g-host
+    ports:
+      - 41102:41102
+    networks:
+      - cc-net
+    healthcheck:
+      test: ["CMD-SHELL", "python3 -c \"import urllib.request; urllib.request.urlopen('http://localhost:41102/health')\" || exit 1"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+      start_period: 15s
+    logging: *logging
+
+  llm_glm51_41103:
+    build:
+      context: ./proxy/llm-glm51/41103
+      dockerfile: Dockerfile
+    container_name: llm_glm51_41103
+    restart: unless-stopped
+    environment:
+      PORT: "41103"
+      LISTEN_HOST: "0.0.0.0"
+      HTTP_PROXY: "socks5://mihomo:7896"
+      HTTPS_PROXY: "socks5://mihomo:7896"
+      REQUESTS_CA_BUNDLE: /etc/ssl/certs/ca-certificates.crt
+      TZ: Asia/Shanghai
+    <<: *resource-1c1g-host
+    ports:
+      - 41103:41103
+    networks:
+      - cc-net
+    healthcheck:
+      test: ["CMD-SHELL", "python3 -c \"import urllib.request; urllib.request.urlopen('http://localhost:41103/health')\" || exit 1"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+      start_period: 15s
+    logging: *logging
+
+  llm_glm51_41104:
+    build:
+      context: ./proxy/llm-glm51/41104
+      dockerfile: Dockerfile
+    container_name: llm_glm51_41104
+    restart: unless-stopped
+    environment:
+      PORT: "41104"
+      LISTEN_HOST: "0.0.0.0"
+      HTTP_PROXY: "socks5://mihomo:7897"
+      HTTPS_PROXY: "socks5://mihomo:7897"
+      REQUESTS_CA_BUNDLE: /etc/ssl/certs/ca-certificates.crt
+      TZ: Asia/Shanghai
+    <<: *resource-1c1g-host
+    ports:
+      - 41104:41104
+    networks:
+      - cc-net
+    healthcheck:
+      test: ["CMD-SHELL", "python3 -c \"import urllib.request; urllib.request.urlopen('http://localhost:41104/health')\" || exit 1"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+      start_period: 15s
+    logging: *logging
+
+  llm_glm51_41105:
+    build:
+      context: ./proxy/llm-glm51/41105
+      dockerfile: Dockerfile
+    container_name: llm_glm51_41105
+    restart: unless-stopped
+    environment:
+      PORT: "41105"
+      LISTEN_HOST: "0.0.0.0"
+      HTTP_PROXY: "socks5://mihomo:7899"
+      HTTPS_PROXY: "socks5://mihomo:7899"
+      REQUESTS_CA_BUNDLE: /etc/ssl/certs/ca-certificates.crt
+      TZ: Asia/Shanghai
+    <<: *resource-1c1g-host
+    ports:
+      - 41105:41105
+    networks:
+      - cc-net
+    healthcheck:
+      test: ["CMD-SHELL", "python3 -c \"import urllib.request; urllib.request.urlopen('http://localhost:41105/health')\" || exit 1"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+      start_period: 15s
+    logging: *logging
+
+networks:
+  cc-net:
+    driver: bridge
+
+volumes:
+  cc_pgdata:
