@@ -33,11 +33,27 @@ R502 时期 hm40006 单模型坍缩: 三 agent (hermes/openclaw/opencode) 全打
 
 ### 1. gateway/config.py
 - NVCF_PEXEC_MODELS 从单 dsv4p_nv 扩为 kimi_nv/dsv4p_nv/glm5_1_nv 三模型
-- glm5.1 strip_params = ["thinking_budget","reasoning_effort","thinking"] (三者实测均 400)
-- glm5.1 inject_thinking=False; kimi/dsv4p inject_thinking=True (注入无害)
+- glm5.1 strip_params = ["thinking_budget","reasoning_effort"] (两者实测均 400)
+- ★ **三模型全 inject_thinking=False** (部署中修正, 见下方"部署中关键修正")
 - NV_MODEL_TIERS 三元素 (仅 get_tier_index 定位用)
 - MODEL_MAP 改 pass-through (不再坍缩)
 - DEFAULT_NV_MODEL=dsv4p_nv
+- MODEL_INPUT_TOKEN_SAFETY 扩三模型各 131072
+
+### 1b. gateway/pexec.py (部署中关键修正)
+- 删 R503 旧逻辑: 同时注入 reasoning_effort=medium + thinking:{type:enabled} 两字段
+- 新逻辑: inject_thinking=True 时只注入 reasoning_effort=medium (不再叠 thinking)
+- ★ 最终 config.py 三模型全 inject_thinking=False → 不注入任何字段, 裸请求最稳
+
+## 部署中关键修正 (推翻 cc2 v2 的 inject 假设)
+cc2 v2 接受 "inject_thinking=True 对 kimi/dsv4p 注入无害(200)" — 实测推翻:
+- 裸 probe: kimi/dsv4p 不带任何思考参数 → 200 content 正常
+- 注入 reasoning_effort=medium: kimi/dsv4p content=None (empty_200)
+- 注入 thinking:{type:enabled}: kimi content=None
+- 两字段叠加: 两者均 content=None
+→ R503 旧 pexec.py 两字段叠加注入 = 必然 empty_200.
+→ "reasoning_effort 是 deepseek 真触发字段" 结论是错的: 注入它反而把响应打空.
+→ 最终: 三模型 inject_thinking=False, 不注入, 裸请求返内容. 思考能力 sacrifice (裸 probe rc 本就全 0).
 
 ### 2. gateway/upstream.py (单点 diff)
 - `tier_order = NV_MODEL_TIERS[start:] + NV_MODEL_TIERS[:start]` → `tier_order = [mapped_model]`
