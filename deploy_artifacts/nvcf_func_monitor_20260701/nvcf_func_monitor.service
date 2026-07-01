@@ -1,0 +1,10 @@
+[Unit]
+Description=NVCF function health monitor (hm40006 backend lifecycle watch)
+After=docker.service
+
+[Service]
+Type=oneshot
+User=opc_uname
+ExecStart=/usr/bin/python3 /home/opc_uname/hm_ps/hermes_improve_self/scripts/nvcf_func_monitor.py
+StandardOutput=append:/home/opc_uname/hm_ps/hermes_improve_self/logs/nvcf_func_monitor.log
+StandardError=append:/home/opc_uname/hm_ps/hermes_improve_self/logs/nvcf_func_monitor.log
