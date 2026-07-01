@@ -225,6 +225,8 @@ class ProxyHandler(http.server.BaseHTTPRequestHandler):
                 metrics["error_type"] = "nv_upstream_error"
                 metrics["error_message"] = str(error_json)[:200]
                 metrics["duration_ms"] = int((time.time() - t_start) * 1000)
+                metrics["tier_model"] = mapped_model
+                metrics["error_subcategory"] = "nv_upstream_error"
                 _log_metrics(metrics)
                 self._send_json(client_status, error_payload, extra_headers=extra_hdrs)
                 return
@@ -367,6 +369,9 @@ class ProxyHandler(http.server.BaseHTTPRequestHandler):
         if metrics.get("error_type"):
             metrics["status"] = 502
             metrics["duration_ms"] = int((time.time() - t_start) * 1000)
+            # R507: ensure tier_model set even on force_stream_upgrade error path
+            if not metrics.get("tier_model"):
+                metrics["tier_model"] = metrics.get("mapped_model")
             _log_metrics(metrics)
             self._send_json(502, {"error": {"message": "upstream stream accumulation failed",
                                             "type": "upstream_error", "code": "502"}})
