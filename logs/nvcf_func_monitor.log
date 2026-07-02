@@ -1962,3 +1962,31 @@
 [2026-07-02 21:24:07]    (信息) watched-prefix ACTIVE 候选 2 个:
 [2026-07-02 21:24:07]       sglang-deepseek-v4-pro              8915fd28  created=2026-07-01
 [2026-07-02 21:24:07]       nvquery-kimi-k2_6                   f966661c  created=2026-06-30
+[2026-07-02 22:24:37] === NVCF function 健康检查开始 ===
+[2026-07-02 22:24:37] ERROR: 无法从 nv_40006_uni 读取 keys/function_id (容器异常?)
+[2026-07-02 22:34:40] === NVCF function 健康检查开始 ===
+[2026-07-02 22:34:41] ERROR: 无法从 nv_40006_uni 读取 keys/function_id (容器异常?)
+[2026-07-02 22:44:43] === NVCF function 健康检查开始 ===
+[2026-07-02 22:44:43] ERROR: 无法从 nv_40006_uni 读取 keys/function_id (容器异常?)
+[2026-07-02 22:54:48] === NVCF function 健康检查开始 ===
+[2026-07-02 22:54:48] ERROR: 无法从 nv_40006_uni 读取 keys/function_id (容器异常?)
+[2026-07-02 23:04:57] === NVCF function 健康检查开始 ===
+[2026-07-02 23:04:57] ERROR: 无法从 nv_40006_uni 读取 keys/function_id (容器异常?)
+[2026-07-02 23:14:58] === NVCF function 健康检查开始 ===
+[2026-07-02 23:14:58] ERROR: 无法从 nv_40006_uni 读取 keys/function_id (容器异常?)
+[2026-07-02 23:25:02] === NVCF function 健康检查开始 ===
+[2026-07-02 23:25:02] ERROR: 无法从 nv_40006_uni 读取 keys/function_id (容器异常?)
+[2026-07-02 23:35:07] === NVCF function 健康检查开始 ===
+[2026-07-02 23:35:08] ERROR: 无法从 nv_40006_uni 读取 keys/function_id (容器异常?)
+[2026-07-02 23:45:18] === NVCF function 健康检查开始 ===
+[2026-07-02 23:45:18] ERROR: 无法从 nv_40006_uni 读取 keys/function_id (容器异常?)
+[2026-07-02 23:55:32] === NVCF function 健康检查开始 ===
+[2026-07-02 23:55:33] ERROR: 无法从 nv_40006_uni 读取 keys/function_id (容器异常?)
+[2026-07-03 00:05:41] === NVCF function 健康检查开始 ===
+[2026-07-03 00:05:41] ERROR: 无法从 nv_40006_uni 读取 keys/function_id (容器异常?)
+[2026-07-03 00:15:47] === NVCF function 健康检查开始 ===
+[2026-07-03 00:15:48] ERROR: 无法从 nv_40006_uni 读取 keys/function_id (容器异常?)
+[2026-07-03 00:25:48] === NVCF function 健康检查开始 ===
+[2026-07-03 00:25:48] ERROR: 无法从 nv_40006_uni 读取 keys/function_id (容器异常?)
+[2026-07-03 00:36:00] === NVCF function 健康检查开始 ===
+[2026-07-03 00:36:00] ERROR: 无法从 nv_40006_uni 读取 keys/function_id (容器异常?)
