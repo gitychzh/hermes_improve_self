@@ -121,7 +121,7 @@ R320 session犯了3个错, 后续轮次严防:
 
 ## R322教训(必读, 避免重蹈)
 R322 session犯了4个错, 后续轮次严防:
-1. **live compose未同步(重演R320#4)**: 改了容器运行态env(PROXY_URL4=""→7897)但live `/opt/cc-infra/docker-compose.yml` line 438还是空. 下次docker compose up会回退. → 改env类参数, 必须改live compose文件并对端`docker compose up -d --force-recreate hm40006`(或rm -f后up)重建, 再`docker exec env`验证从compose读到的值. 不许只改容器运行态.
+1. **live compose未同步(重演R320#4)**: 改了容器运行态env(PROXY_URL4=""→7897)但live `/opt/cc-infra/docker-compose.yml` line 438还是空. 下次docker compose up会回退. → 改env类参数, 必须改live compose文件并对端`docker compose up -d --force-recreate nv_40006_uni`(或rm -f后up)重建, 再`docker exec env`验证从compose读到的值. 不许只改容器运行态.
 2. **commit改错文件**: live `/opt/cc-infra/docker-compose.yml` **不在git仓库**. 仓库里只有归档副本`deploy_artifacts/hm1_gateway_modular_R310/docker-compose.hm1.R310.yml`(R310快照,非live). 改归档副本对运行态无影响. → 改完live compose后, round文件里**显式说明"live compose不在git, 本次改动已部署生效但未入git, CC托底时会同步"**, 不要把改动commit到归档副本冒充live.
 3. **round文件命名错**: 写到`rounds/RN_hm2_optimize_hm1.md`(模板)而非`rounds/R322_hm2_optimize_hm1.md`. → round文件必须命名`R<N>_hmX_optimize_hmY.md`, 不许写到RN模板.
 4. **一轮三改+中途改动未记录**: 同时改k4路由+UPSTREAM_TIMEOUT+BUDGET(后两项称"同步误配"仍算改), 且CONNECT_RESERVE 24→16中途改了但round文件和commit都没提. → 一轮严格1参数; 任何中途试探改动(即使最终没用)都必须记入round文件, 不可溯源=违规.

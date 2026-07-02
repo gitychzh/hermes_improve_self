@@ -2,7 +2,7 @@
 """
 NVCF function 健康监控 (2026-07-01)
 
-目的: 自动检测 hm40006 当前使用的 NVCF function 是否进入衰退/下架状态,
+目的: 自动检测 nv_40006_uni 当前使用的 NVCF function 是否进入衰退/下架状态,
       并在故障前预警 + 推荐替代 function。
 
 机制 (见 memory: nvcf-function-lifecycle-mechanism-2026-07-01):
@@ -33,7 +33,7 @@ urllib3.disable_warnings()
 REPO = "/home/opc_uname/hm_ps/hermes_improve_self"
 LOG_FILE = f"{REPO}/logs/nvcf_func_monitor.log"
 NVCF_BASE = "https://api.nvcf.nvidia.com/v2/nvcf/functions"
-# 关注的 model 名称前缀 (deepseek-v4 + kimi, 即 hm40006 可能用的后端)
+# 关注的 model 名称前缀 (deepseek-v4 + kimi, 即 nv_40006_uni 可能用的后端)
 WATCH_PREFIXES = ("deepseek-v4", "kimi")
 # 思考链实测时用的 model 字段候选 (按 function name 匹配)
 MODEL_FIELD_CANDIDATES = {
@@ -60,10 +60,10 @@ def log(msg):
             pass
 
 
-def get_hm40006_env(var):
-    """从 hm40006 容器读 env (避免在宿主机暴露 keys)"""
+def get_nv_40006_uni_env(var):
+    """从 nv_40006_uni 容器读 env (避免在宿主机暴露 keys)"""
     r = subprocess.run(
-        ["docker", "exec", "hm40006", "python3", "-c",
+        ["docker", "exec", "nv_40006_uni", "python3", "-c",
          f"from gateway.config import {var}; print({var})"],
         capture_output=True, text=True, timeout=15
     )
@@ -73,7 +73,7 @@ def get_hm40006_env(var):
 def get_keys_and_current():
     """拿 keys + 当前 function_id + model id 映射"""
     r = subprocess.run(
-        ["docker", "exec", "hm40006", "python3", "-c",
+        ["docker", "exec", "nv_40006_uni", "python3", "-c",
          "import os, json; from gateway.config import HM_NV_KEYS, NV_MODEL_IDS, NVCF_PEXEC_MODELS; "
          "fid = os.environ.get('NVCF_DEEPSEEK_FUNCTION_ID') or NVCF_PEXEC_MODELS['dsv4p_nv'].get('function_id',''); "
          "print(json.dumps({'keys': HM_NV_KEYS, 'fid': fid, 'model_ids': NV_MODEL_IDS}))"],
@@ -165,7 +165,7 @@ def main():
     log("=== NVCF function 健康检查开始 ===")
     info = get_keys_and_current()
     if not info:
-        log("ERROR: 无法从 hm40006 读取 keys/function_id (容器异常?)")
+        log("ERROR: 无法从 nv_40006_uni 读取 keys/function_id (容器异常?)")
         return 3
 
     keys = info["keys"]
@@ -236,10 +236,10 @@ def main():
         best_f, best_r = probed[0]
         log(f"推荐切换到: {best_f.get('name')} ({best_f['id']})")
         log(f"  model 字段: {best_r['model_field']}")
-        log(f"  需改 hm40006:")
+        log(f"  需改 nv_40006_uni:")
         log(f"    1. docker-compose.yml env NVCF_DEEPSEEK_FUNCTION_ID: {best_f['id']}")
         log(f"    2. gateway/config.py NV_MODEL_IDS['dsv4p_nv']: {best_r['model_field']}")
-        log(f"    3. docker compose up -d hm40006 (recreate)")
+        log(f"    3. docker compose up -d nv_40006_uni (recreate)")
         log(f"  并提交到仓库 deploy_artifacts/")
     else:
         log("⚠️ 候选均不支持 reasoning_content — 可切 orion (无思考链但可用) 作降级")
