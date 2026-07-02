@@ -1,7 +1,0 @@
-from gateway.config import TIER_TIMEOUT_BUDGET_S, TIER_COOLDOWN_S, KEY_COOLDOWN_S
-print("TIER_TIMEOUT_BUDGET_S:", TIER_TIMEOUT_BUDGET_S)
-print("TIER_COOLDOWN_S:", TIER_COOLDOWN_S)
-print("KEY_COOLDOWN_S:", KEY_COOLDOWN_S)
-# Also check upstream.py's imports
-from gateway.upstream import HM_CONNECT_RESERVE_S
-print("HM_CONNECT_RESERVE_S:", HM_CONNECT_RESERVE_S)

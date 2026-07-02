@@ -1,3 +1,9 @@
 .hm1_processed_head
 .hm2_processed_head
 .my_turn_trigger
+.run_my_turn.lock
+__pycache__/
+*.pyc
+llm_requests.db
+logs/prompt_*.txt
+tmp_*.py
