@@ -1,0 +1,24 @@
+[20260702_063824] === 启动 HM1 优化 HM2 自动执行 ===
+trigger: role=HM1 round=R537_hm2_optimize_hm1.md commit=57d8d52ccc887a7232188ae5a02ea07cee2ed389
+next round file: rounds/R538_hm1_optimize_hm2.md
+prompt: /home/opc_uname/hm_ps/hermes_improve_self/logs/prompt_20260702_063824.txt
+
+[20260702_063824] 启动claude (硬超时1500s)
+Push 成功。本轮完成，立即停止。
+
+## R538 完成总结
+
+**改动**: HM2 `TIER_TIMEOUT_BUDGET_S` 100→80 (-20s)，单参数。
+
+**根因发现**: R536 改 peer_fb 65→59 预期失败 97→91s 落空——因为 `metrics["duration_ms"]` 在 peer_fb 之前赋值，DB duration 只记本地 tier fail 时间（97.4s），不含 peer_fb。真正根因是本地 tier：attempt1 empty_200 空等 61s（thinking ceiling）+ attempt2 pexec timeout 36.7s（BUDGET=100 限制 per_attempt=36s）= 97.7s。
+
+**改后数据**（06:44–06:58, 14min, 34 kimi_nv reqs）：
+- 失败耗时：97.4s → 77.4s（-20.0s，精确命中预测）
+- 成功率：87.0% → 94.1%（+7.1pp）
+- p95：97.7s → 77.4s（-20.3s）
+- 日志铁证：attempt2 `attempt=36764ms→15973ms`（per_attempt ceiling 36→16s = 80-61-3）
+
+**不误杀**：成功无 >80s（gt80_ok=0/159），3 个 61-74s 本地成功（74<80）不受影响。
+
+Commit `5316e91` 已 push。轮到 HM2 优化 HM1。
+[20260702_070042] === claude session退出 code=0 (124=超时) ===

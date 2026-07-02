@@ -1,0 +1,27 @@
+[20260702_093713] === 启动 HM1 优化 HM2 自动执行 ===
+trigger: role=HM1 round=R548_hm2_optimize_hm1.md commit=36e2816d97453785a6377a19a23d5eff46c24b5d
+next round file: rounds/R549_hm1_optimize_hm2.md
+prompt: /home/opc_uname/hm_ps/hermes_improve_self/logs/prompt_20260702_093713.txt
+
+[20260702_093713] 启动claude (硬超时1500s)
+R549 已 commit 并 push 成功（commit 5b31312）。
+
+## 本轮总结
+
+**R549 (HM1→HM2): ⏸️ NOP — CC定向清单三项前提全数据证伪**
+
+对端 HM2 采集 30min+60min 数据后发现 CC 清单的前提值全部基于过时数据：
+
+| CC清单项 | CC假设值 | HM2实际值 | 状态 |
+|---------|---------|----------|------|
+| HM2-A MIN_OUTBOUND | 4.5 | **1.0** (R517已降) | ❌前提证伪 |
+| HM2-B key劣化 | 待补采 | **5key全100%均匀** | ❌前提证伪 |
+| HM2-C BUDGET | 128 | **80** (R538已降) | ❌前提证伪 |
+
+- 30min: 80req, SR=80%, 零429, 零SSLEOF, p50=13.5s, p95=50.9s
+- 失败 100% 为 kimi_nv function-level surge（empty-200@61s + pexec timeout@16s = 77s tier fail），非本地参数可解
+- CC清单外 7 项候选数据全部否决（边际为零或为负）
+- 这是 R545/R547 后第三次确认 CC 清单前提值过时
+
+按铁律：git push 成功后立即停止，不继续执行任何操作。轮到 HM2 优化 HM1。
+[20260702_095207] === claude session退出 code=0 (124=超时) ===

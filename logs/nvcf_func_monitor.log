@@ -861,3 +861,1067 @@
 [2026-07-02 01:24:08]       ai-deepseek-v4-pro                  74f02205  created=2026-06-30
 [2026-07-02 01:24:08]       nvquery-kimi-k2_6                   f966661c  created=2026-06-30
 [2026-07-02 01:24:08]       ai-kimi-k2_6                        23d4f03a  created=2026-06-03
+[2026-07-02 01:34:08] === NVCF function 健康检查开始 ===
+[2026-07-02 01:34:08] 当前 function_id: 8915fd28-fe8f-47d6-a35d-d745d78b35d5
+[2026-07-02 01:34:08] 当前 NV_MODEL_IDS: {'kimi_nv': 'moonshotai/kimi-k2.6', 'dsv4p_nv': 'deepseek-ai/deepseek-v4-pro', 'glm5_1_nv': 'z-ai/glm-5.1'}
+[2026-07-02 01:34:09] NVCF 账号共 169 个 functions
+[2026-07-02 01:34:09] 当前 function: name=sglang-deepseek-v4-pro status=ACTIVE created=2026-07-01 ncaId=NtdWlOIq9M-C
+[2026-07-02 01:34:09] ✅ 当前 function ACTIVE, 正常
+[2026-07-02 01:34:09]    (信息) watched-prefix ACTIVE 候选 4 个:
+[2026-07-02 01:34:09]       ai-deepseek-v4-flash                52e1ddb6  created=2026-06-29
+[2026-07-02 01:34:09]       ai-deepseek-v4-pro                  74f02205  created=2026-06-30
+[2026-07-02 01:34:09]       nvquery-kimi-k2_6                   f966661c  created=2026-06-30
+[2026-07-02 01:34:09]       ai-kimi-k2_6                        23d4f03a  created=2026-06-03
+[2026-07-02 01:44:08] === NVCF function 健康检查开始 ===
+[2026-07-02 01:44:08] 当前 function_id: 8915fd28-fe8f-47d6-a35d-d745d78b35d5
+[2026-07-02 01:44:08] 当前 NV_MODEL_IDS: {'kimi_nv': 'moonshotai/kimi-k2.6', 'dsv4p_nv': 'deepseek-ai/deepseek-v4-pro', 'glm5_1_nv': 'z-ai/glm-5.1'}
+[2026-07-02 01:44:09] NVCF 账号共 169 个 functions
+[2026-07-02 01:44:09] 当前 function: name=sglang-deepseek-v4-pro status=ACTIVE created=2026-07-01 ncaId=NtdWlOIq9M-C
+[2026-07-02 01:44:09] ✅ 当前 function ACTIVE, 正常
+[2026-07-02 01:44:09]    (信息) watched-prefix ACTIVE 候选 4 个:
+[2026-07-02 01:44:09]       ai-deepseek-v4-flash                52e1ddb6  created=2026-06-29
+[2026-07-02 01:44:09]       ai-deepseek-v4-pro                  74f02205  created=2026-06-30
+[2026-07-02 01:44:09]       nvquery-kimi-k2_6                   f966661c  created=2026-06-30
+[2026-07-02 01:44:09]       ai-kimi-k2_6                        23d4f03a  created=2026-06-03
+[2026-07-02 01:54:09] === NVCF function 健康检查开始 ===
+[2026-07-02 01:54:09] 当前 function_id: 8915fd28-fe8f-47d6-a35d-d745d78b35d5
+[2026-07-02 01:54:09] 当前 NV_MODEL_IDS: {'kimi_nv': 'moonshotai/kimi-k2.6', 'dsv4p_nv': 'deepseek-ai/deepseek-v4-pro', 'glm5_1_nv': 'z-ai/glm-5.1'}
+[2026-07-02 01:54:10] NVCF 账号共 169 个 functions
+[2026-07-02 01:54:10] 当前 function: name=sglang-deepseek-v4-pro status=ACTIVE created=2026-07-01 ncaId=NtdWlOIq9M-C
+[2026-07-02 01:54:10] ✅ 当前 function ACTIVE, 正常
+[2026-07-02 01:54:10]    (信息) watched-prefix ACTIVE 候选 4 个:
+[2026-07-02 01:54:10]       ai-deepseek-v4-flash                52e1ddb6  created=2026-06-29
+[2026-07-02 01:54:10]       ai-deepseek-v4-pro                  74f02205  created=2026-06-30
+[2026-07-02 01:54:10]       nvquery-kimi-k2_6                   f966661c  created=2026-06-30
+[2026-07-02 01:54:10]       ai-kimi-k2_6                        23d4f03a  created=2026-06-03
+[2026-07-02 02:04:09] === NVCF function 健康检查开始 ===
+[2026-07-02 02:04:09] 当前 function_id: 8915fd28-fe8f-47d6-a35d-d745d78b35d5
+[2026-07-02 02:04:09] 当前 NV_MODEL_IDS: {'kimi_nv': 'moonshotai/kimi-k2.6', 'dsv4p_nv': 'deepseek-ai/deepseek-v4-pro', 'glm5_1_nv': 'z-ai/glm-5.1'}
+[2026-07-02 02:04:10] NVCF 账号共 169 个 functions
+[2026-07-02 02:04:10] 当前 function: name=sglang-deepseek-v4-pro status=ACTIVE created=2026-07-01 ncaId=NtdWlOIq9M-C
+[2026-07-02 02:04:10] ✅ 当前 function ACTIVE, 正常
+[2026-07-02 02:04:10]    (信息) watched-prefix ACTIVE 候选 4 个:
+[2026-07-02 02:04:10]       ai-deepseek-v4-flash                52e1ddb6  created=2026-06-29
+[2026-07-02 02:04:10]       ai-deepseek-v4-pro                  74f02205  created=2026-06-30
+[2026-07-02 02:04:10]       nvquery-kimi-k2_6                   f966661c  created=2026-06-30
+[2026-07-02 02:04:10]       ai-kimi-k2_6                        23d4f03a  created=2026-06-03
+[2026-07-02 02:14:30] === NVCF function 健康检查开始 ===
+[2026-07-02 02:14:30] 当前 function_id: 8915fd28-fe8f-47d6-a35d-d745d78b35d5
+[2026-07-02 02:14:30] 当前 NV_MODEL_IDS: {'kimi_nv': 'moonshotai/kimi-k2.6', 'dsv4p_nv': 'deepseek-ai/deepseek-v4-pro', 'glm5_1_nv': 'z-ai/glm-5.1'}
+[2026-07-02 02:14:31] NVCF 账号共 169 个 functions
+[2026-07-02 02:14:31] 当前 function: name=sglang-deepseek-v4-pro status=ACTIVE created=2026-07-01 ncaId=NtdWlOIq9M-C
+[2026-07-02 02:14:31] ✅ 当前 function ACTIVE, 正常
+[2026-07-02 02:14:31]    (信息) watched-prefix ACTIVE 候选 4 个:
+[2026-07-02 02:14:31]       ai-deepseek-v4-flash                52e1ddb6  created=2026-06-29
+[2026-07-02 02:14:31]       ai-deepseek-v4-pro                  74f02205  created=2026-06-30
+[2026-07-02 02:14:31]       nvquery-kimi-k2_6                   f966661c  created=2026-06-30
+[2026-07-02 02:14:31]       ai-kimi-k2_6                        23d4f03a  created=2026-06-03
+[2026-07-02 02:24:30] === NVCF function 健康检查开始 ===
+[2026-07-02 02:24:30] 当前 function_id: 8915fd28-fe8f-47d6-a35d-d745d78b35d5
+[2026-07-02 02:24:30] 当前 NV_MODEL_IDS: {'kimi_nv': 'moonshotai/kimi-k2.6', 'dsv4p_nv': 'deepseek-ai/deepseek-v4-pro', 'glm5_1_nv': 'z-ai/glm-5.1'}
+[2026-07-02 02:24:31] NVCF 账号共 169 个 functions
+[2026-07-02 02:24:31] 当前 function: name=sglang-deepseek-v4-pro status=ACTIVE created=2026-07-01 ncaId=NtdWlOIq9M-C
+[2026-07-02 02:24:31] ✅ 当前 function ACTIVE, 正常
+[2026-07-02 02:24:31]    (信息) watched-prefix ACTIVE 候选 3 个:
+[2026-07-02 02:24:31]       ai-deepseek-v4-flash                52e1ddb6  created=2026-06-29
+[2026-07-02 02:24:31]       ai-deepseek-v4-pro                  74f02205  created=2026-06-30
+[2026-07-02 02:24:31]       nvquery-kimi-k2_6                   f966661c  created=2026-06-30
+[2026-07-02 02:34:32] === NVCF function 健康检查开始 ===
+[2026-07-02 02:34:32] 当前 function_id: 8915fd28-fe8f-47d6-a35d-d745d78b35d5
+[2026-07-02 02:34:32] 当前 NV_MODEL_IDS: {'kimi_nv': 'moonshotai/kimi-k2.6', 'dsv4p_nv': 'deepseek-ai/deepseek-v4-pro', 'glm5_1_nv': 'z-ai/glm-5.1'}
+[2026-07-02 02:34:32] NVCF 账号共 169 个 functions
+[2026-07-02 02:34:32] 当前 function: name=sglang-deepseek-v4-pro status=ACTIVE created=2026-07-01 ncaId=NtdWlOIq9M-C
+[2026-07-02 02:34:32] ✅ 当前 function ACTIVE, 正常
+[2026-07-02 02:34:32]    (信息) watched-prefix ACTIVE 候选 3 个:
+[2026-07-02 02:34:32]       ai-deepseek-v4-flash                52e1ddb6  created=2026-06-29
+[2026-07-02 02:34:32]       nvquery-kimi-k2_6                   f966661c  created=2026-06-30
+[2026-07-02 02:34:32]       ai-kimi-k2_6                        23d4f03a  created=2026-06-03
+[2026-07-02 02:44:32] === NVCF function 健康检查开始 ===
+[2026-07-02 02:44:32] 当前 function_id: 8915fd28-fe8f-47d6-a35d-d745d78b35d5
+[2026-07-02 02:44:32] 当前 NV_MODEL_IDS: {'kimi_nv': 'moonshotai/kimi-k2.6', 'dsv4p_nv': 'deepseek-ai/deepseek-v4-pro', 'glm5_1_nv': 'z-ai/glm-5.1'}
+[2026-07-02 02:44:33] NVCF 账号共 169 个 functions
+[2026-07-02 02:44:33] 当前 function: name=sglang-deepseek-v4-pro status=ACTIVE created=2026-07-01 ncaId=NtdWlOIq9M-C
+[2026-07-02 02:44:33] ✅ 当前 function ACTIVE, 正常
+[2026-07-02 02:44:33]    (信息) watched-prefix ACTIVE 候选 2 个:
+[2026-07-02 02:44:33]       ai-deepseek-v4-flash                52e1ddb6  created=2026-06-29
+[2026-07-02 02:44:33]       nvquery-kimi-k2_6                   f966661c  created=2026-06-30
+[2026-07-02 02:54:33] === NVCF function 健康检查开始 ===
+[2026-07-02 02:54:33] 当前 function_id: 8915fd28-fe8f-47d6-a35d-d745d78b35d5
+[2026-07-02 02:54:33] 当前 NV_MODEL_IDS: {'kimi_nv': 'moonshotai/kimi-k2.6', 'dsv4p_nv': 'deepseek-ai/deepseek-v4-pro', 'glm5_1_nv': 'z-ai/glm-5.1'}
+[2026-07-02 02:54:34] NVCF 账号共 169 个 functions
+[2026-07-02 02:54:34] 当前 function: name=sglang-deepseek-v4-pro status=ACTIVE created=2026-07-01 ncaId=NtdWlOIq9M-C
+[2026-07-02 02:54:34] ✅ 当前 function ACTIVE, 正常
+[2026-07-02 02:54:34]    (信息) watched-prefix ACTIVE 候选 2 个:
+[2026-07-02 02:54:34]       ai-deepseek-v4-flash                52e1ddb6  created=2026-06-29
+[2026-07-02 02:54:34]       nvquery-kimi-k2_6                   f966661c  created=2026-06-30
+[2026-07-02 03:04:36] === NVCF function 健康检查开始 ===
+[2026-07-02 03:04:36] 当前 function_id: 8915fd28-fe8f-47d6-a35d-d745d78b35d5
+[2026-07-02 03:04:36] 当前 NV_MODEL_IDS: {'kimi_nv': 'moonshotai/kimi-k2.6', 'dsv4p_nv': 'deepseek-ai/deepseek-v4-pro', 'glm5_1_nv': 'z-ai/glm-5.1'}
+[2026-07-02 03:04:37] NVCF 账号共 169 个 functions
+[2026-07-02 03:04:37] 当前 function: name=sglang-deepseek-v4-pro status=ACTIVE created=2026-07-01 ncaId=NtdWlOIq9M-C
+[2026-07-02 03:04:37] ✅ 当前 function ACTIVE, 正常
+[2026-07-02 03:04:37]    (信息) watched-prefix ACTIVE 候选 2 个:
+[2026-07-02 03:04:37]       ai-deepseek-v4-flash                52e1ddb6  created=2026-06-29
+[2026-07-02 03:04:37]       nvquery-kimi-k2_6                   f966661c  created=2026-06-30
+[2026-07-02 03:14:41] === NVCF function 健康检查开始 ===
+[2026-07-02 03:14:41] 当前 function_id: 8915fd28-fe8f-47d6-a35d-d745d78b35d5
+[2026-07-02 03:14:41] 当前 NV_MODEL_IDS: {'kimi_nv': 'moonshotai/kimi-k2.6', 'dsv4p_nv': 'deepseek-ai/deepseek-v4-pro', 'glm5_1_nv': 'z-ai/glm-5.1'}
+[2026-07-02 03:14:41] NVCF 账号共 169 个 functions
+[2026-07-02 03:14:41] 当前 function: name=sglang-deepseek-v4-pro status=ACTIVE created=2026-07-01 ncaId=NtdWlOIq9M-C
+[2026-07-02 03:14:41] ✅ 当前 function ACTIVE, 正常
+[2026-07-02 03:14:41]    (信息) watched-prefix ACTIVE 候选 2 个:
+[2026-07-02 03:14:41]       ai-deepseek-v4-flash                52e1ddb6  created=2026-06-29
+[2026-07-02 03:14:41]       nvquery-kimi-k2_6                   f966661c  created=2026-06-30
+[2026-07-02 03:24:41] === NVCF function 健康检查开始 ===
+[2026-07-02 03:24:41] 当前 function_id: 8915fd28-fe8f-47d6-a35d-d745d78b35d5
+[2026-07-02 03:24:41] 当前 NV_MODEL_IDS: {'kimi_nv': 'moonshotai/kimi-k2.6', 'dsv4p_nv': 'deepseek-ai/deepseek-v4-pro', 'glm5_1_nv': 'z-ai/glm-5.1'}
+[2026-07-02 03:24:41] NVCF 账号共 169 个 functions
+[2026-07-02 03:24:41] 当前 function: name=sglang-deepseek-v4-pro status=ACTIVE created=2026-07-01 ncaId=NtdWlOIq9M-C
+[2026-07-02 03:24:41] ✅ 当前 function ACTIVE, 正常
+[2026-07-02 03:24:41]    (信息) watched-prefix ACTIVE 候选 2 个:
+[2026-07-02 03:24:41]       ai-deepseek-v4-flash                52e1ddb6  created=2026-06-29
+[2026-07-02 03:24:41]       nvquery-kimi-k2_6                   f966661c  created=2026-06-30
+[2026-07-02 03:34:41] === NVCF function 健康检查开始 ===
+[2026-07-02 03:34:41] 当前 function_id: 8915fd28-fe8f-47d6-a35d-d745d78b35d5
+[2026-07-02 03:34:41] 当前 NV_MODEL_IDS: {'kimi_nv': 'moonshotai/kimi-k2.6', 'dsv4p_nv': 'deepseek-ai/deepseek-v4-pro', 'glm5_1_nv': 'z-ai/glm-5.1'}
+[2026-07-02 03:34:42] NVCF 账号共 169 个 functions
+[2026-07-02 03:34:42] 当前 function: name=sglang-deepseek-v4-pro status=ACTIVE created=2026-07-01 ncaId=NtdWlOIq9M-C
+[2026-07-02 03:34:42] ✅ 当前 function ACTIVE, 正常
+[2026-07-02 03:34:42]    (信息) watched-prefix ACTIVE 候选 3 个:
+[2026-07-02 03:34:42]       ai-deepseek-v4-flash                52e1ddb6  created=2026-06-29
+[2026-07-02 03:34:42]       nvquery-kimi-k2_6                   f966661c  created=2026-06-30
+[2026-07-02 03:34:42]       ai-kimi-k2_6                        23d4f03a  created=2026-06-03
+[2026-07-02 03:44:43] === NVCF function 健康检查开始 ===
+[2026-07-02 03:44:43] 当前 function_id: 8915fd28-fe8f-47d6-a35d-d745d78b35d5
+[2026-07-02 03:44:43] 当前 NV_MODEL_IDS: {'kimi_nv': 'moonshotai/kimi-k2.6', 'dsv4p_nv': 'deepseek-ai/deepseek-v4-pro', 'glm5_1_nv': 'z-ai/glm-5.1'}
+[2026-07-02 03:44:44] NVCF 账号共 169 个 functions
+[2026-07-02 03:44:44] 当前 function: name=sglang-deepseek-v4-pro status=ACTIVE created=2026-07-01 ncaId=NtdWlOIq9M-C
+[2026-07-02 03:44:44] ✅ 当前 function ACTIVE, 正常
+[2026-07-02 03:44:44]    (信息) watched-prefix ACTIVE 候选 4 个:
+[2026-07-02 03:44:44]       ai-deepseek-v4-pro                  74f02205  created=2026-07-01
+[2026-07-02 03:44:44]       ai-deepseek-v4-flash                52e1ddb6  created=2026-06-29
+[2026-07-02 03:44:44]       nvquery-kimi-k2_6                   f966661c  created=2026-06-30
+[2026-07-02 03:44:44]       ai-kimi-k2_6                        23d4f03a  created=2026-06-03
+[2026-07-02 03:54:44] === NVCF function 健康检查开始 ===
+[2026-07-02 03:54:44] 当前 function_id: 8915fd28-fe8f-47d6-a35d-d745d78b35d5
+[2026-07-02 03:54:44] 当前 NV_MODEL_IDS: {'kimi_nv': 'moonshotai/kimi-k2.6', 'dsv4p_nv': 'deepseek-ai/deepseek-v4-pro', 'glm5_1_nv': 'z-ai/glm-5.1'}
+[2026-07-02 03:54:45] NVCF 账号共 169 个 functions
+[2026-07-02 03:54:45] 当前 function: name=sglang-deepseek-v4-pro status=ACTIVE created=2026-07-01 ncaId=NtdWlOIq9M-C
+[2026-07-02 03:54:45] ✅ 当前 function ACTIVE, 正常
+[2026-07-02 03:54:45]    (信息) watched-prefix ACTIVE 候选 3 个:
+[2026-07-02 03:54:45]       ai-deepseek-v4-pro                  74f02205  created=2026-07-01
+[2026-07-02 03:54:45]       ai-deepseek-v4-flash                52e1ddb6  created=2026-06-29
+[2026-07-02 03:54:45]       nvquery-kimi-k2_6                   f966661c  created=2026-06-30
+[2026-07-02 04:04:48] === NVCF function 健康检查开始 ===
+[2026-07-02 04:04:48] 当前 function_id: 8915fd28-fe8f-47d6-a35d-d745d78b35d5
+[2026-07-02 04:04:48] 当前 NV_MODEL_IDS: {'kimi_nv': 'moonshotai/kimi-k2.6', 'dsv4p_nv': 'deepseek-ai/deepseek-v4-pro', 'glm5_1_nv': 'z-ai/glm-5.1'}
+[2026-07-02 04:04:49] NVCF 账号共 169 个 functions
+[2026-07-02 04:04:49] 当前 function: name=sglang-deepseek-v4-pro status=ACTIVE created=2026-07-01 ncaId=NtdWlOIq9M-C
+[2026-07-02 04:04:49] ✅ 当前 function ACTIVE, 正常
+[2026-07-02 04:04:49]    (信息) watched-prefix ACTIVE 候选 3 个:
+[2026-07-02 04:04:49]       ai-deepseek-v4-pro                  74f02205  created=2026-07-01
+[2026-07-02 04:04:49]       ai-deepseek-v4-flash                52e1ddb6  created=2026-06-29
+[2026-07-02 04:04:49]       nvquery-kimi-k2_6                   f966661c  created=2026-06-30
+[2026-07-02 04:14:53] === NVCF function 健康检查开始 ===
+[2026-07-02 04:14:53] 当前 function_id: 8915fd28-fe8f-47d6-a35d-d745d78b35d5
+[2026-07-02 04:14:53] 当前 NV_MODEL_IDS: {'kimi_nv': 'moonshotai/kimi-k2.6', 'dsv4p_nv': 'deepseek-ai/deepseek-v4-pro', 'glm5_1_nv': 'z-ai/glm-5.1'}
+[2026-07-02 04:14:54] NVCF 账号共 169 个 functions
+[2026-07-02 04:14:54] 当前 function: name=sglang-deepseek-v4-pro status=ACTIVE created=2026-07-01 ncaId=NtdWlOIq9M-C
+[2026-07-02 04:14:54] ✅ 当前 function ACTIVE, 正常
+[2026-07-02 04:14:54]    (信息) watched-prefix ACTIVE 候选 4 个:
+[2026-07-02 04:14:54]       ai-deepseek-v4-pro                  74f02205  created=2026-07-01
+[2026-07-02 04:14:54]       ai-deepseek-v4-flash                52e1ddb6  created=2026-06-29
+[2026-07-02 04:14:54]       nvquery-kimi-k2_6                   f966661c  created=2026-06-30
+[2026-07-02 04:14:54]       ai-kimi-k2_6                        23d4f03a  created=2026-06-03
+[2026-07-02 04:25:00] === NVCF function 健康检查开始 ===
+[2026-07-02 04:25:00] 当前 function_id: 8915fd28-fe8f-47d6-a35d-d745d78b35d5
+[2026-07-02 04:25:00] 当前 NV_MODEL_IDS: {'kimi_nv': 'moonshotai/kimi-k2.6', 'dsv4p_nv': 'deepseek-ai/deepseek-v4-pro', 'glm5_1_nv': 'z-ai/glm-5.1'}
+[2026-07-02 04:25:00] NVCF 账号共 169 个 functions
+[2026-07-02 04:25:00] 当前 function: name=sglang-deepseek-v4-pro status=ACTIVE created=2026-07-01 ncaId=NtdWlOIq9M-C
+[2026-07-02 04:25:00] ✅ 当前 function ACTIVE, 正常
+[2026-07-02 04:25:00]    (信息) watched-prefix ACTIVE 候选 4 个:
+[2026-07-02 04:25:00]       ai-deepseek-v4-pro                  74f02205  created=2026-07-01
+[2026-07-02 04:25:00]       ai-deepseek-v4-flash                52e1ddb6  created=2026-06-29
+[2026-07-02 04:25:00]       nvquery-kimi-k2_6                   f966661c  created=2026-06-30
+[2026-07-02 04:25:00]       ai-kimi-k2_6                        23d4f03a  created=2026-06-03
+[2026-07-02 04:35:00] === NVCF function 健康检查开始 ===
+[2026-07-02 04:35:00] 当前 function_id: 8915fd28-fe8f-47d6-a35d-d745d78b35d5
+[2026-07-02 04:35:00] 当前 NV_MODEL_IDS: {'kimi_nv': 'moonshotai/kimi-k2.6', 'dsv4p_nv': 'deepseek-ai/deepseek-v4-pro', 'glm5_1_nv': 'z-ai/glm-5.1'}
+[2026-07-02 04:35:01] NVCF 账号共 169 个 functions
+[2026-07-02 04:35:01] 当前 function: name=sglang-deepseek-v4-pro status=ACTIVE created=2026-07-01 ncaId=NtdWlOIq9M-C
+[2026-07-02 04:35:01] ✅ 当前 function ACTIVE, 正常
+[2026-07-02 04:35:01]    (信息) watched-prefix ACTIVE 候选 4 个:
+[2026-07-02 04:35:01]       ai-deepseek-v4-pro                  74f02205  created=2026-07-01
+[2026-07-02 04:35:01]       ai-deepseek-v4-flash                52e1ddb6  created=2026-06-29
+[2026-07-02 04:35:01]       nvquery-kimi-k2_6                   f966661c  created=2026-06-30
+[2026-07-02 04:35:01]       ai-kimi-k2_6                        23d4f03a  created=2026-06-03
+[2026-07-02 04:45:01] === NVCF function 健康检查开始 ===
+[2026-07-02 04:45:01] 当前 function_id: 8915fd28-fe8f-47d6-a35d-d745d78b35d5
+[2026-07-02 04:45:01] 当前 NV_MODEL_IDS: {'kimi_nv': 'moonshotai/kimi-k2.6', 'dsv4p_nv': 'deepseek-ai/deepseek-v4-pro', 'glm5_1_nv': 'z-ai/glm-5.1'}
+[2026-07-02 04:45:01] NVCF 账号共 169 个 functions
+[2026-07-02 04:45:01] 当前 function: name=sglang-deepseek-v4-pro status=ACTIVE created=2026-07-01 ncaId=NtdWlOIq9M-C
+[2026-07-02 04:45:01] ✅ 当前 function ACTIVE, 正常
+[2026-07-02 04:45:01]    (信息) watched-prefix ACTIVE 候选 4 个:
+[2026-07-02 04:45:01]       ai-deepseek-v4-pro                  74f02205  created=2026-07-01
+[2026-07-02 04:45:01]       ai-deepseek-v4-flash                52e1ddb6  created=2026-06-29
+[2026-07-02 04:45:01]       nvquery-kimi-k2_6                   f966661c  created=2026-06-30
+[2026-07-02 04:45:01]       ai-kimi-k2_6                        23d4f03a  created=2026-06-03
+[2026-07-02 04:55:01] === NVCF function 健康检查开始 ===
+[2026-07-02 04:55:01] 当前 function_id: 8915fd28-fe8f-47d6-a35d-d745d78b35d5
+[2026-07-02 04:55:01] 当前 NV_MODEL_IDS: {'kimi_nv': 'moonshotai/kimi-k2.6', 'dsv4p_nv': 'deepseek-ai/deepseek-v4-pro', 'glm5_1_nv': 'z-ai/glm-5.1'}
+[2026-07-02 04:55:02] NVCF 账号共 169 个 functions
+[2026-07-02 04:55:02] 当前 function: name=sglang-deepseek-v4-pro status=ACTIVE created=2026-07-01 ncaId=NtdWlOIq9M-C
+[2026-07-02 04:55:02] ✅ 当前 function ACTIVE, 正常
+[2026-07-02 04:55:02]    (信息) watched-prefix ACTIVE 候选 4 个:
+[2026-07-02 04:55:02]       ai-deepseek-v4-pro                  74f02205  created=2026-07-01
+[2026-07-02 04:55:02]       ai-deepseek-v4-flash                52e1ddb6  created=2026-06-29
+[2026-07-02 04:55:02]       nvquery-kimi-k2_6                   f966661c  created=2026-06-30
+[2026-07-02 04:55:02]       ai-kimi-k2_6                        23d4f03a  created=2026-06-03
+[2026-07-02 05:05:01] === NVCF function 健康检查开始 ===
+[2026-07-02 05:05:02] 当前 function_id: 8915fd28-fe8f-47d6-a35d-d745d78b35d5
+[2026-07-02 05:05:02] 当前 NV_MODEL_IDS: {'kimi_nv': 'moonshotai/kimi-k2.6', 'dsv4p_nv': 'deepseek-ai/deepseek-v4-pro', 'glm5_1_nv': 'z-ai/glm-5.1'}
+[2026-07-02 05:05:02] NVCF 账号共 169 个 functions
+[2026-07-02 05:05:02] 当前 function: name=sglang-deepseek-v4-pro status=ACTIVE created=2026-07-01 ncaId=NtdWlOIq9M-C
+[2026-07-02 05:05:02] ✅ 当前 function ACTIVE, 正常
+[2026-07-02 05:05:02]    (信息) watched-prefix ACTIVE 候选 3 个:
+[2026-07-02 05:05:02]       ai-deepseek-v4-pro                  74f02205  created=2026-07-01
+[2026-07-02 05:05:02]       ai-deepseek-v4-flash                52e1ddb6  created=2026-06-29
+[2026-07-02 05:05:02]       nvquery-kimi-k2_6                   f966661c  created=2026-06-30
+[2026-07-02 05:15:02] === NVCF function 健康检查开始 ===
+[2026-07-02 05:15:02] 当前 function_id: 8915fd28-fe8f-47d6-a35d-d745d78b35d5
+[2026-07-02 05:15:02] 当前 NV_MODEL_IDS: {'kimi_nv': 'moonshotai/kimi-k2.6', 'dsv4p_nv': 'deepseek-ai/deepseek-v4-pro', 'glm5_1_nv': 'z-ai/glm-5.1'}
+[2026-07-02 05:15:02] NVCF 账号共 169 个 functions
+[2026-07-02 05:15:02] 当前 function: name=sglang-deepseek-v4-pro status=ACTIVE created=2026-07-01 ncaId=NtdWlOIq9M-C
+[2026-07-02 05:15:02] ✅ 当前 function ACTIVE, 正常
+[2026-07-02 05:15:02]    (信息) watched-prefix ACTIVE 候选 3 个:
+[2026-07-02 05:15:02]       ai-deepseek-v4-pro                  74f02205  created=2026-07-01
+[2026-07-02 05:15:02]       ai-deepseek-v4-flash                52e1ddb6  created=2026-06-29
+[2026-07-02 05:15:02]       nvquery-kimi-k2_6                   f966661c  created=2026-06-30
+[2026-07-02 05:25:02] === NVCF function 健康检查开始 ===
+[2026-07-02 05:25:02] 当前 function_id: 8915fd28-fe8f-47d6-a35d-d745d78b35d5
+[2026-07-02 05:25:02] 当前 NV_MODEL_IDS: {'kimi_nv': 'moonshotai/kimi-k2.6', 'dsv4p_nv': 'deepseek-ai/deepseek-v4-pro', 'glm5_1_nv': 'z-ai/glm-5.1'}
+[2026-07-02 05:25:03] NVCF 账号共 169 个 functions
+[2026-07-02 05:25:03] 当前 function: name=sglang-deepseek-v4-pro status=ACTIVE created=2026-07-01 ncaId=NtdWlOIq9M-C
+[2026-07-02 05:25:03] ✅ 当前 function ACTIVE, 正常
+[2026-07-02 05:25:03]    (信息) watched-prefix ACTIVE 候选 4 个:
+[2026-07-02 05:25:03]       ai-deepseek-v4-pro                  74f02205  created=2026-07-01
+[2026-07-02 05:25:03]       ai-deepseek-v4-flash                52e1ddb6  created=2026-06-29
+[2026-07-02 05:25:03]       nvquery-kimi-k2_6                   f966661c  created=2026-06-30
+[2026-07-02 05:25:03]       ai-kimi-k2_6                        23d4f03a  created=2026-06-03
+[2026-07-02 05:35:02] === NVCF function 健康检查开始 ===
+[2026-07-02 05:35:02] 当前 function_id: 8915fd28-fe8f-47d6-a35d-d745d78b35d5
+[2026-07-02 05:35:02] 当前 NV_MODEL_IDS: {'kimi_nv': 'moonshotai/kimi-k2.6', 'dsv4p_nv': 'deepseek-ai/deepseek-v4-pro', 'glm5_1_nv': 'z-ai/glm-5.1'}
+[2026-07-02 05:35:03] NVCF 账号共 169 个 functions
+[2026-07-02 05:35:03] 当前 function: name=sglang-deepseek-v4-pro status=ACTIVE created=2026-07-01 ncaId=NtdWlOIq9M-C
+[2026-07-02 05:35:03] ✅ 当前 function ACTIVE, 正常
+[2026-07-02 05:35:03]    (信息) watched-prefix ACTIVE 候选 3 个:
+[2026-07-02 05:35:03]       ai-deepseek-v4-pro                  74f02205  created=2026-07-01
+[2026-07-02 05:35:03]       ai-deepseek-v4-flash                52e1ddb6  created=2026-06-29
+[2026-07-02 05:35:03]       nvquery-kimi-k2_6                   f966661c  created=2026-06-30
+[2026-07-02 05:45:03] === NVCF function 健康检查开始 ===
+[2026-07-02 05:45:03] 当前 function_id: 8915fd28-fe8f-47d6-a35d-d745d78b35d5
+[2026-07-02 05:45:03] 当前 NV_MODEL_IDS: {'kimi_nv': 'moonshotai/kimi-k2.6', 'dsv4p_nv': 'deepseek-ai/deepseek-v4-pro', 'glm5_1_nv': 'z-ai/glm-5.1'}
+[2026-07-02 05:45:04] NVCF 账号共 169 个 functions
+[2026-07-02 05:45:04] 当前 function: name=sglang-deepseek-v4-pro status=ACTIVE created=2026-07-01 ncaId=NtdWlOIq9M-C
+[2026-07-02 05:45:04] ✅ 当前 function ACTIVE, 正常
+[2026-07-02 05:45:04]    (信息) watched-prefix ACTIVE 候选 3 个:
+[2026-07-02 05:45:04]       ai-deepseek-v4-pro                  74f02205  created=2026-07-01
+[2026-07-02 05:45:04]       ai-deepseek-v4-flash                52e1ddb6  created=2026-06-29
+[2026-07-02 05:45:04]       nvquery-kimi-k2_6                   f966661c  created=2026-06-30
+[2026-07-02 05:55:03] === NVCF function 健康检查开始 ===
+[2026-07-02 05:55:03] 当前 function_id: 8915fd28-fe8f-47d6-a35d-d745d78b35d5
+[2026-07-02 05:55:03] 当前 NV_MODEL_IDS: {'kimi_nv': 'moonshotai/kimi-k2.6', 'dsv4p_nv': 'deepseek-ai/deepseek-v4-pro', 'glm5_1_nv': 'z-ai/glm-5.1'}
+[2026-07-02 05:55:04] NVCF 账号共 169 个 functions
+[2026-07-02 05:55:04] 当前 function: name=sglang-deepseek-v4-pro status=ACTIVE created=2026-07-01 ncaId=NtdWlOIq9M-C
+[2026-07-02 05:55:04] ✅ 当前 function ACTIVE, 正常
+[2026-07-02 05:55:04]    (信息) watched-prefix ACTIVE 候选 3 个:
+[2026-07-02 05:55:04]       ai-deepseek-v4-pro                  74f02205  created=2026-07-01
+[2026-07-02 05:55:04]       ai-deepseek-v4-flash                52e1ddb6  created=2026-06-29
+[2026-07-02 05:55:04]       nvquery-kimi-k2_6                   f966661c  created=2026-06-30
+[2026-07-02 06:05:04] === NVCF function 健康检查开始 ===
+[2026-07-02 06:05:04] 当前 function_id: 8915fd28-fe8f-47d6-a35d-d745d78b35d5
+[2026-07-02 06:05:04] 当前 NV_MODEL_IDS: {'kimi_nv': 'moonshotai/kimi-k2.6', 'dsv4p_nv': 'deepseek-ai/deepseek-v4-pro', 'glm5_1_nv': 'z-ai/glm-5.1'}
+[2026-07-02 06:05:04] NVCF 账号共 169 个 functions
+[2026-07-02 06:05:04] 当前 function: name=sglang-deepseek-v4-pro status=ACTIVE created=2026-07-01 ncaId=NtdWlOIq9M-C
+[2026-07-02 06:05:04] ✅ 当前 function ACTIVE, 正常
+[2026-07-02 06:05:04]    (信息) watched-prefix ACTIVE 候选 3 个:
+[2026-07-02 06:05:04]       ai-deepseek-v4-pro                  74f02205  created=2026-07-01
+[2026-07-02 06:05:04]       ai-deepseek-v4-flash                52e1ddb6  created=2026-06-29
+[2026-07-02 06:05:04]       nvquery-kimi-k2_6                   f966661c  created=2026-06-30
+[2026-07-02 06:15:04] === NVCF function 健康检查开始 ===
+[2026-07-02 06:15:04] 当前 function_id: 8915fd28-fe8f-47d6-a35d-d745d78b35d5
+[2026-07-02 06:15:04] 当前 NV_MODEL_IDS: {'kimi_nv': 'moonshotai/kimi-k2.6', 'dsv4p_nv': 'deepseek-ai/deepseek-v4-pro', 'glm5_1_nv': 'z-ai/glm-5.1'}
+[2026-07-02 06:15:05] NVCF 账号共 169 个 functions
+[2026-07-02 06:15:05] 当前 function: name=sglang-deepseek-v4-pro status=ACTIVE created=2026-07-01 ncaId=NtdWlOIq9M-C
+[2026-07-02 06:15:05] ✅ 当前 function ACTIVE, 正常
+[2026-07-02 06:15:05]    (信息) watched-prefix ACTIVE 候选 4 个:
+[2026-07-02 06:15:05]       ai-deepseek-v4-pro                  74f02205  created=2026-07-01
+[2026-07-02 06:15:05]       ai-deepseek-v4-flash                52e1ddb6  created=2026-06-29
+[2026-07-02 06:15:05]       nvquery-kimi-k2_6                   f966661c  created=2026-06-30
+[2026-07-02 06:15:05]       ai-kimi-k2_6                        23d4f03a  created=2026-06-03
+[2026-07-02 06:25:04] === NVCF function 健康检查开始 ===
+[2026-07-02 06:25:04] 当前 function_id: 8915fd28-fe8f-47d6-a35d-d745d78b35d5
+[2026-07-02 06:25:04] 当前 NV_MODEL_IDS: {'kimi_nv': 'moonshotai/kimi-k2.6', 'dsv4p_nv': 'deepseek-ai/deepseek-v4-pro', 'glm5_1_nv': 'z-ai/glm-5.1'}
+[2026-07-02 06:25:05] NVCF 账号共 169 个 functions
+[2026-07-02 06:25:05] 当前 function: name=sglang-deepseek-v4-pro status=ACTIVE created=2026-07-01 ncaId=NtdWlOIq9M-C
+[2026-07-02 06:25:05] ✅ 当前 function ACTIVE, 正常
+[2026-07-02 06:25:05]    (信息) watched-prefix ACTIVE 候选 3 个:
+[2026-07-02 06:25:05]       ai-deepseek-v4-pro                  74f02205  created=2026-07-01
+[2026-07-02 06:25:05]       ai-deepseek-v4-flash                52e1ddb6  created=2026-06-29
+[2026-07-02 06:25:05]       nvquery-kimi-k2_6                   f966661c  created=2026-06-30
+[2026-07-02 06:35:04] === NVCF function 健康检查开始 ===
+[2026-07-02 06:35:04] 当前 function_id: 8915fd28-fe8f-47d6-a35d-d745d78b35d5
+[2026-07-02 06:35:04] 当前 NV_MODEL_IDS: {'kimi_nv': 'moonshotai/kimi-k2.6', 'dsv4p_nv': 'deepseek-ai/deepseek-v4-pro', 'glm5_1_nv': 'z-ai/glm-5.1'}
+[2026-07-02 06:35:05] NVCF 账号共 169 个 functions
+[2026-07-02 06:35:05] 当前 function: name=sglang-deepseek-v4-pro status=ACTIVE created=2026-07-01 ncaId=NtdWlOIq9M-C
+[2026-07-02 06:35:05] ✅ 当前 function ACTIVE, 正常
+[2026-07-02 06:35:05]    (信息) watched-prefix ACTIVE 候选 3 个:
+[2026-07-02 06:35:05]       ai-deepseek-v4-pro                  74f02205  created=2026-07-01
+[2026-07-02 06:35:05]       ai-deepseek-v4-flash                52e1ddb6  created=2026-06-29
+[2026-07-02 06:35:05]       nvquery-kimi-k2_6                   f966661c  created=2026-06-30
+[2026-07-02 06:45:04] === NVCF function 健康检查开始 ===
+[2026-07-02 06:45:04] 当前 function_id: 8915fd28-fe8f-47d6-a35d-d745d78b35d5
+[2026-07-02 06:45:04] 当前 NV_MODEL_IDS: {'kimi_nv': 'moonshotai/kimi-k2.6', 'dsv4p_nv': 'deepseek-ai/deepseek-v4-pro', 'glm5_1_nv': 'z-ai/glm-5.1'}
+[2026-07-02 06:45:05] NVCF 账号共 169 个 functions
+[2026-07-02 06:45:05] 当前 function: name=sglang-deepseek-v4-pro status=ACTIVE created=2026-07-01 ncaId=NtdWlOIq9M-C
+[2026-07-02 06:45:05] ✅ 当前 function ACTIVE, 正常
+[2026-07-02 06:45:05]    (信息) watched-prefix ACTIVE 候选 4 个:
+[2026-07-02 06:45:05]       ai-deepseek-v4-pro                  74f02205  created=2026-07-01
+[2026-07-02 06:45:05]       ai-deepseek-v4-flash                52e1ddb6  created=2026-06-29
+[2026-07-02 06:45:05]       nvquery-kimi-k2_6                   f966661c  created=2026-06-30
+[2026-07-02 06:45:05]       ai-kimi-k2_6                        23d4f03a  created=2026-06-03
+[2026-07-02 06:55:05] === NVCF function 健康检查开始 ===
+[2026-07-02 06:55:05] 当前 function_id: 8915fd28-fe8f-47d6-a35d-d745d78b35d5
+[2026-07-02 06:55:05] 当前 NV_MODEL_IDS: {'kimi_nv': 'moonshotai/kimi-k2.6', 'dsv4p_nv': 'deepseek-ai/deepseek-v4-pro', 'glm5_1_nv': 'z-ai/glm-5.1'}
+[2026-07-02 06:55:05] NVCF 账号共 169 个 functions
+[2026-07-02 06:55:05] 当前 function: name=sglang-deepseek-v4-pro status=ACTIVE created=2026-07-01 ncaId=NtdWlOIq9M-C
+[2026-07-02 06:55:05] ✅ 当前 function ACTIVE, 正常
+[2026-07-02 06:55:05]    (信息) watched-prefix ACTIVE 候选 3 个:
+[2026-07-02 06:55:05]       ai-deepseek-v4-pro                  74f02205  created=2026-07-01
+[2026-07-02 06:55:05]       nvquery-kimi-k2_6                   f966661c  created=2026-06-30
+[2026-07-02 06:55:05]       ai-kimi-k2_6                        23d4f03a  created=2026-06-03
+[2026-07-02 07:05:05] === NVCF function 健康检查开始 ===
+[2026-07-02 07:05:05] 当前 function_id: 8915fd28-fe8f-47d6-a35d-d745d78b35d5
+[2026-07-02 07:05:05] 当前 NV_MODEL_IDS: {'kimi_nv': 'moonshotai/kimi-k2.6', 'dsv4p_nv': 'deepseek-ai/deepseek-v4-pro', 'glm5_1_nv': 'z-ai/glm-5.1'}
+[2026-07-02 07:05:06] NVCF 账号共 169 个 functions
+[2026-07-02 07:05:06] 当前 function: name=sglang-deepseek-v4-pro status=ACTIVE created=2026-07-01 ncaId=NtdWlOIq9M-C
+[2026-07-02 07:05:06] ✅ 当前 function ACTIVE, 正常
+[2026-07-02 07:05:06]    (信息) watched-prefix ACTIVE 候选 2 个:
+[2026-07-02 07:05:06]       ai-deepseek-v4-pro                  74f02205  created=2026-07-01
+[2026-07-02 07:05:06]       nvquery-kimi-k2_6                   f966661c  created=2026-06-30
+[2026-07-02 07:15:06] === NVCF function 健康检查开始 ===
+[2026-07-02 07:15:06] 当前 function_id: 8915fd28-fe8f-47d6-a35d-d745d78b35d5
+[2026-07-02 07:15:06] 当前 NV_MODEL_IDS: {'kimi_nv': 'moonshotai/kimi-k2.6', 'dsv4p_nv': 'deepseek-ai/deepseek-v4-pro', 'glm5_1_nv': 'z-ai/glm-5.1'}
+[2026-07-02 07:15:06] NVCF 账号共 169 个 functions
+[2026-07-02 07:15:06] 当前 function: name=sglang-deepseek-v4-pro status=ACTIVE created=2026-07-01 ncaId=NtdWlOIq9M-C
+[2026-07-02 07:15:06] ✅ 当前 function ACTIVE, 正常
+[2026-07-02 07:15:06]    (信息) watched-prefix ACTIVE 候选 3 个:
+[2026-07-02 07:15:06]       ai-deepseek-v4-pro                  74f02205  created=2026-07-01
+[2026-07-02 07:15:06]       nvquery-kimi-k2_6                   f966661c  created=2026-06-30
+[2026-07-02 07:15:06]       ai-kimi-k2_6                        23d4f03a  created=2026-06-03
+[2026-07-02 07:25:06] === NVCF function 健康检查开始 ===
+[2026-07-02 07:25:06] 当前 function_id: 8915fd28-fe8f-47d6-a35d-d745d78b35d5
+[2026-07-02 07:25:06] 当前 NV_MODEL_IDS: {'kimi_nv': 'moonshotai/kimi-k2.6', 'dsv4p_nv': 'deepseek-ai/deepseek-v4-pro', 'glm5_1_nv': 'z-ai/glm-5.1'}
+[2026-07-02 07:25:07] NVCF 账号共 169 个 functions
+[2026-07-02 07:25:07] 当前 function: name=sglang-deepseek-v4-pro status=ACTIVE created=2026-07-01 ncaId=NtdWlOIq9M-C
+[2026-07-02 07:25:07] ✅ 当前 function ACTIVE, 正常
+[2026-07-02 07:25:07]    (信息) watched-prefix ACTIVE 候选 3 个:
+[2026-07-02 07:25:07]       ai-deepseek-v4-pro                  74f02205  created=2026-07-01
+[2026-07-02 07:25:07]       nvquery-kimi-k2_6                   f966661c  created=2026-06-30
+[2026-07-02 07:25:07]       ai-kimi-k2_6                        23d4f03a  created=2026-06-03
+[2026-07-02 07:35:07] === NVCF function 健康检查开始 ===
+[2026-07-02 07:35:07] 当前 function_id: 8915fd28-fe8f-47d6-a35d-d745d78b35d5
+[2026-07-02 07:35:07] 当前 NV_MODEL_IDS: {'kimi_nv': 'moonshotai/kimi-k2.6', 'dsv4p_nv': 'deepseek-ai/deepseek-v4-pro', 'glm5_1_nv': 'z-ai/glm-5.1'}
+[2026-07-02 07:35:08] NVCF 账号共 169 个 functions
+[2026-07-02 07:35:08] 当前 function: name=sglang-deepseek-v4-pro status=ACTIVE created=2026-07-01 ncaId=NtdWlOIq9M-C
+[2026-07-02 07:35:08] ✅ 当前 function ACTIVE, 正常
+[2026-07-02 07:35:08]    (信息) watched-prefix ACTIVE 候选 2 个:
+[2026-07-02 07:35:08]       ai-deepseek-v4-pro                  74f02205  created=2026-07-01
+[2026-07-02 07:35:08]       nvquery-kimi-k2_6                   f966661c  created=2026-06-30
+[2026-07-02 07:45:07] === NVCF function 健康检查开始 ===
+[2026-07-02 07:45:07] 当前 function_id: 8915fd28-fe8f-47d6-a35d-d745d78b35d5
+[2026-07-02 07:45:07] 当前 NV_MODEL_IDS: {'kimi_nv': 'moonshotai/kimi-k2.6', 'dsv4p_nv': 'deepseek-ai/deepseek-v4-pro', 'glm5_1_nv': 'z-ai/glm-5.1'}
+[2026-07-02 07:45:08] NVCF 账号共 169 个 functions
+[2026-07-02 07:45:08] 当前 function: name=sglang-deepseek-v4-pro status=ACTIVE created=2026-07-01 ncaId=NtdWlOIq9M-C
+[2026-07-02 07:45:08] ✅ 当前 function ACTIVE, 正常
+[2026-07-02 07:45:08]    (信息) watched-prefix ACTIVE 候选 2 个:
+[2026-07-02 07:45:08]       ai-deepseek-v4-pro                  74f02205  created=2026-07-01
+[2026-07-02 07:45:08]       nvquery-kimi-k2_6                   f966661c  created=2026-06-30
+[2026-07-02 07:55:07] === NVCF function 健康检查开始 ===
+[2026-07-02 07:55:07] 当前 function_id: 8915fd28-fe8f-47d6-a35d-d745d78b35d5
+[2026-07-02 07:55:07] 当前 NV_MODEL_IDS: {'kimi_nv': 'moonshotai/kimi-k2.6', 'dsv4p_nv': 'deepseek-ai/deepseek-v4-pro', 'glm5_1_nv': 'z-ai/glm-5.1'}
+[2026-07-02 07:55:09] NVCF 账号共 169 个 functions
+[2026-07-02 07:55:09] 当前 function: name=sglang-deepseek-v4-pro status=ACTIVE created=2026-07-01 ncaId=NtdWlOIq9M-C
+[2026-07-02 07:55:09] ✅ 当前 function ACTIVE, 正常
+[2026-07-02 07:55:09]    (信息) watched-prefix ACTIVE 候选 2 个:
+[2026-07-02 07:55:09]       ai-deepseek-v4-pro                  74f02205  created=2026-07-01
+[2026-07-02 07:55:09]       nvquery-kimi-k2_6                   f966661c  created=2026-06-30
+[2026-07-02 08:05:08] === NVCF function 健康检查开始 ===
+[2026-07-02 08:05:08] 当前 function_id: 8915fd28-fe8f-47d6-a35d-d745d78b35d5
+[2026-07-02 08:05:08] 当前 NV_MODEL_IDS: {'kimi_nv': 'moonshotai/kimi-k2.6', 'dsv4p_nv': 'deepseek-ai/deepseek-v4-pro', 'glm5_1_nv': 'z-ai/glm-5.1'}
+[2026-07-02 08:05:08] NVCF 账号共 169 个 functions
+[2026-07-02 08:05:08] 当前 function: name=sglang-deepseek-v4-pro status=ACTIVE created=2026-07-01 ncaId=NtdWlOIq9M-C
+[2026-07-02 08:05:08] ✅ 当前 function ACTIVE, 正常
+[2026-07-02 08:05:08]    (信息) watched-prefix ACTIVE 候选 3 个:
+[2026-07-02 08:05:08]       ai-deepseek-v4-pro                  74f02205  created=2026-07-01
+[2026-07-02 08:05:08]       nvquery-kimi-k2_6                   f966661c  created=2026-06-30
+[2026-07-02 08:05:08]       ai-kimi-k2_6                        23d4f03a  created=2026-06-03
+[2026-07-02 08:15:08] === NVCF function 健康检查开始 ===
+[2026-07-02 08:15:08] 当前 function_id: 8915fd28-fe8f-47d6-a35d-d745d78b35d5
+[2026-07-02 08:15:08] 当前 NV_MODEL_IDS: {'kimi_nv': 'moonshotai/kimi-k2.6', 'dsv4p_nv': 'deepseek-ai/deepseek-v4-pro', 'glm5_1_nv': 'z-ai/glm-5.1'}
+[2026-07-02 08:15:09] NVCF 账号共 169 个 functions
+[2026-07-02 08:15:09] 当前 function: name=sglang-deepseek-v4-pro status=ACTIVE created=2026-07-01 ncaId=NtdWlOIq9M-C
+[2026-07-02 08:15:09] ✅ 当前 function ACTIVE, 正常
+[2026-07-02 08:15:09]    (信息) watched-prefix ACTIVE 候选 3 个:
+[2026-07-02 08:15:09]       ai-deepseek-v4-pro                  74f02205  created=2026-07-01
+[2026-07-02 08:15:09]       nvquery-kimi-k2_6                   f966661c  created=2026-06-30
+[2026-07-02 08:15:09]       ai-kimi-k2_6                        23d4f03a  created=2026-06-03
+[2026-07-02 08:25:08] === NVCF function 健康检查开始 ===
+[2026-07-02 08:25:08] 当前 function_id: 8915fd28-fe8f-47d6-a35d-d745d78b35d5
+[2026-07-02 08:25:08] 当前 NV_MODEL_IDS: {'kimi_nv': 'moonshotai/kimi-k2.6', 'dsv4p_nv': 'deepseek-ai/deepseek-v4-pro', 'glm5_1_nv': 'z-ai/glm-5.1'}
+[2026-07-02 08:25:09] NVCF 账号共 169 个 functions
+[2026-07-02 08:25:09] 当前 function: name=sglang-deepseek-v4-pro status=ACTIVE created=2026-07-01 ncaId=NtdWlOIq9M-C
+[2026-07-02 08:25:09] ✅ 当前 function ACTIVE, 正常
+[2026-07-02 08:25:09]    (信息) watched-prefix ACTIVE 候选 2 个:
+[2026-07-02 08:25:09]       ai-deepseek-v4-pro                  74f02205  created=2026-07-01
+[2026-07-02 08:25:09]       nvquery-kimi-k2_6                   f966661c  created=2026-06-30
+[2026-07-02 08:35:08] === NVCF function 健康检查开始 ===
+[2026-07-02 08:35:08] 当前 function_id: 8915fd28-fe8f-47d6-a35d-d745d78b35d5
+[2026-07-02 08:35:08] 当前 NV_MODEL_IDS: {'kimi_nv': 'moonshotai/kimi-k2.6', 'dsv4p_nv': 'deepseek-ai/deepseek-v4-pro', 'glm5_1_nv': 'z-ai/glm-5.1'}
+[2026-07-02 08:35:09] NVCF 账号共 169 个 functions
+[2026-07-02 08:35:09] 当前 function: name=sglang-deepseek-v4-pro status=ACTIVE created=2026-07-01 ncaId=NtdWlOIq9M-C
+[2026-07-02 08:35:09] ✅ 当前 function ACTIVE, 正常
+[2026-07-02 08:35:09]    (信息) watched-prefix ACTIVE 候选 3 个:
+[2026-07-02 08:35:09]       ai-deepseek-v4-pro                  74f02205  created=2026-07-01
+[2026-07-02 08:35:09]       nvquery-kimi-k2_6                   f966661c  created=2026-06-30
+[2026-07-02 08:35:09]       ai-kimi-k2_6                        23d4f03a  created=2026-06-03
+[2026-07-02 08:45:09] === NVCF function 健康检查开始 ===
+[2026-07-02 08:45:09] 当前 function_id: 8915fd28-fe8f-47d6-a35d-d745d78b35d5
+[2026-07-02 08:45:09] 当前 NV_MODEL_IDS: {'kimi_nv': 'moonshotai/kimi-k2.6', 'dsv4p_nv': 'deepseek-ai/deepseek-v4-pro', 'glm5_1_nv': 'z-ai/glm-5.1'}
+[2026-07-02 08:45:10] NVCF 账号共 169 个 functions
+[2026-07-02 08:45:10] 当前 function: name=sglang-deepseek-v4-pro status=ACTIVE created=2026-07-01 ncaId=NtdWlOIq9M-C
+[2026-07-02 08:45:10] ✅ 当前 function ACTIVE, 正常
+[2026-07-02 08:45:10]    (信息) watched-prefix ACTIVE 候选 3 个:
+[2026-07-02 08:45:10]       ai-deepseek-v4-pro                  74f02205  created=2026-07-01
+[2026-07-02 08:45:10]       nvquery-kimi-k2_6                   f966661c  created=2026-06-30
+[2026-07-02 08:45:10]       ai-kimi-k2_6                        23d4f03a  created=2026-06-03
+[2026-07-02 08:55:09] === NVCF function 健康检查开始 ===
+[2026-07-02 08:55:09] 当前 function_id: 8915fd28-fe8f-47d6-a35d-d745d78b35d5
+[2026-07-02 08:55:09] 当前 NV_MODEL_IDS: {'kimi_nv': 'moonshotai/kimi-k2.6', 'dsv4p_nv': 'deepseek-ai/deepseek-v4-pro', 'glm5_1_nv': 'z-ai/glm-5.1'}
+[2026-07-02 08:55:10] NVCF 账号共 169 个 functions
+[2026-07-02 08:55:10] 当前 function: name=sglang-deepseek-v4-pro status=ACTIVE created=2026-07-01 ncaId=NtdWlOIq9M-C
+[2026-07-02 08:55:10] ✅ 当前 function ACTIVE, 正常
+[2026-07-02 08:55:10]    (信息) watched-prefix ACTIVE 候选 3 个:
+[2026-07-02 08:55:10]       ai-deepseek-v4-pro                  74f02205  created=2026-07-01
+[2026-07-02 08:55:10]       nvquery-kimi-k2_6                   f966661c  created=2026-06-30
+[2026-07-02 08:55:10]       ai-kimi-k2_6                        23d4f03a  created=2026-06-03
+[2026-07-02 09:05:09] === NVCF function 健康检查开始 ===
+[2026-07-02 09:05:09] 当前 function_id: 8915fd28-fe8f-47d6-a35d-d745d78b35d5
+[2026-07-02 09:05:09] 当前 NV_MODEL_IDS: {'kimi_nv': 'moonshotai/kimi-k2.6', 'dsv4p_nv': 'deepseek-ai/deepseek-v4-pro', 'glm5_1_nv': 'z-ai/glm-5.1'}
+[2026-07-02 09:05:12] NVCF 账号共 169 个 functions
+[2026-07-02 09:05:12] 当前 function: name=sglang-deepseek-v4-pro status=ACTIVE created=2026-07-01 ncaId=NtdWlOIq9M-C
+[2026-07-02 09:05:12] ✅ 当前 function ACTIVE, 正常
+[2026-07-02 09:05:12]    (信息) watched-prefix ACTIVE 候选 3 个:
+[2026-07-02 09:05:12]       ai-deepseek-v4-pro                  74f02205  created=2026-07-01
+[2026-07-02 09:05:12]       nvquery-kimi-k2_6                   f966661c  created=2026-06-30
+[2026-07-02 09:05:12]       ai-kimi-k2_6                        23d4f03a  created=2026-06-03
+[2026-07-02 09:15:10] === NVCF function 健康检查开始 ===
+[2026-07-02 09:15:10] 当前 function_id: 8915fd28-fe8f-47d6-a35d-d745d78b35d5
+[2026-07-02 09:15:10] 当前 NV_MODEL_IDS: {'kimi_nv': 'moonshotai/kimi-k2.6', 'dsv4p_nv': 'deepseek-ai/deepseek-v4-pro', 'glm5_1_nv': 'z-ai/glm-5.1'}
+[2026-07-02 09:15:11] NVCF 账号共 169 个 functions
+[2026-07-02 09:15:11] 当前 function: name=sglang-deepseek-v4-pro status=ACTIVE created=2026-07-01 ncaId=NtdWlOIq9M-C
+[2026-07-02 09:15:11] ✅ 当前 function ACTIVE, 正常
+[2026-07-02 09:15:11]    (信息) watched-prefix ACTIVE 候选 2 个:
+[2026-07-02 09:15:11]       ai-deepseek-v4-pro                  74f02205  created=2026-07-01
+[2026-07-02 09:15:11]       nvquery-kimi-k2_6                   f966661c  created=2026-06-30
+[2026-07-02 09:25:12] === NVCF function 健康检查开始 ===
+[2026-07-02 09:25:12] 当前 function_id: 8915fd28-fe8f-47d6-a35d-d745d78b35d5
+[2026-07-02 09:25:12] 当前 NV_MODEL_IDS: {'kimi_nv': 'moonshotai/kimi-k2.6', 'dsv4p_nv': 'deepseek-ai/deepseek-v4-pro', 'glm5_1_nv': 'z-ai/glm-5.1'}
+[2026-07-02 09:25:13] NVCF 账号共 169 个 functions
+[2026-07-02 09:25:13] 当前 function: name=sglang-deepseek-v4-pro status=ACTIVE created=2026-07-01 ncaId=NtdWlOIq9M-C
+[2026-07-02 09:25:13] ✅ 当前 function ACTIVE, 正常
+[2026-07-02 09:25:13]    (信息) watched-prefix ACTIVE 候选 2 个:
+[2026-07-02 09:25:13]       ai-deepseek-v4-pro                  74f02205  created=2026-07-01
+[2026-07-02 09:25:13]       nvquery-kimi-k2_6                   f966661c  created=2026-06-30
+[2026-07-02 09:35:13] === NVCF function 健康检查开始 ===
+[2026-07-02 09:35:13] 当前 function_id: 8915fd28-fe8f-47d6-a35d-d745d78b35d5
+[2026-07-02 09:35:13] 当前 NV_MODEL_IDS: {'kimi_nv': 'moonshotai/kimi-k2.6', 'dsv4p_nv': 'deepseek-ai/deepseek-v4-pro', 'glm5_1_nv': 'z-ai/glm-5.1'}
+[2026-07-02 09:35:13] NVCF 账号共 169 个 functions
+[2026-07-02 09:35:13] 当前 function: name=sglang-deepseek-v4-pro status=ACTIVE created=2026-07-01 ncaId=NtdWlOIq9M-C
+[2026-07-02 09:35:13] ✅ 当前 function ACTIVE, 正常
+[2026-07-02 09:35:13]    (信息) watched-prefix ACTIVE 候选 2 个:
+[2026-07-02 09:35:13]       ai-deepseek-v4-pro                  74f02205  created=2026-07-01
+[2026-07-02 09:35:13]       nvquery-kimi-k2_6                   f966661c  created=2026-06-30
+[2026-07-02 09:45:13] === NVCF function 健康检查开始 ===
+[2026-07-02 09:45:13] 当前 function_id: 8915fd28-fe8f-47d6-a35d-d745d78b35d5
+[2026-07-02 09:45:13] 当前 NV_MODEL_IDS: {'kimi_nv': 'moonshotai/kimi-k2.6', 'dsv4p_nv': 'deepseek-ai/deepseek-v4-pro', 'glm5_1_nv': 'z-ai/glm-5.1'}
+[2026-07-02 09:45:14] NVCF 账号共 169 个 functions
+[2026-07-02 09:45:14] 当前 function: name=sglang-deepseek-v4-pro status=ACTIVE created=2026-07-01 ncaId=NtdWlOIq9M-C
+[2026-07-02 09:45:14] ✅ 当前 function ACTIVE, 正常
+[2026-07-02 09:45:14]    (信息) watched-prefix ACTIVE 候选 2 个:
+[2026-07-02 09:45:14]       ai-deepseek-v4-pro                  74f02205  created=2026-07-01
+[2026-07-02 09:45:14]       nvquery-kimi-k2_6                   f966661c  created=2026-06-30
+[2026-07-02 09:55:15] === NVCF function 健康检查开始 ===
+[2026-07-02 09:55:15] 当前 function_id: 8915fd28-fe8f-47d6-a35d-d745d78b35d5
+[2026-07-02 09:55:15] 当前 NV_MODEL_IDS: {'kimi_nv': 'moonshotai/kimi-k2.6', 'dsv4p_nv': 'deepseek-ai/deepseek-v4-pro', 'glm5_1_nv': 'z-ai/glm-5.1'}
+[2026-07-02 09:55:16] NVCF 账号共 169 个 functions
+[2026-07-02 09:55:16] 当前 function: name=sglang-deepseek-v4-pro status=ACTIVE created=2026-07-01 ncaId=NtdWlOIq9M-C
+[2026-07-02 09:55:16] ✅ 当前 function ACTIVE, 正常
+[2026-07-02 09:55:16]    (信息) watched-prefix ACTIVE 候选 2 个:
+[2026-07-02 09:55:16]       ai-deepseek-v4-pro                  74f02205  created=2026-07-01
+[2026-07-02 09:55:16]       nvquery-kimi-k2_6                   f966661c  created=2026-06-30
+[2026-07-02 10:05:22] === NVCF function 健康检查开始 ===
+[2026-07-02 10:05:22] 当前 function_id: 8915fd28-fe8f-47d6-a35d-d745d78b35d5
+[2026-07-02 10:05:22] 当前 NV_MODEL_IDS: {'kimi_nv': 'moonshotai/kimi-k2.6', 'dsv4p_nv': 'deepseek-ai/deepseek-v4-pro', 'glm5_1_nv': 'z-ai/glm-5.1'}
+[2026-07-02 10:05:23] NVCF 账号共 169 个 functions
+[2026-07-02 10:05:23] 当前 function: name=sglang-deepseek-v4-pro status=ACTIVE created=2026-07-01 ncaId=NtdWlOIq9M-C
+[2026-07-02 10:05:23] ✅ 当前 function ACTIVE, 正常
+[2026-07-02 10:05:23]    (信息) watched-prefix ACTIVE 候选 2 个:
+[2026-07-02 10:05:23]       ai-deepseek-v4-pro                  74f02205  created=2026-07-01
+[2026-07-02 10:05:23]       nvquery-kimi-k2_6                   f966661c  created=2026-06-30
+[2026-07-02 10:15:25] === NVCF function 健康检查开始 ===
+[2026-07-02 10:15:25] 当前 function_id: 8915fd28-fe8f-47d6-a35d-d745d78b35d5
+[2026-07-02 10:15:25] 当前 NV_MODEL_IDS: {'kimi_nv': 'moonshotai/kimi-k2.6', 'dsv4p_nv': 'deepseek-ai/deepseek-v4-pro', 'glm5_1_nv': 'z-ai/glm-5.1'}
+[2026-07-02 10:15:26] NVCF 账号共 169 个 functions
+[2026-07-02 10:15:26] 当前 function: name=sglang-deepseek-v4-pro status=ACTIVE created=2026-07-01 ncaId=NtdWlOIq9M-C
+[2026-07-02 10:15:26] ✅ 当前 function ACTIVE, 正常
+[2026-07-02 10:15:26]    (信息) watched-prefix ACTIVE 候选 2 个:
+[2026-07-02 10:15:26]       ai-deepseek-v4-pro                  74f02205  created=2026-07-01
+[2026-07-02 10:15:26]       nvquery-kimi-k2_6                   f966661c  created=2026-06-30
+[2026-07-02 10:25:36] === NVCF function 健康检查开始 ===
+[2026-07-02 10:25:36] 当前 function_id: 8915fd28-fe8f-47d6-a35d-d745d78b35d5
+[2026-07-02 10:25:36] 当前 NV_MODEL_IDS: {'kimi_nv': 'moonshotai/kimi-k2.6', 'dsv4p_nv': 'deepseek-ai/deepseek-v4-pro', 'glm5_1_nv': 'z-ai/glm-5.1'}
+[2026-07-02 10:25:36] NVCF 账号共 169 个 functions
+[2026-07-02 10:25:36] 当前 function: name=sglang-deepseek-v4-pro status=ACTIVE created=2026-07-01 ncaId=NtdWlOIq9M-C
+[2026-07-02 10:25:36] ✅ 当前 function ACTIVE, 正常
+[2026-07-02 10:25:36]    (信息) watched-prefix ACTIVE 候选 2 个:
+[2026-07-02 10:25:36]       ai-deepseek-v4-pro                  74f02205  created=2026-07-01
+[2026-07-02 10:25:36]       nvquery-kimi-k2_6                   f966661c  created=2026-06-30
+[2026-07-02 10:35:36] === NVCF function 健康检查开始 ===
+[2026-07-02 10:35:36] 当前 function_id: 8915fd28-fe8f-47d6-a35d-d745d78b35d5
+[2026-07-02 10:35:36] 当前 NV_MODEL_IDS: {'kimi_nv': 'moonshotai/kimi-k2.6', 'dsv4p_nv': 'deepseek-ai/deepseek-v4-pro', 'glm5_1_nv': 'z-ai/glm-5.1'}
+[2026-07-02 10:35:37] NVCF 账号共 169 个 functions
+[2026-07-02 10:35:37] 当前 function: name=sglang-deepseek-v4-pro status=ACTIVE created=2026-07-01 ncaId=NtdWlOIq9M-C
+[2026-07-02 10:35:37] ✅ 当前 function ACTIVE, 正常
+[2026-07-02 10:35:37]    (信息) watched-prefix ACTIVE 候选 2 个:
+[2026-07-02 10:35:37]       ai-deepseek-v4-pro                  74f02205  created=2026-07-01
+[2026-07-02 10:35:37]       nvquery-kimi-k2_6                   f966661c  created=2026-06-30
+[2026-07-02 10:45:36] === NVCF function 健康检查开始 ===
+[2026-07-02 10:45:36] 当前 function_id: 8915fd28-fe8f-47d6-a35d-d745d78b35d5
+[2026-07-02 10:45:36] 当前 NV_MODEL_IDS: {'kimi_nv': 'moonshotai/kimi-k2.6', 'dsv4p_nv': 'deepseek-ai/deepseek-v4-pro', 'glm5_1_nv': 'z-ai/glm-5.1'}
+[2026-07-02 10:45:37] NVCF 账号共 169 个 functions
+[2026-07-02 10:45:37] 当前 function: name=sglang-deepseek-v4-pro status=ACTIVE created=2026-07-01 ncaId=NtdWlOIq9M-C
+[2026-07-02 10:45:37] ✅ 当前 function ACTIVE, 正常
+[2026-07-02 10:45:37]    (信息) watched-prefix ACTIVE 候选 2 个:
+[2026-07-02 10:45:37]       ai-deepseek-v4-pro                  74f02205  created=2026-07-01
+[2026-07-02 10:45:37]       nvquery-kimi-k2_6                   f966661c  created=2026-06-30
+[2026-07-02 10:55:37] === NVCF function 健康检查开始 ===
+[2026-07-02 10:55:37] 当前 function_id: 8915fd28-fe8f-47d6-a35d-d745d78b35d5
+[2026-07-02 10:55:37] 当前 NV_MODEL_IDS: {'kimi_nv': 'moonshotai/kimi-k2.6', 'dsv4p_nv': 'deepseek-ai/deepseek-v4-pro', 'glm5_1_nv': 'z-ai/glm-5.1'}
+[2026-07-02 10:55:38] NVCF 账号共 169 个 functions
+[2026-07-02 10:55:38] 当前 function: name=sglang-deepseek-v4-pro status=ACTIVE created=2026-07-01 ncaId=NtdWlOIq9M-C
+[2026-07-02 10:55:38] ✅ 当前 function ACTIVE, 正常
+[2026-07-02 10:55:38]    (信息) watched-prefix ACTIVE 候选 2 个:
+[2026-07-02 10:55:38]       ai-deepseek-v4-pro                  74f02205  created=2026-07-01
+[2026-07-02 10:55:38]       nvquery-kimi-k2_6                   f966661c  created=2026-06-30
+[2026-07-02 11:05:44] === NVCF function 健康检查开始 ===
+[2026-07-02 11:05:44] 当前 function_id: 8915fd28-fe8f-47d6-a35d-d745d78b35d5
+[2026-07-02 11:05:44] 当前 NV_MODEL_IDS: {'kimi_nv': 'moonshotai/kimi-k2.6', 'dsv4p_nv': 'deepseek-ai/deepseek-v4-pro', 'glm5_1_nv': 'z-ai/glm-5.1'}
+[2026-07-02 11:05:45] NVCF 账号共 169 个 functions
+[2026-07-02 11:05:45] 当前 function: name=sglang-deepseek-v4-pro status=ACTIVE created=2026-07-01 ncaId=NtdWlOIq9M-C
+[2026-07-02 11:05:45] ✅ 当前 function ACTIVE, 正常
+[2026-07-02 11:05:45]    (信息) watched-prefix ACTIVE 候选 2 个:
+[2026-07-02 11:05:45]       ai-deepseek-v4-pro                  74f02205  created=2026-07-01
+[2026-07-02 11:05:45]       nvquery-kimi-k2_6                   f966661c  created=2026-06-30
+[2026-07-02 11:15:44] === NVCF function 健康检查开始 ===
+[2026-07-02 11:15:44] 当前 function_id: 8915fd28-fe8f-47d6-a35d-d745d78b35d5
+[2026-07-02 11:15:44] 当前 NV_MODEL_IDS: {'kimi_nv': 'moonshotai/kimi-k2.6', 'dsv4p_nv': 'deepseek-ai/deepseek-v4-pro', 'glm5_1_nv': 'z-ai/glm-5.1'}
+[2026-07-02 11:15:45] NVCF 账号共 169 个 functions
+[2026-07-02 11:15:45] 当前 function: name=sglang-deepseek-v4-pro status=ACTIVE created=2026-07-01 ncaId=NtdWlOIq9M-C
+[2026-07-02 11:15:45] ✅ 当前 function ACTIVE, 正常
+[2026-07-02 11:15:45]    (信息) watched-prefix ACTIVE 候选 2 个:
+[2026-07-02 11:15:45]       ai-deepseek-v4-pro                  74f02205  created=2026-07-01
+[2026-07-02 11:15:45]       nvquery-kimi-k2_6                   f966661c  created=2026-06-30
+[2026-07-02 11:25:45] === NVCF function 健康检查开始 ===
+[2026-07-02 11:25:45] 当前 function_id: 8915fd28-fe8f-47d6-a35d-d745d78b35d5
+[2026-07-02 11:25:45] 当前 NV_MODEL_IDS: {'kimi_nv': 'moonshotai/kimi-k2.6', 'dsv4p_nv': 'deepseek-ai/deepseek-v4-pro', 'glm5_1_nv': 'z-ai/glm-5.1'}
+[2026-07-02 11:25:46] NVCF 账号共 169 个 functions
+[2026-07-02 11:25:46] 当前 function: name=sglang-deepseek-v4-pro status=ACTIVE created=2026-07-01 ncaId=NtdWlOIq9M-C
+[2026-07-02 11:25:46] ✅ 当前 function ACTIVE, 正常
+[2026-07-02 11:25:46]    (信息) watched-prefix ACTIVE 候选 3 个:
+[2026-07-02 11:25:46]       ai-deepseek-v4-pro                  74f02205  created=2026-07-01
+[2026-07-02 11:25:46]       nvquery-kimi-k2_6                   f966661c  created=2026-06-30
+[2026-07-02 11:25:46]       ai-kimi-k2_6                        23d4f03a  created=2026-06-03
+[2026-07-02 11:35:45] === NVCF function 健康检查开始 ===
+[2026-07-02 11:35:45] 当前 function_id: 8915fd28-fe8f-47d6-a35d-d745d78b35d5
+[2026-07-02 11:35:45] 当前 NV_MODEL_IDS: {'kimi_nv': 'moonshotai/kimi-k2.6', 'dsv4p_nv': 'deepseek-ai/deepseek-v4-pro', 'glm5_1_nv': 'z-ai/glm-5.1'}
+[2026-07-02 11:35:46] NVCF 账号共 169 个 functions
+[2026-07-02 11:35:46] 当前 function: name=sglang-deepseek-v4-pro status=ACTIVE created=2026-07-01 ncaId=NtdWlOIq9M-C
+[2026-07-02 11:35:46] ✅ 当前 function ACTIVE, 正常
+[2026-07-02 11:35:46]    (信息) watched-prefix ACTIVE 候选 2 个:
+[2026-07-02 11:35:46]       ai-deepseek-v4-pro                  74f02205  created=2026-07-01
+[2026-07-02 11:35:46]       nvquery-kimi-k2_6                   f966661c  created=2026-06-30
+[2026-07-02 11:45:46] === NVCF function 健康检查开始 ===
+[2026-07-02 11:45:46] 当前 function_id: 8915fd28-fe8f-47d6-a35d-d745d78b35d5
+[2026-07-02 11:45:46] 当前 NV_MODEL_IDS: {'kimi_nv': 'moonshotai/kimi-k2.6', 'dsv4p_nv': 'deepseek-ai/deepseek-v4-pro', 'glm5_1_nv': 'z-ai/glm-5.1'}
+[2026-07-02 11:45:47] NVCF 账号共 169 个 functions
+[2026-07-02 11:45:47] 当前 function: name=sglang-deepseek-v4-pro status=ACTIVE created=2026-07-01 ncaId=NtdWlOIq9M-C
+[2026-07-02 11:45:47] ✅ 当前 function ACTIVE, 正常
+[2026-07-02 11:45:47]    (信息) watched-prefix ACTIVE 候选 2 个:
+[2026-07-02 11:45:47]       ai-deepseek-v4-pro                  74f02205  created=2026-07-01
+[2026-07-02 11:45:47]       nvquery-kimi-k2_6                   f966661c  created=2026-06-30
+[2026-07-02 11:56:01] === NVCF function 健康检查开始 ===
+[2026-07-02 11:56:01] 当前 function_id: 8915fd28-fe8f-47d6-a35d-d745d78b35d5
+[2026-07-02 11:56:01] 当前 NV_MODEL_IDS: {'kimi_nv': 'moonshotai/kimi-k2.6', 'dsv4p_nv': 'deepseek-ai/deepseek-v4-pro', 'glm5_1_nv': 'z-ai/glm-5.1'}
+[2026-07-02 11:56:03] NVCF 账号共 169 个 functions
+[2026-07-02 11:56:03] 当前 function: name=sglang-deepseek-v4-pro status=ACTIVE created=2026-07-01 ncaId=NtdWlOIq9M-C
+[2026-07-02 11:56:03] ✅ 当前 function ACTIVE, 正常
+[2026-07-02 11:56:03]    (信息) watched-prefix ACTIVE 候选 2 个:
+[2026-07-02 11:56:03]       ai-deepseek-v4-pro                  74f02205  created=2026-07-01
+[2026-07-02 11:56:03]       nvquery-kimi-k2_6                   f966661c  created=2026-06-30
+[2026-07-02 12:06:01] === NVCF function 健康检查开始 ===
+[2026-07-02 12:06:01] 当前 function_id: 8915fd28-fe8f-47d6-a35d-d745d78b35d5
+[2026-07-02 12:06:01] 当前 NV_MODEL_IDS: {'kimi_nv': 'moonshotai/kimi-k2.6', 'dsv4p_nv': 'deepseek-ai/deepseek-v4-pro', 'glm5_1_nv': 'z-ai/glm-5.1'}
+[2026-07-02 12:06:03] NVCF 账号共 169 个 functions
+[2026-07-02 12:06:03] 当前 function: name=sglang-deepseek-v4-pro status=ACTIVE created=2026-07-01 ncaId=NtdWlOIq9M-C
+[2026-07-02 12:06:03] ✅ 当前 function ACTIVE, 正常
+[2026-07-02 12:06:03]    (信息) watched-prefix ACTIVE 候选 2 个:
+[2026-07-02 12:06:03]       ai-deepseek-v4-pro                  74f02205  created=2026-07-01
+[2026-07-02 12:06:03]       nvquery-kimi-k2_6                   f966661c  created=2026-06-30
+[2026-07-02 12:16:03] === NVCF function 健康检查开始 ===
+[2026-07-02 12:16:03] 当前 function_id: 8915fd28-fe8f-47d6-a35d-d745d78b35d5
+[2026-07-02 12:16:03] 当前 NV_MODEL_IDS: {'kimi_nv': 'moonshotai/kimi-k2.6', 'dsv4p_nv': 'deepseek-ai/deepseek-v4-pro', 'glm5_1_nv': 'z-ai/glm-5.1'}
+[2026-07-02 12:16:05] NVCF 账号共 169 个 functions
+[2026-07-02 12:16:05] 当前 function: name=sglang-deepseek-v4-pro status=ACTIVE created=2026-07-01 ncaId=NtdWlOIq9M-C
+[2026-07-02 12:16:05] ✅ 当前 function ACTIVE, 正常
+[2026-07-02 12:16:05]    (信息) watched-prefix ACTIVE 候选 2 个:
+[2026-07-02 12:16:05]       ai-deepseek-v4-pro                  74f02205  created=2026-07-01
+[2026-07-02 12:16:05]       nvquery-kimi-k2_6                   f966661c  created=2026-06-30
+[2026-07-02 12:26:03] === NVCF function 健康检查开始 ===
+[2026-07-02 12:26:03] 当前 function_id: 8915fd28-fe8f-47d6-a35d-d745d78b35d5
+[2026-07-02 12:26:03] 当前 NV_MODEL_IDS: {'kimi_nv': 'moonshotai/kimi-k2.6', 'dsv4p_nv': 'deepseek-ai/deepseek-v4-pro', 'glm5_1_nv': 'z-ai/glm-5.1'}
+[2026-07-02 12:26:04] NVCF 账号共 169 个 functions
+[2026-07-02 12:26:04] 当前 function: name=sglang-deepseek-v4-pro status=ACTIVE created=2026-07-01 ncaId=NtdWlOIq9M-C
+[2026-07-02 12:26:04] ✅ 当前 function ACTIVE, 正常
+[2026-07-02 12:26:04]    (信息) watched-prefix ACTIVE 候选 2 个:
+[2026-07-02 12:26:04]       ai-deepseek-v4-pro                  74f02205  created=2026-07-01
+[2026-07-02 12:26:04]       nvquery-kimi-k2_6                   f966661c  created=2026-06-30
+[2026-07-02 12:36:03] === NVCF function 健康检查开始 ===
+[2026-07-02 12:36:03] 当前 function_id: 8915fd28-fe8f-47d6-a35d-d745d78b35d5
+[2026-07-02 12:36:03] 当前 NV_MODEL_IDS: {'kimi_nv': 'moonshotai/kimi-k2.6', 'dsv4p_nv': 'deepseek-ai/deepseek-v4-pro', 'glm5_1_nv': 'z-ai/glm-5.1'}
+[2026-07-02 12:36:09] NVCF 账号共 169 个 functions
+[2026-07-02 12:36:09] 当前 function: name=sglang-deepseek-v4-pro status=ACTIVE created=2026-07-01 ncaId=NtdWlOIq9M-C
+[2026-07-02 12:36:09] ✅ 当前 function ACTIVE, 正常
+[2026-07-02 12:36:09]    (信息) watched-prefix ACTIVE 候选 3 个:
+[2026-07-02 12:36:09]       ai-deepseek-v4-pro                  74f02205  created=2026-07-01
+[2026-07-02 12:36:09]       nvquery-kimi-k2_6                   f966661c  created=2026-06-30
+[2026-07-02 12:36:09]       ai-kimi-k2_6                        23d4f03a  created=2026-06-03
+[2026-07-02 12:46:04] === NVCF function 健康检查开始 ===
+[2026-07-02 12:46:04] 当前 function_id: 8915fd28-fe8f-47d6-a35d-d745d78b35d5
+[2026-07-02 12:46:04] 当前 NV_MODEL_IDS: {'kimi_nv': 'moonshotai/kimi-k2.6', 'dsv4p_nv': 'deepseek-ai/deepseek-v4-pro', 'glm5_1_nv': 'z-ai/glm-5.1'}
+[2026-07-02 12:46:06] NVCF 账号共 169 个 functions
+[2026-07-02 12:46:06] 当前 function: name=sglang-deepseek-v4-pro status=ACTIVE created=2026-07-01 ncaId=NtdWlOIq9M-C
+[2026-07-02 12:46:06] ✅ 当前 function ACTIVE, 正常
+[2026-07-02 12:46:06]    (信息) watched-prefix ACTIVE 候选 2 个:
+[2026-07-02 12:46:06]       ai-deepseek-v4-pro                  74f02205  created=2026-07-01
+[2026-07-02 12:46:06]       nvquery-kimi-k2_6                   f966661c  created=2026-06-30
+[2026-07-02 12:56:04] === NVCF function 健康检查开始 ===
+[2026-07-02 12:56:04] 当前 function_id: 8915fd28-fe8f-47d6-a35d-d745d78b35d5
+[2026-07-02 12:56:04] 当前 NV_MODEL_IDS: {'kimi_nv': 'moonshotai/kimi-k2.6', 'dsv4p_nv': 'deepseek-ai/deepseek-v4-pro', 'glm5_1_nv': 'z-ai/glm-5.1'}
+[2026-07-02 12:56:12] NVCF 账号共 169 个 functions
+[2026-07-02 12:56:12] 当前 function: name=sglang-deepseek-v4-pro status=ACTIVE created=2026-07-01 ncaId=NtdWlOIq9M-C
+[2026-07-02 12:56:12] ✅ 当前 function ACTIVE, 正常
+[2026-07-02 12:56:12]    (信息) watched-prefix ACTIVE 候选 2 个:
+[2026-07-02 12:56:12]       ai-deepseek-v4-pro                  74f02205  created=2026-07-01
+[2026-07-02 12:56:12]       nvquery-kimi-k2_6                   f966661c  created=2026-06-30
+[2026-07-02 13:06:05] === NVCF function 健康检查开始 ===
+[2026-07-02 13:06:05] 当前 function_id: 8915fd28-fe8f-47d6-a35d-d745d78b35d5
+[2026-07-02 13:06:05] 当前 NV_MODEL_IDS: {'kimi_nv': 'moonshotai/kimi-k2.6', 'dsv4p_nv': 'deepseek-ai/deepseek-v4-pro', 'glm5_1_nv': 'z-ai/glm-5.1'}
+[2026-07-02 13:06:16] NVCF 账号共 169 个 functions
+[2026-07-02 13:06:16] 当前 function: name=sglang-deepseek-v4-pro status=ACTIVE created=2026-07-01 ncaId=NtdWlOIq9M-C
+[2026-07-02 13:06:16] ✅ 当前 function ACTIVE, 正常
+[2026-07-02 13:06:16]    (信息) watched-prefix ACTIVE 候选 2 个:
+[2026-07-02 13:06:16]       ai-deepseek-v4-pro                  74f02205  created=2026-07-01
+[2026-07-02 13:06:16]       nvquery-kimi-k2_6                   f966661c  created=2026-06-30
+[2026-07-02 13:16:05] === NVCF function 健康检查开始 ===
+[2026-07-02 13:16:05] 当前 function_id: 8915fd28-fe8f-47d6-a35d-d745d78b35d5
+[2026-07-02 13:16:05] 当前 NV_MODEL_IDS: {'kimi_nv': 'moonshotai/kimi-k2.6', 'dsv4p_nv': 'deepseek-ai/deepseek-v4-pro', 'glm5_1_nv': 'z-ai/glm-5.1'}
+[2026-07-02 13:16:06] NVCF 账号共 169 个 functions
+[2026-07-02 13:16:06] 当前 function: name=sglang-deepseek-v4-pro status=ACTIVE created=2026-07-01 ncaId=NtdWlOIq9M-C
+[2026-07-02 13:16:06] ✅ 当前 function ACTIVE, 正常
+[2026-07-02 13:16:06]    (信息) watched-prefix ACTIVE 候选 2 个:
+[2026-07-02 13:16:06]       ai-deepseek-v4-pro                  74f02205  created=2026-07-01
+[2026-07-02 13:16:06]       nvquery-kimi-k2_6                   f966661c  created=2026-06-30
+[2026-07-02 13:26:06] === NVCF function 健康检查开始 ===
+[2026-07-02 13:26:06] 当前 function_id: 8915fd28-fe8f-47d6-a35d-d745d78b35d5
+[2026-07-02 13:26:06] 当前 NV_MODEL_IDS: {'kimi_nv': 'moonshotai/kimi-k2.6', 'dsv4p_nv': 'deepseek-ai/deepseek-v4-pro', 'glm5_1_nv': 'z-ai/glm-5.1'}
+[2026-07-02 13:26:07] NVCF 账号共 169 个 functions
+[2026-07-02 13:26:07] 当前 function: name=sglang-deepseek-v4-pro status=ACTIVE created=2026-07-01 ncaId=NtdWlOIq9M-C
+[2026-07-02 13:26:07] ✅ 当前 function ACTIVE, 正常
+[2026-07-02 13:26:07]    (信息) watched-prefix ACTIVE 候选 3 个:
+[2026-07-02 13:26:07]       ai-deepseek-v4-pro                  74f02205  created=2026-07-01
+[2026-07-02 13:26:07]       nvquery-kimi-k2_6                   f966661c  created=2026-06-30
+[2026-07-02 13:26:07]       ai-kimi-k2_6                        23d4f03a  created=2026-06-03
+[2026-07-02 13:36:06] === NVCF function 健康检查开始 ===
+[2026-07-02 13:36:06] 当前 function_id: 8915fd28-fe8f-47d6-a35d-d745d78b35d5
+[2026-07-02 13:36:06] 当前 NV_MODEL_IDS: {'kimi_nv': 'moonshotai/kimi-k2.6', 'dsv4p_nv': 'deepseek-ai/deepseek-v4-pro', 'glm5_1_nv': 'z-ai/glm-5.1'}
+[2026-07-02 13:36:07] NVCF 账号共 169 个 functions
+[2026-07-02 13:36:07] 当前 function: name=sglang-deepseek-v4-pro status=ACTIVE created=2026-07-01 ncaId=NtdWlOIq9M-C
+[2026-07-02 13:36:07] ✅ 当前 function ACTIVE, 正常
+[2026-07-02 13:36:07]    (信息) watched-prefix ACTIVE 候选 2 个:
+[2026-07-02 13:36:07]       ai-deepseek-v4-pro                  74f02205  created=2026-07-01
+[2026-07-02 13:36:07]       nvquery-kimi-k2_6                   f966661c  created=2026-06-30
+[2026-07-02 13:46:06] === NVCF function 健康检查开始 ===
+[2026-07-02 13:46:06] 当前 function_id: 8915fd28-fe8f-47d6-a35d-d745d78b35d5
+[2026-07-02 13:46:06] 当前 NV_MODEL_IDS: {'kimi_nv': 'moonshotai/kimi-k2.6', 'dsv4p_nv': 'deepseek-ai/deepseek-v4-pro', 'glm5_1_nv': 'z-ai/glm-5.1'}
+[2026-07-02 13:46:07] NVCF 账号共 169 个 functions
+[2026-07-02 13:46:07] 当前 function: name=sglang-deepseek-v4-pro status=ACTIVE created=2026-07-01 ncaId=NtdWlOIq9M-C
+[2026-07-02 13:46:07] ✅ 当前 function ACTIVE, 正常
+[2026-07-02 13:46:07]    (信息) watched-prefix ACTIVE 候选 2 个:
+[2026-07-02 13:46:07]       ai-deepseek-v4-pro                  74f02205  created=2026-07-01
+[2026-07-02 13:46:07]       nvquery-kimi-k2_6                   f966661c  created=2026-06-30
+[2026-07-02 13:56:07] === NVCF function 健康检查开始 ===
+[2026-07-02 13:56:07] 当前 function_id: 8915fd28-fe8f-47d6-a35d-d745d78b35d5
+[2026-07-02 13:56:07] 当前 NV_MODEL_IDS: {'kimi_nv': 'moonshotai/kimi-k2.6', 'dsv4p_nv': 'deepseek-ai/deepseek-v4-pro', 'glm5_1_nv': 'z-ai/glm-5.1'}
+[2026-07-02 13:56:08] NVCF 账号共 169 个 functions
+[2026-07-02 13:56:08] 当前 function: name=sglang-deepseek-v4-pro status=ACTIVE created=2026-07-01 ncaId=NtdWlOIq9M-C
+[2026-07-02 13:56:08] ✅ 当前 function ACTIVE, 正常
+[2026-07-02 13:56:08]    (信息) watched-prefix ACTIVE 候选 2 个:
+[2026-07-02 13:56:08]       ai-deepseek-v4-pro                  74f02205  created=2026-07-01
+[2026-07-02 13:56:08]       nvquery-kimi-k2_6                   f966661c  created=2026-06-30
+[2026-07-02 14:06:07] === NVCF function 健康检查开始 ===
+[2026-07-02 14:06:07] 当前 function_id: 8915fd28-fe8f-47d6-a35d-d745d78b35d5
+[2026-07-02 14:06:07] 当前 NV_MODEL_IDS: {'kimi_nv': 'moonshotai/kimi-k2.6', 'dsv4p_nv': 'deepseek-ai/deepseek-v4-pro', 'glm5_1_nv': 'z-ai/glm-5.1'}
+[2026-07-02 14:06:08] NVCF 账号共 169 个 functions
+[2026-07-02 14:06:08] 当前 function: name=sglang-deepseek-v4-pro status=ACTIVE created=2026-07-01 ncaId=NtdWlOIq9M-C
+[2026-07-02 14:06:08] ✅ 当前 function ACTIVE, 正常
+[2026-07-02 14:06:08]    (信息) watched-prefix ACTIVE 候选 2 个:
+[2026-07-02 14:06:08]       ai-deepseek-v4-pro                  74f02205  created=2026-07-01
+[2026-07-02 14:06:08]       nvquery-kimi-k2_6                   f966661c  created=2026-06-30
+[2026-07-02 14:16:07] === NVCF function 健康检查开始 ===
+[2026-07-02 14:16:07] 当前 function_id: 8915fd28-fe8f-47d6-a35d-d745d78b35d5
+[2026-07-02 14:16:07] 当前 NV_MODEL_IDS: {'kimi_nv': 'moonshotai/kimi-k2.6', 'dsv4p_nv': 'deepseek-ai/deepseek-v4-pro', 'glm5_1_nv': 'z-ai/glm-5.1'}
+[2026-07-02 14:16:08] NVCF 账号共 169 个 functions
+[2026-07-02 14:16:08] 当前 function: name=sglang-deepseek-v4-pro status=ACTIVE created=2026-07-01 ncaId=NtdWlOIq9M-C
+[2026-07-02 14:16:08] ✅ 当前 function ACTIVE, 正常
+[2026-07-02 14:16:08]    (信息) watched-prefix ACTIVE 候选 2 个:
+[2026-07-02 14:16:08]       ai-deepseek-v4-pro                  74f02205  created=2026-07-01
+[2026-07-02 14:16:08]       nvquery-kimi-k2_6                   f966661c  created=2026-06-30
+[2026-07-02 14:26:08] === NVCF function 健康检查开始 ===
+[2026-07-02 14:26:08] 当前 function_id: 8915fd28-fe8f-47d6-a35d-d745d78b35d5
+[2026-07-02 14:26:08] 当前 NV_MODEL_IDS: {'kimi_nv': 'moonshotai/kimi-k2.6', 'dsv4p_nv': 'deepseek-ai/deepseek-v4-pro', 'glm5_1_nv': 'z-ai/glm-5.1'}
+[2026-07-02 14:26:09] NVCF 账号共 169 个 functions
+[2026-07-02 14:26:09] 当前 function: name=sglang-deepseek-v4-pro status=ACTIVE created=2026-07-01 ncaId=NtdWlOIq9M-C
+[2026-07-02 14:26:09] ✅ 当前 function ACTIVE, 正常
+[2026-07-02 14:26:09]    (信息) watched-prefix ACTIVE 候选 2 个:
+[2026-07-02 14:26:09]       ai-deepseek-v4-pro                  74f02205  created=2026-07-01
+[2026-07-02 14:26:09]       nvquery-kimi-k2_6                   f966661c  created=2026-06-30
+[2026-07-02 14:36:08] === NVCF function 健康检查开始 ===
+[2026-07-02 14:36:08] 当前 function_id: 8915fd28-fe8f-47d6-a35d-d745d78b35d5
+[2026-07-02 14:36:08] 当前 NV_MODEL_IDS: {'kimi_nv': 'moonshotai/kimi-k2.6', 'dsv4p_nv': 'deepseek-ai/deepseek-v4-pro', 'glm5_1_nv': 'z-ai/glm-5.1'}
+[2026-07-02 14:36:09] NVCF 账号共 169 个 functions
+[2026-07-02 14:36:09] 当前 function: name=sglang-deepseek-v4-pro status=ACTIVE created=2026-07-01 ncaId=NtdWlOIq9M-C
+[2026-07-02 14:36:09] ✅ 当前 function ACTIVE, 正常
+[2026-07-02 14:36:09]    (信息) watched-prefix ACTIVE 候选 2 个:
+[2026-07-02 14:36:09]       ai-deepseek-v4-pro                  74f02205  created=2026-07-01
+[2026-07-02 14:36:09]       nvquery-kimi-k2_6                   f966661c  created=2026-06-30
+[2026-07-02 14:46:08] === NVCF function 健康检查开始 ===
+[2026-07-02 14:46:08] 当前 function_id: 8915fd28-fe8f-47d6-a35d-d745d78b35d5
+[2026-07-02 14:46:08] 当前 NV_MODEL_IDS: {'kimi_nv': 'moonshotai/kimi-k2.6', 'dsv4p_nv': 'deepseek-ai/deepseek-v4-pro', 'glm5_1_nv': 'z-ai/glm-5.1'}
+[2026-07-02 14:46:09] NVCF 账号共 169 个 functions
+[2026-07-02 14:46:09] 当前 function: name=sglang-deepseek-v4-pro status=ACTIVE created=2026-07-01 ncaId=NtdWlOIq9M-C
+[2026-07-02 14:46:09] ✅ 当前 function ACTIVE, 正常
+[2026-07-02 14:46:09]    (信息) watched-prefix ACTIVE 候选 2 个:
+[2026-07-02 14:46:09]       ai-deepseek-v4-pro                  74f02205  created=2026-07-01
+[2026-07-02 14:46:09]       nvquery-kimi-k2_6                   f966661c  created=2026-06-30
+[2026-07-02 14:56:09] === NVCF function 健康检查开始 ===
+[2026-07-02 14:56:09] 当前 function_id: 8915fd28-fe8f-47d6-a35d-d745d78b35d5
+[2026-07-02 14:56:09] 当前 NV_MODEL_IDS: {'kimi_nv': 'moonshotai/kimi-k2.6', 'dsv4p_nv': 'deepseek-ai/deepseek-v4-pro', 'glm5_1_nv': 'z-ai/glm-5.1'}
+[2026-07-02 14:56:10] NVCF 账号共 169 个 functions
+[2026-07-02 14:56:10] 当前 function: name=sglang-deepseek-v4-pro status=ACTIVE created=2026-07-01 ncaId=NtdWlOIq9M-C
+[2026-07-02 14:56:10] ✅ 当前 function ACTIVE, 正常
+[2026-07-02 14:56:10]    (信息) watched-prefix ACTIVE 候选 2 个:
+[2026-07-02 14:56:10]       ai-deepseek-v4-pro                  74f02205  created=2026-07-01
+[2026-07-02 14:56:10]       nvquery-kimi-k2_6                   f966661c  created=2026-06-30
+[2026-07-02 15:06:09] === NVCF function 健康检查开始 ===
+[2026-07-02 15:06:09] 当前 function_id: 8915fd28-fe8f-47d6-a35d-d745d78b35d5
+[2026-07-02 15:06:09] 当前 NV_MODEL_IDS: {'kimi_nv': 'moonshotai/kimi-k2.6', 'dsv4p_nv': 'deepseek-ai/deepseek-v4-pro', 'glm5_1_nv': 'z-ai/glm-5.1'}
+[2026-07-02 15:06:10] NVCF 账号共 169 个 functions
+[2026-07-02 15:06:10] 当前 function: name=sglang-deepseek-v4-pro status=ACTIVE created=2026-07-01 ncaId=NtdWlOIq9M-C
+[2026-07-02 15:06:10] ✅ 当前 function ACTIVE, 正常
+[2026-07-02 15:06:10]    (信息) watched-prefix ACTIVE 候选 2 个:
+[2026-07-02 15:06:10]       ai-deepseek-v4-pro                  74f02205  created=2026-07-01
+[2026-07-02 15:06:10]       nvquery-kimi-k2_6                   f966661c  created=2026-06-30
+[2026-07-02 15:16:09] === NVCF function 健康检查开始 ===
+[2026-07-02 15:16:09] 当前 function_id: 8915fd28-fe8f-47d6-a35d-d745d78b35d5
+[2026-07-02 15:16:09] 当前 NV_MODEL_IDS: {'kimi_nv': 'moonshotai/kimi-k2.6', 'dsv4p_nv': 'deepseek-ai/deepseek-v4-pro', 'glm5_1_nv': 'z-ai/glm-5.1'}
+[2026-07-02 15:16:10] NVCF 账号共 169 个 functions
+[2026-07-02 15:16:10] 当前 function: name=sglang-deepseek-v4-pro status=ACTIVE created=2026-07-01 ncaId=NtdWlOIq9M-C
+[2026-07-02 15:16:10] ✅ 当前 function ACTIVE, 正常
+[2026-07-02 15:16:10]    (信息) watched-prefix ACTIVE 候选 2 个:
+[2026-07-02 15:16:10]       ai-deepseek-v4-pro                  74f02205  created=2026-07-01
+[2026-07-02 15:16:10]       nvquery-kimi-k2_6                   f966661c  created=2026-06-30
+[2026-07-02 15:26:09] === NVCF function 健康检查开始 ===
+[2026-07-02 15:26:09] 当前 function_id: 8915fd28-fe8f-47d6-a35d-d745d78b35d5
+[2026-07-02 15:26:09] 当前 NV_MODEL_IDS: {'kimi_nv': 'moonshotai/kimi-k2.6', 'dsv4p_nv': 'deepseek-ai/deepseek-v4-pro', 'glm5_1_nv': 'z-ai/glm-5.1'}
+[2026-07-02 15:26:10] NVCF 账号共 169 个 functions
+[2026-07-02 15:26:10] 当前 function: name=sglang-deepseek-v4-pro status=ACTIVE created=2026-07-01 ncaId=NtdWlOIq9M-C
+[2026-07-02 15:26:10] ✅ 当前 function ACTIVE, 正常
+[2026-07-02 15:26:10]    (信息) watched-prefix ACTIVE 候选 3 个:
+[2026-07-02 15:26:10]       ai-deepseek-v4-pro                  74f02205  created=2026-07-01
+[2026-07-02 15:26:10]       nvquery-kimi-k2_6                   f966661c  created=2026-06-30
+[2026-07-02 15:26:10]       ai-kimi-k2_6                        23d4f03a  created=2026-06-03
+[2026-07-02 15:36:25] === NVCF function 健康检查开始 ===
+[2026-07-02 15:36:25] 当前 function_id: 8915fd28-fe8f-47d6-a35d-d745d78b35d5
+[2026-07-02 15:36:25] 当前 NV_MODEL_IDS: {'kimi_nv': 'moonshotai/kimi-k2.6', 'dsv4p_nv': 'deepseek-ai/deepseek-v4-pro', 'glm5_1_nv': 'z-ai/glm-5.1'}
+[2026-07-02 15:36:26] NVCF 账号共 170 个 functions
+[2026-07-02 15:36:26] 当前 function: name=sglang-deepseek-v4-pro status=ACTIVE created=2026-07-01 ncaId=NtdWlOIq9M-C
+[2026-07-02 15:36:26] ✅ 当前 function ACTIVE, 正常
+[2026-07-02 15:36:26]    (信息) watched-prefix ACTIVE 候选 3 个:
+[2026-07-02 15:36:26]       ai-deepseek-v4-pro                  74f02205  created=2026-07-01
+[2026-07-02 15:36:26]       nvquery-kimi-k2_6                   f966661c  created=2026-06-30
+[2026-07-02 15:36:26]       ai-kimi-k2_6                        23d4f03a  created=2026-06-03
+[2026-07-02 15:46:25] === NVCF function 健康检查开始 ===
+[2026-07-02 15:46:25] 当前 function_id: 8915fd28-fe8f-47d6-a35d-d745d78b35d5
+[2026-07-02 15:46:25] 当前 NV_MODEL_IDS: {'kimi_nv': 'moonshotai/kimi-k2.6', 'dsv4p_nv': 'deepseek-ai/deepseek-v4-pro', 'glm5_1_nv': 'z-ai/glm-5.1'}
+[2026-07-02 15:46:26] NVCF 账号共 170 个 functions
+[2026-07-02 15:46:26] 当前 function: name=sglang-deepseek-v4-pro status=ACTIVE created=2026-07-01 ncaId=NtdWlOIq9M-C
+[2026-07-02 15:46:26] ✅ 当前 function ACTIVE, 正常
+[2026-07-02 15:46:26]    (信息) watched-prefix ACTIVE 候选 3 个:
+[2026-07-02 15:46:26]       ai-deepseek-v4-pro                  74f02205  created=2026-07-01
+[2026-07-02 15:46:26]       nvquery-kimi-k2_6                   f966661c  created=2026-06-30
+[2026-07-02 15:46:26]       ai-kimi-k2_6                        23d4f03a  created=2026-06-03
+[2026-07-02 15:56:26] === NVCF function 健康检查开始 ===
+[2026-07-02 15:56:26] 当前 function_id: 8915fd28-fe8f-47d6-a35d-d745d78b35d5
+[2026-07-02 15:56:26] 当前 NV_MODEL_IDS: {'kimi_nv': 'moonshotai/kimi-k2.6', 'dsv4p_nv': 'deepseek-ai/deepseek-v4-pro', 'glm5_1_nv': 'z-ai/glm-5.1'}
+[2026-07-02 15:56:26] NVCF 账号共 170 个 functions
+[2026-07-02 15:56:26] 当前 function: name=sglang-deepseek-v4-pro status=ACTIVE created=2026-07-01 ncaId=NtdWlOIq9M-C
+[2026-07-02 15:56:26] ✅ 当前 function ACTIVE, 正常
+[2026-07-02 15:56:26]    (信息) watched-prefix ACTIVE 候选 2 个:
+[2026-07-02 15:56:26]       ai-deepseek-v4-pro                  74f02205  created=2026-07-01
+[2026-07-02 15:56:26]       nvquery-kimi-k2_6                   f966661c  created=2026-06-30
+[2026-07-02 16:06:36] === NVCF function 健康检查开始 ===
+[2026-07-02 16:06:36] 当前 function_id: 8915fd28-fe8f-47d6-a35d-d745d78b35d5
+[2026-07-02 16:06:36] 当前 NV_MODEL_IDS: {'kimi_nv': 'moonshotai/kimi-k2.6', 'dsv4p_nv': 'deepseek-ai/deepseek-v4-pro', 'glm5_1_nv': 'z-ai/glm-5.1'}
+[2026-07-02 16:06:38] NVCF 账号共 170 个 functions
+[2026-07-02 16:06:38] 当前 function: name=sglang-deepseek-v4-pro status=ACTIVE created=2026-07-01 ncaId=NtdWlOIq9M-C
+[2026-07-02 16:06:38] ✅ 当前 function ACTIVE, 正常
+[2026-07-02 16:06:38]    (信息) watched-prefix ACTIVE 候选 2 个:
+[2026-07-02 16:06:38]       ai-deepseek-v4-pro                  74f02205  created=2026-07-01
+[2026-07-02 16:06:38]       nvquery-kimi-k2_6                   f966661c  created=2026-06-30
+[2026-07-02 16:16:40] === NVCF function 健康检查开始 ===
+[2026-07-02 16:16:40] 当前 function_id: 8915fd28-fe8f-47d6-a35d-d745d78b35d5
+[2026-07-02 16:16:40] 当前 NV_MODEL_IDS: {'kimi_nv': 'moonshotai/kimi-k2.6', 'dsv4p_nv': 'deepseek-ai/deepseek-v4-pro', 'glm5_1_nv': 'z-ai/glm-5.1'}
+[2026-07-02 16:16:41] NVCF 账号共 170 个 functions
+[2026-07-02 16:16:41] 当前 function: name=sglang-deepseek-v4-pro status=ACTIVE created=2026-07-01 ncaId=NtdWlOIq9M-C
+[2026-07-02 16:16:41] ✅ 当前 function ACTIVE, 正常
+[2026-07-02 16:16:41]    (信息) watched-prefix ACTIVE 候选 3 个:
+[2026-07-02 16:16:41]       ai-deepseek-v4-pro                  74f02205  created=2026-07-01
+[2026-07-02 16:16:41]       nvquery-kimi-k2_6                   f966661c  created=2026-06-30
+[2026-07-02 16:16:41]       ai-kimi-k2_6                        23d4f03a  created=2026-06-03
+[2026-07-02 16:26:42] === NVCF function 健康检查开始 ===
+[2026-07-02 16:26:42] 当前 function_id: 8915fd28-fe8f-47d6-a35d-d745d78b35d5
+[2026-07-02 16:26:42] 当前 NV_MODEL_IDS: {'kimi_nv': 'moonshotai/kimi-k2.6', 'dsv4p_nv': 'deepseek-ai/deepseek-v4-pro', 'glm5_1_nv': 'z-ai/glm-5.1'}
+[2026-07-02 16:26:43] NVCF 账号共 170 个 functions
+[2026-07-02 16:26:43] 当前 function: name=sglang-deepseek-v4-pro status=ACTIVE created=2026-07-01 ncaId=NtdWlOIq9M-C
+[2026-07-02 16:26:43] ✅ 当前 function ACTIVE, 正常
+[2026-07-02 16:26:43]    (信息) watched-prefix ACTIVE 候选 2 个:
+[2026-07-02 16:26:43]       ai-deepseek-v4-pro                  74f02205  created=2026-07-01
+[2026-07-02 16:26:43]       nvquery-kimi-k2_6                   f966661c  created=2026-06-30
+[2026-07-02 16:36:48] === NVCF function 健康检查开始 ===
+[2026-07-02 16:36:48] 当前 function_id: 8915fd28-fe8f-47d6-a35d-d745d78b35d5
+[2026-07-02 16:36:48] 当前 NV_MODEL_IDS: {'kimi_nv': 'moonshotai/kimi-k2.6', 'dsv4p_nv': 'deepseek-ai/deepseek-v4-pro', 'glm5_1_nv': 'z-ai/glm-5.1'}
+[2026-07-02 16:36:49] NVCF 账号共 170 个 functions
+[2026-07-02 16:36:49] 当前 function: name=sglang-deepseek-v4-pro status=ACTIVE created=2026-07-01 ncaId=NtdWlOIq9M-C
+[2026-07-02 16:36:49] ✅ 当前 function ACTIVE, 正常
+[2026-07-02 16:36:49]    (信息) watched-prefix ACTIVE 候选 2 个:
+[2026-07-02 16:36:49]       ai-deepseek-v4-pro                  74f02205  created=2026-07-01
+[2026-07-02 16:36:49]       nvquery-kimi-k2_6                   f966661c  created=2026-06-30
+[2026-07-02 16:46:51] === NVCF function 健康检查开始 ===
+[2026-07-02 16:46:51] 当前 function_id: 8915fd28-fe8f-47d6-a35d-d745d78b35d5
+[2026-07-02 16:46:51] 当前 NV_MODEL_IDS: {'kimi_nv': 'moonshotai/kimi-k2.6', 'dsv4p_nv': 'deepseek-ai/deepseek-v4-pro', 'glm5_1_nv': 'z-ai/glm-5.1'}
+[2026-07-02 16:46:51] NVCF 账号共 170 个 functions
+[2026-07-02 16:46:51] 当前 function: name=sglang-deepseek-v4-pro status=ACTIVE created=2026-07-01 ncaId=NtdWlOIq9M-C
+[2026-07-02 16:46:51] ✅ 当前 function ACTIVE, 正常
+[2026-07-02 16:46:51]    (信息) watched-prefix ACTIVE 候选 3 个:
+[2026-07-02 16:46:51]       ai-deepseek-v4-pro                  74f02205  created=2026-07-01
+[2026-07-02 16:46:51]       nvquery-kimi-k2_6                   f966661c  created=2026-06-30
+[2026-07-02 16:46:51]       ai-kimi-k2_6                        23d4f03a  created=2026-06-03
+[2026-07-02 16:57:01] === NVCF function 健康检查开始 ===
+[2026-07-02 16:57:01] 当前 function_id: 8915fd28-fe8f-47d6-a35d-d745d78b35d5
+[2026-07-02 16:57:01] 当前 NV_MODEL_IDS: {'kimi_nv': 'moonshotai/kimi-k2.6', 'dsv4p_nv': 'deepseek-ai/deepseek-v4-pro', 'glm5_1_nv': 'z-ai/glm-5.1'}
+[2026-07-02 16:57:02] NVCF 账号共 170 个 functions
+[2026-07-02 16:57:02] 当前 function: name=sglang-deepseek-v4-pro status=ACTIVE created=2026-07-01 ncaId=NtdWlOIq9M-C
+[2026-07-02 16:57:02] ✅ 当前 function ACTIVE, 正常
+[2026-07-02 16:57:02]    (信息) watched-prefix ACTIVE 候选 3 个:
+[2026-07-02 16:57:02]       ai-deepseek-v4-pro                  74f02205  created=2026-07-01
+[2026-07-02 16:57:02]       nvquery-kimi-k2_6                   f966661c  created=2026-06-30
+[2026-07-02 16:57:02]       ai-kimi-k2_6                        23d4f03a  created=2026-06-03
+[2026-07-02 17:07:02] === NVCF function 健康检查开始 ===
+[2026-07-02 17:07:02] 当前 function_id: 8915fd28-fe8f-47d6-a35d-d745d78b35d5
+[2026-07-02 17:07:02] 当前 NV_MODEL_IDS: {'kimi_nv': 'moonshotai/kimi-k2.6', 'dsv4p_nv': 'deepseek-ai/deepseek-v4-pro', 'glm5_1_nv': 'z-ai/glm-5.1'}
+[2026-07-02 17:07:03] NVCF 账号共 170 个 functions
+[2026-07-02 17:07:03] 当前 function: name=sglang-deepseek-v4-pro status=ACTIVE created=2026-07-01 ncaId=NtdWlOIq9M-C
+[2026-07-02 17:07:03] ✅ 当前 function ACTIVE, 正常
+[2026-07-02 17:07:03]    (信息) watched-prefix ACTIVE 候选 2 个:
+[2026-07-02 17:07:03]       ai-deepseek-v4-pro                  74f02205  created=2026-07-01
+[2026-07-02 17:07:03]       nvquery-kimi-k2_6                   f966661c  created=2026-06-30
+[2026-07-02 17:17:04] === NVCF function 健康检查开始 ===
+[2026-07-02 17:17:04] 当前 function_id: 8915fd28-fe8f-47d6-a35d-d745d78b35d5
+[2026-07-02 17:17:04] 当前 NV_MODEL_IDS: {'kimi_nv': 'moonshotai/kimi-k2.6', 'dsv4p_nv': 'deepseek-ai/deepseek-v4-pro', 'glm5_1_nv': 'z-ai/glm-5.1'}
+[2026-07-02 17:17:04] NVCF 账号共 170 个 functions
+[2026-07-02 17:17:04] 当前 function: name=sglang-deepseek-v4-pro status=ACTIVE created=2026-07-01 ncaId=NtdWlOIq9M-C
+[2026-07-02 17:17:04] ✅ 当前 function ACTIVE, 正常
+[2026-07-02 17:17:04]    (信息) watched-prefix ACTIVE 候选 2 个:
+[2026-07-02 17:17:04]       ai-deepseek-v4-pro                  74f02205  created=2026-07-01
+[2026-07-02 17:17:04]       nvquery-kimi-k2_6                   f966661c  created=2026-06-30
+[2026-07-02 17:27:04] === NVCF function 健康检查开始 ===
+[2026-07-02 17:27:04] 当前 function_id: 8915fd28-fe8f-47d6-a35d-d745d78b35d5
+[2026-07-02 17:27:04] 当前 NV_MODEL_IDS: {'kimi_nv': 'moonshotai/kimi-k2.6', 'dsv4p_nv': 'deepseek-ai/deepseek-v4-pro', 'glm5_1_nv': 'z-ai/glm-5.1'}
+[2026-07-02 17:27:05] NVCF 账号共 170 个 functions
+[2026-07-02 17:27:05] 当前 function: name=sglang-deepseek-v4-pro status=ACTIVE created=2026-07-01 ncaId=NtdWlOIq9M-C
+[2026-07-02 17:27:05] ✅ 当前 function ACTIVE, 正常
+[2026-07-02 17:27:05]    (信息) watched-prefix ACTIVE 候选 2 个:
+[2026-07-02 17:27:05]       ai-deepseek-v4-pro                  74f02205  created=2026-07-01
+[2026-07-02 17:27:05]       nvquery-kimi-k2_6                   f966661c  created=2026-06-30
+[2026-07-02 17:37:04] === NVCF function 健康检查开始 ===
+[2026-07-02 17:37:04] 当前 function_id: 8915fd28-fe8f-47d6-a35d-d745d78b35d5
+[2026-07-02 17:37:04] 当前 NV_MODEL_IDS: {'kimi_nv': 'moonshotai/kimi-k2.6', 'dsv4p_nv': 'deepseek-ai/deepseek-v4-pro', 'glm5_1_nv': 'z-ai/glm-5.1'}
+[2026-07-02 17:37:05] NVCF 账号共 170 个 functions
+[2026-07-02 17:37:05] 当前 function: name=sglang-deepseek-v4-pro status=ACTIVE created=2026-07-01 ncaId=NtdWlOIq9M-C
+[2026-07-02 17:37:05] ✅ 当前 function ACTIVE, 正常
+[2026-07-02 17:37:05]    (信息) watched-prefix ACTIVE 候选 3 个:
+[2026-07-02 17:37:05]       ai-deepseek-v4-pro                  74f02205  created=2026-07-01
+[2026-07-02 17:37:05]       nvquery-kimi-k2_6                   f966661c  created=2026-06-30
+[2026-07-02 17:37:05]       ai-kimi-k2_6                        23d4f03a  created=2026-06-03
+[2026-07-02 17:47:05] === NVCF function 健康检查开始 ===
+[2026-07-02 17:47:05] 当前 function_id: 8915fd28-fe8f-47d6-a35d-d745d78b35d5
+[2026-07-02 17:47:05] 当前 NV_MODEL_IDS: {'kimi_nv': 'moonshotai/kimi-k2.6', 'dsv4p_nv': 'deepseek-ai/deepseek-v4-pro', 'glm5_1_nv': 'z-ai/glm-5.1'}
+[2026-07-02 17:47:06] NVCF 账号共 170 个 functions
+[2026-07-02 17:47:06] 当前 function: name=sglang-deepseek-v4-pro status=ACTIVE created=2026-07-01 ncaId=NtdWlOIq9M-C
+[2026-07-02 17:47:06] ✅ 当前 function ACTIVE, 正常
+[2026-07-02 17:47:06]    (信息) watched-prefix ACTIVE 候选 2 个:
+[2026-07-02 17:47:06]       ai-deepseek-v4-pro                  74f02205  created=2026-07-01
+[2026-07-02 17:47:06]       nvquery-kimi-k2_6                   f966661c  created=2026-06-30
+[2026-07-02 17:57:05] === NVCF function 健康检查开始 ===
+[2026-07-02 17:57:05] 当前 function_id: 8915fd28-fe8f-47d6-a35d-d745d78b35d5
+[2026-07-02 17:57:05] 当前 NV_MODEL_IDS: {'kimi_nv': 'moonshotai/kimi-k2.6', 'dsv4p_nv': 'deepseek-ai/deepseek-v4-pro', 'glm5_1_nv': 'z-ai/glm-5.1'}
+[2026-07-02 17:57:06] NVCF 账号共 170 个 functions
+[2026-07-02 17:57:06] 当前 function: name=sglang-deepseek-v4-pro status=ACTIVE created=2026-07-01 ncaId=NtdWlOIq9M-C
+[2026-07-02 17:57:06] ✅ 当前 function ACTIVE, 正常
+[2026-07-02 17:57:06]    (信息) watched-prefix ACTIVE 候选 3 个:
+[2026-07-02 17:57:06]       ai-deepseek-v4-pro                  74f02205  created=2026-07-01
+[2026-07-02 17:57:06]       nvquery-kimi-k2_6                   f966661c  created=2026-06-30
+[2026-07-02 17:57:06]       ai-kimi-k2_6                        23d4f03a  created=2026-06-03
+[2026-07-02 18:07:06] === NVCF function 健康检查开始 ===
+[2026-07-02 18:07:06] 当前 function_id: 8915fd28-fe8f-47d6-a35d-d745d78b35d5
+[2026-07-02 18:07:06] 当前 NV_MODEL_IDS: {'kimi_nv': 'moonshotai/kimi-k2.6', 'dsv4p_nv': 'deepseek-ai/deepseek-v4-pro', 'glm5_1_nv': 'z-ai/glm-5.1'}
+[2026-07-02 18:07:07] NVCF 账号共 171 个 functions
+[2026-07-02 18:07:07] 当前 function: name=sglang-deepseek-v4-pro status=ACTIVE created=2026-07-01 ncaId=NtdWlOIq9M-C
+[2026-07-02 18:07:07] ✅ 当前 function ACTIVE, 正常
+[2026-07-02 18:07:07]    (信息) watched-prefix ACTIVE 候选 2 个:
+[2026-07-02 18:07:07]       ai-deepseek-v4-pro                  74f02205  created=2026-07-01
+[2026-07-02 18:07:07]       nvquery-kimi-k2_6                   f966661c  created=2026-06-30
+[2026-07-02 19:03:51] === NVCF function 健康检查开始 ===
+[2026-07-02 19:03:51] 当前 function_id: 8915fd28-fe8f-47d6-a35d-d745d78b35d5
+[2026-07-02 19:03:51] 当前 NV_MODEL_IDS: {'kimi_nv': 'moonshotai/kimi-k2.6', 'dsv4p_nv': 'deepseek-ai/deepseek-v4-pro', 'glm5_1_nv': 'z-ai/glm-5.1'}
+[2026-07-02 19:04:06] NVCF 账号共 171 个 functions
+[2026-07-02 19:04:06] 当前 function: name=sglang-deepseek-v4-pro status=ACTIVE created=2026-07-01 ncaId=NtdWlOIq9M-C
+[2026-07-02 19:04:06] ✅ 当前 function ACTIVE, 正常
+[2026-07-02 19:04:06]    (信息) watched-prefix ACTIVE 候选 2 个:
+[2026-07-02 19:04:06]       ai-deepseek-v4-pro                  74f02205  created=2026-07-01
+[2026-07-02 19:04:06]       nvquery-kimi-k2_6                   f966661c  created=2026-06-30
+[2026-07-02 19:13:51] === NVCF function 健康检查开始 ===
+[2026-07-02 19:13:51] 当前 function_id: 8915fd28-fe8f-47d6-a35d-d745d78b35d5
+[2026-07-02 19:13:51] 当前 NV_MODEL_IDS: {'kimi_nv': 'moonshotai/kimi-k2.6', 'dsv4p_nv': 'deepseek-ai/deepseek-v4-pro', 'glm5_1_nv': 'z-ai/glm-5.1'}
+[2026-07-02 19:13:54] NVCF 账号共 171 个 functions
+[2026-07-02 19:13:54] 当前 function: name=sglang-deepseek-v4-pro status=ACTIVE created=2026-07-01 ncaId=NtdWlOIq9M-C
+[2026-07-02 19:13:54] ✅ 当前 function ACTIVE, 正常
+[2026-07-02 19:13:54]    (信息) watched-prefix ACTIVE 候选 2 个:
+[2026-07-02 19:13:54]       ai-deepseek-v4-pro                  74f02205  created=2026-07-01
+[2026-07-02 19:13:54]       nvquery-kimi-k2_6                   f966661c  created=2026-06-30
+[2026-07-02 19:23:52] === NVCF function 健康检查开始 ===
+[2026-07-02 19:23:52] 当前 function_id: 8915fd28-fe8f-47d6-a35d-d745d78b35d5
+[2026-07-02 19:23:52] 当前 NV_MODEL_IDS: {'kimi_nv': 'moonshotai/kimi-k2.6', 'dsv4p_nv': 'deepseek-ai/deepseek-v4-pro', 'glm5_1_nv': 'z-ai/glm-5.1'}
+[2026-07-02 19:23:54] NVCF 账号共 171 个 functions
+[2026-07-02 19:23:54] 当前 function: name=sglang-deepseek-v4-pro status=ACTIVE created=2026-07-01 ncaId=NtdWlOIq9M-C
+[2026-07-02 19:23:54] ✅ 当前 function ACTIVE, 正常
+[2026-07-02 19:23:54]    (信息) watched-prefix ACTIVE 候选 2 个:
+[2026-07-02 19:23:54]       ai-deepseek-v4-pro                  74f02205  created=2026-07-01
+[2026-07-02 19:23:54]       nvquery-kimi-k2_6                   f966661c  created=2026-06-30
+[2026-07-02 19:33:52] === NVCF function 健康检查开始 ===
+[2026-07-02 19:33:52] 当前 function_id: 8915fd28-fe8f-47d6-a35d-d745d78b35d5
+[2026-07-02 19:33:52] 当前 NV_MODEL_IDS: {'kimi_nv': 'moonshotai/kimi-k2.6', 'dsv4p_nv': 'deepseek-ai/deepseek-v4-pro', 'glm5_1_nv': 'z-ai/glm-5.1'}
+[2026-07-02 19:33:56] NVCF 账号共 171 个 functions
+[2026-07-02 19:33:56] 当前 function: name=sglang-deepseek-v4-pro status=ACTIVE created=2026-07-01 ncaId=NtdWlOIq9M-C
+[2026-07-02 19:33:56] ✅ 当前 function ACTIVE, 正常
+[2026-07-02 19:33:56]    (信息) watched-prefix ACTIVE 候选 3 个:
+[2026-07-02 19:33:56]       ai-deepseek-v4-pro                  74f02205  created=2026-07-01
+[2026-07-02 19:33:56]       nvquery-kimi-k2_6                   f966661c  created=2026-06-30
+[2026-07-02 19:33:56]       ai-kimi-k2_6                        23d4f03a  created=2026-06-03
+[2026-07-02 19:43:56] === NVCF function 健康检查开始 ===
+[2026-07-02 19:43:56] 当前 function_id: 8915fd28-fe8f-47d6-a35d-d745d78b35d5
+[2026-07-02 19:43:56] 当前 NV_MODEL_IDS: {'kimi_nv': 'moonshotai/kimi-k2.6', 'dsv4p_nv': 'deepseek-ai/deepseek-v4-pro', 'glm5_1_nv': 'z-ai/glm-5.1'}
+[2026-07-02 19:43:58] NVCF 账号共 171 个 functions
+[2026-07-02 19:43:58] 当前 function: name=sglang-deepseek-v4-pro status=ACTIVE created=2026-07-01 ncaId=NtdWlOIq9M-C
+[2026-07-02 19:43:58] ✅ 当前 function ACTIVE, 正常
+[2026-07-02 19:43:58]    (信息) watched-prefix ACTIVE 候选 3 个:
+[2026-07-02 19:43:58]       ai-deepseek-v4-pro                  74f02205  created=2026-07-01
+[2026-07-02 19:43:58]       nvquery-kimi-k2_6                   f966661c  created=2026-06-30
+[2026-07-02 19:43:58]       ai-kimi-k2_6                        23d4f03a  created=2026-06-03
+[2026-07-02 19:54:01] === NVCF function 健康检查开始 ===
+[2026-07-02 19:54:01] 当前 function_id: 8915fd28-fe8f-47d6-a35d-d745d78b35d5
+[2026-07-02 19:54:01] 当前 NV_MODEL_IDS: {'kimi_nv': 'moonshotai/kimi-k2.6', 'dsv4p_nv': 'deepseek-ai/deepseek-v4-pro', 'glm5_1_nv': 'z-ai/glm-5.1'}
+[2026-07-02 19:54:04] NVCF 账号共 171 个 functions
+[2026-07-02 19:54:04] 当前 function: name=sglang-deepseek-v4-pro status=ACTIVE created=2026-07-01 ncaId=NtdWlOIq9M-C
+[2026-07-02 19:54:04] ✅ 当前 function ACTIVE, 正常
+[2026-07-02 19:54:04]    (信息) watched-prefix ACTIVE 候选 3 个:
+[2026-07-02 19:54:04]       ai-deepseek-v4-pro                  74f02205  created=2026-07-01
+[2026-07-02 19:54:04]       nvquery-kimi-k2_6                   f966661c  created=2026-06-30
+[2026-07-02 19:54:04]       ai-kimi-k2_6                        23d4f03a  created=2026-06-03
+[2026-07-02 20:04:01] === NVCF function 健康检查开始 ===
+[2026-07-02 20:04:01] 当前 function_id: 74f02205-c7ba-438f-b81a-2537955bd7ec
+[2026-07-02 20:04:01] 当前 NV_MODEL_IDS: {'kimi_nv': 'moonshotai/kimi-k2.6', 'dsv4p_nv': 'deepseek-ai/deepseek-v4-pro', 'glm5_1_nv': 'z-ai/glm-5.1'}
+[2026-07-02 20:04:04] NVCF 账号共 171 个 functions
+[2026-07-02 20:04:04] 当前 function: name=ai-deepseek-v4-pro status=ACTIVE created=2026-07-01 ncaId=NtdWlOIq9M-C
+[2026-07-02 20:04:04] ✅ 当前 function ACTIVE, 正常
+[2026-07-02 20:04:04]    (信息) watched-prefix ACTIVE 候选 3 个:
+[2026-07-02 20:04:04]       sglang-deepseek-v4-pro              8915fd28  created=2026-07-01
+[2026-07-02 20:04:04]       nvquery-kimi-k2_6                   f966661c  created=2026-06-30
+[2026-07-02 20:04:04]       ai-kimi-k2_6                        23d4f03a  created=2026-06-03
+[2026-07-02 20:14:01] === NVCF function 健康检查开始 ===
+[2026-07-02 20:14:01] 当前 function_id: 74f02205-c7ba-438f-b81a-2537955bd7ec
+[2026-07-02 20:14:01] 当前 NV_MODEL_IDS: {'kimi_nv': 'moonshotai/kimi-k2.6', 'dsv4p_nv': 'deepseek-ai/deepseek-v4-pro', 'glm5_1_nv': 'z-ai/glm-5.1'}
+[2026-07-02 20:14:06] NVCF 账号共 171 个 functions
+[2026-07-02 20:14:06] 当前 function: name=ai-deepseek-v4-pro status=ACTIVE created=2026-07-01 ncaId=NtdWlOIq9M-C
+[2026-07-02 20:14:06] ✅ 当前 function ACTIVE, 正常
+[2026-07-02 20:14:06]    (信息) watched-prefix ACTIVE 候选 2 个:
+[2026-07-02 20:14:06]       sglang-deepseek-v4-pro              8915fd28  created=2026-07-01
+[2026-07-02 20:14:06]       nvquery-kimi-k2_6                   f966661c  created=2026-06-30
+[2026-07-02 20:24:01] === NVCF function 健康检查开始 ===
+[2026-07-02 20:24:02] 当前 function_id: 74f02205-c7ba-438f-b81a-2537955bd7ec
+[2026-07-02 20:24:02] 当前 NV_MODEL_IDS: {'kimi_nv': 'moonshotai/kimi-k2.6', 'dsv4p_nv': 'deepseek-ai/deepseek-v4-pro', 'glm5_1_nv': 'z-ai/glm-5.1'}
+[2026-07-02 20:24:06] NVCF 账号共 171 个 functions
+[2026-07-02 20:24:06] 当前 function: name=ai-deepseek-v4-pro status=ACTIVE created=2026-07-01 ncaId=NtdWlOIq9M-C
+[2026-07-02 20:24:06] ✅ 当前 function ACTIVE, 正常
+[2026-07-02 20:24:06]    (信息) watched-prefix ACTIVE 候选 2 个:
+[2026-07-02 20:24:06]       sglang-deepseek-v4-pro              8915fd28  created=2026-07-01
+[2026-07-02 20:24:06]       nvquery-kimi-k2_6                   f966661c  created=2026-06-30
+[2026-07-02 20:34:02] === NVCF function 健康检查开始 ===
+[2026-07-02 20:34:02] 当前 function_id: 74f02205-c7ba-438f-b81a-2537955bd7ec
+[2026-07-02 20:34:02] 当前 NV_MODEL_IDS: {'kimi_nv': 'moonshotai/kimi-k2.6', 'dsv4p_nv': 'deepseek-ai/deepseek-v4-pro', 'glm5_1_nv': 'z-ai/glm-5.1'}
+[2026-07-02 20:34:07] NVCF 账号共 171 个 functions
+[2026-07-02 20:34:07] 当前 function: name=ai-deepseek-v4-pro status=ACTIVE created=2026-07-01 ncaId=NtdWlOIq9M-C
+[2026-07-02 20:34:07] ✅ 当前 function ACTIVE, 正常
+[2026-07-02 20:34:07]    (信息) watched-prefix ACTIVE 候选 2 个:
+[2026-07-02 20:34:07]       sglang-deepseek-v4-pro              8915fd28  created=2026-07-01
+[2026-07-02 20:34:07]       nvquery-kimi-k2_6                   f966661c  created=2026-06-30
+[2026-07-02 20:44:02] === NVCF function 健康检查开始 ===
+[2026-07-02 20:44:02] 当前 function_id: 74f02205-c7ba-438f-b81a-2537955bd7ec
+[2026-07-02 20:44:02] 当前 NV_MODEL_IDS: {'kimi_nv': 'moonshotai/kimi-k2.6', 'dsv4p_nv': 'deepseek-ai/deepseek-v4-pro', 'glm5_1_nv': 'z-ai/glm-5.1'}
+[2026-07-02 20:44:06] NVCF 账号共 171 个 functions
+[2026-07-02 20:44:06] 当前 function: name=ai-deepseek-v4-pro status=ACTIVE created=2026-07-01 ncaId=NtdWlOIq9M-C
+[2026-07-02 20:44:06] ✅ 当前 function ACTIVE, 正常
+[2026-07-02 20:44:06]    (信息) watched-prefix ACTIVE 候选 2 个:
+[2026-07-02 20:44:06]       sglang-deepseek-v4-pro              8915fd28  created=2026-07-01
+[2026-07-02 20:44:06]       nvquery-kimi-k2_6                   f966661c  created=2026-06-30

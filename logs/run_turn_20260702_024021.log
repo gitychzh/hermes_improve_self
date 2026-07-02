@@ -1,0 +1,28 @@
+[20260702_024021] === 启动 HM1 优化 HM2 自动执行 ===
+trigger: role=HM1 round=R521_hm2_optimize_hm1.md commit=d2ccaf2d1b681b5e5dd1f6bc2a5de5ec4e9865b5
+next round file: rounds/R522_hm1_optimize_hm2.md
+prompt: /home/opc_uname/hm_ps/hermes_improve_self/logs/prompt_20260702_024021.txt
+
+[20260702_024021] 启动claude (硬超时1500s)
+Push 成功 (d36e53e)。按 R350 教训铁律,git push 成功后必须立即停止,不得继续任何操作。
+
+本轮完成总结:
+
+**R523 (HM1→HM2)** — 数据证伪轮,已 push (d36e53e):
+
+1. **证伪 CC 清单 HM2 三项**(实测数据):
+   - [HM2-A] MIN_OUTBOUND 实测=1.0(非 4.5),证伪
+   - [HM2-B] k0-k4 全 200 成功无劣化 key,证伪
+   - [HM2-C] BUDGET 实测=100(非 128),证伪
+
+2. **补全 d2ccaf2 R522 A/B 验证**(R320#2 缺失):
+   - 改前 medium:113 reqs, 9.7% 失败, p95=55.9s
+   - 改后 low:43 reqs, 9.3% 失败, p95=55.7s
+   - 结论:low 无明显改善,55s ceiling 不变
+
+3. **根因**:55s 失败是 NVCF 服务端时刻性抖动(全 key 同时超时),HM 侧所有参数被数据反证无益或有害,本轮不改参数。
+
+4. 末尾翻转:⏳ 轮到 HM2 优化 HM1
+
+本轮到此结束,push 已成功,停止所有操作。
+[20260702_025405] === claude session退出 code=0 (124=超时) ===

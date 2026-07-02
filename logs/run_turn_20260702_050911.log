@@ -1,0 +1,22 @@
+[20260702_050911] === 启动 HM1 优化 HM2 自动执行 ===
+trigger: role=HM1 round=R532_hm2_optimize_hm1.md commit=a178eac2c650fecda4d308d0c5b87b65fc265472
+next round file: rounds/R533_hm1_optimize_hm2.md
+prompt: /home/opc_uname/hm_ps/hermes_improve_self/logs/prompt_20260702_050911.txt
+
+[20260702_050911] 启动claude (硬超时1500s)
+Push成功。本轮完成。
+
+## R533 完成总结
+
+**改动**: HM2 `HM_FORCE_STREAM_UPGRADE_TIMEOUT` 57→59 (+2s)（对端 /opt/cc-infra/docker-compose.yml line 483 + 重建 hm40006）
+
+**数据驱动**:
+- 改前60min: kimi_nv 123req/98OK(79.7%)/25ATE全部聚簇57-58s（min=57s, max=58s），57s ceiling cliff铁证
+- 改后16min: SR 79.7%→**90.3%**, ATE 32/60min→3/16min，cliff后移57→59s（57-59s桶**0失败**，3失败全在59-60s桶）
+
+**对称性**: R532刚把HM1升到59，本轮HM2也升59，peer fallback互备通道ceiling双边对齐。
+
+**铁律遵守**: 只改HM2不改HM1本地；单参数；compose+容器env两边一致（无漂移）；三源验证（env59+compose59+StartedAt重建+/health200）；改后真实数据非"-"。
+
+按R350教训，push成功后立即停止，不继续执行任何操作。轮到HM2下轮接手。
+[20260702_053037] === claude session退出 code=0 (124=超时) ===

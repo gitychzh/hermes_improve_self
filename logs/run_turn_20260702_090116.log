@@ -1,0 +1,24 @@
+[20260702_090116] === 启动 HM1 优化 HM2 自动执行 ===
+trigger: role=HM1 round=R546_hm2_optimize_hm1.md commit=17a61e15dbb87410250d499b68085ab0cbf8b377
+next round file: rounds/R547_hm1_optimize_hm2.md
+prompt: /home/opc_uname/hm_ps/hermes_improve_self/logs/prompt_20260702_090116.txt
+
+[20260702_090116] 启动claude (硬超时1500s)
+push 成功。按 R350 教训铁律，立即停止，不再执行任何操作。
+
+本轮完成总结：
+
+**R547 (HM1→HM2) — 数据证伪型 NOP**
+
+执行了 CC 清单 [HM2-B] 数据补采任务（[HM2-A]/[HM2-C] 前提证伪：MIN_OUTBOUND 实际 1.0 非 4.5，BUDGET 实际 80 非 128，顺延到 B）。
+
+核心发现：
+- **5 个 key 全部 100% SR**，零 key 劣化（否决"劣化 key"假设）
+- 失败 100% 是 NVCF function-level surge 导致的 empty_200(61s)+timeout(16s) 模式，全部为 peer-fb(hop=1) 请求
+- FASTBREAK=1 合理：empty_200 cycle 救回 13 次，timeout cycle 救回 0/4（surge 期换 key 仍 timeout）
+- 所有参数改动候选被数据否决（FASTBREAK 1→2 无效、timeout 61→50 误杀 5%、BUDGET 降误杀 max_ok=76.9s、ttfb 阈值误杀 p95=45.9s）
+
+与 HM1 R546 结论对称——双机都确认 NVCF surge 是 root cause，网关参数已最优。容器未重启，未改任何参数/源码。
+
+已 push (774e582)。轮到 HM2 优化 HM1。
+[20260702_091534] === claude session退出 code=0 (124=超时) ===

@@ -1,0 +1,25 @@
+[20260702_083932] === 启动 HM1 优化 HM2 自动执行 ===
+trigger: role=HM1 round=R544_hm2_optimize_hm1.md commit=16e85563cad4561ceee96f02e88cf39911b486f4
+next round file: rounds/R545_hm1_optimize_hm2.md
+prompt: /home/opc_uname/hm_ps/hermes_improve_self/logs/prompt_20260702_083932.txt
+
+[20260702_083932] 启动claude (硬超时1500s)
+Push 成功(`16e8556..dc4975c`)。按 R350 教训铁律,push 成功后立即停止,不再执行任何操作。
+
+## 本轮总结
+
+**R545 (HM1→HM2): NOP 轮**,commit `dc4975c` 已推送。
+
+**执行过程**:
+1. 拉取最新 + 读 R544/R542 上下文
+2. 采集对端 HM2 运行态,发现 CC 定向清单三项前提全部被实测证伪:
+   - **HM2-A**:假设 MIN_OUTBOUND=4.5,实际=**1.0**(R518 已降,远低于目标 2.5)
+   - **HM2-C**:假设 BUDGET=128,实际=**80**(R538 已降,低于目标 100)
+   - **HM2-B**:60min per-key 数据显示 **5 个本地 key 全 100% 成功**,k4 反而最优(p95=27.7s 最低),无劣化 key 可改路由
+3. 按"三项已做完或数据证伪"规则执行 NOP
+4. **额外发现孤儿改动**:compose 第486行 `HM_PEER_FALLBACK_TIMEOUT=50` 标注 "R545" 但无对应 round/commit(R542 合法值是 55,R543/R544 不应动 HM2)。已如实记录供 CC 裁决,本轮不搭车合法化、不回滚(避免越权+一轮两改)
+
+**60min 基线数据**:SR=86.4%(146/169),失败全 all_tiers_exhausted 来自 peer-fb NULL 路径(双机同时满载),零 429、零 SSLEOF、2 条 empty_200。HM2 网关参数已收敛,失败根源在 NVCF function-level surge 与 peer-fb 互救失败,非参数可修。
+
+轮次完成,push 后停止。⏳ 轮到 HM2 优化 HM1。
+[20260702_084432] === claude session退出 code=0 (124=超时) ===

@@ -1,0 +1,47 @@
+[20260702_021713] === 启动 HM1 优化 HM2 自动执行 ===
+trigger: role=HM1 round=R521_hm2_optimize_hm1.md commit=4273177a3d67de8734dc04f631a01ecb8865520c
+next round file: rounds/R522_hm1_optimize_hm2.md
+prompt: /home/opc_uname/hm_ps/hermes_improve_self/logs/prompt_20260702_021713.txt
+
+[20260702_021713] 启动claude (硬超时1500s)
+最终状态确认：
+
+**Git**：
+- 最新 commit = d2ccaf2（抢跑 R522，reasoning_effort medium→low）
+- 我**没有**任何 commit
+- `R522_concurrent_event_note.md` 是 untracked（未 staged，不会被 push）
+
+**Live HM2**：
+- `HM_PEER_FALLBACK_TIMEOUT=120`（原值，我的 120→15 改动已完全回滚）
+- `config.py line 77: reasoning_effort "low"`（d2ccaf2 的 R522 改动，保留运行）
+- 容器 healthy
+
+---
+
+## 本轮总结
+
+**事件**：R522 期间，两个 HM1 session 并发响应"轮到HM1优化HM2"。
+
+- **d2ccaf2**（另一个 session）在 02:32:32 CST commit+push 了 R522：`kimi_nv reasoning_effort medium→low`（改 config.py line 77），已部署到 live HM2。
+- **本 session** 在 02:29 CST 改了 HM2 `HM_PEER_FALLBACK_TIMEOUT 120→15`（对齐 HM1），但发现 d2ccaf2 已 push R522 后，**立即回滚所有改动**（compose + 容器恢复 120），**未 commit、未 push**，遵守 R350 教训铁律（避免撞号）。
+
+**本 session 的有价值发现**（记录在本地 `R522_concurrent_event_note.md`，未 commit，供 CC 仲裁）：
+
+1. **DB ts 时区真相**：`hm_requests.ts` 列存的是 **CST 时间数值**但类型标 `timestamptz`（实际值 = UTC+8h）。查询窗口必须用 CST 数值（如 `'2026-07-02 01:59'`）。R320 教训#5 "ts是UTC" 表述不准确。
+
+2. **peer fallback 机制**（handlers.py line 206/715）：
+   - peer fallback **FAILED**：DB duration = 本地 tier elapsed（55s），peer 等待时间**不计入** DB。
+   - peer fallback **OK**：DB duration = peer fallback 耗时（覆盖本地 elapsed）。
+   - `HM_PEER_FALLBACK_TIMEOUT` 是 `http.client.HTTPConnection` socket timeout（单次 read 阻塞上限），**不是总超时**。
+
+3. **双端不对称**：`HM_PEER_FALLBACK_TIMEOUT` HM1=15 / HM2=120。本 session 分析认为这**可能是有意的**（HM2 流量高、peer 救回多、120s 容忍长 thinking；HM1 流量低、15s 早 fail）。盲目降到 15 会误杀 HM2 peer 救回中 thinking 停滞 >15s 的（改前 5 次 peer 救回有 2 次耗时 17.5s/47s）。**不建议盲目对齐**。
+
+4. **CC 清单 HM2 三项证伪**（30min 数据）：
+   - [HM2-A] MIN_OUTBOUND 4.5→2.5：实测 HM2=1.0，证伪
+   - [HM2-B] 失败模式补采：已完成，k0–k4 全 0 失败，无劣化 key
+   - [HM2-C] TIER_TIMEOUT_BUDGET 128→100：实测 HM2=100，证伪
+
+**给下轮（HM2→HM1）的建议**：验证 d2ccaf2 R522（reasoning_effort=low）的效果——timeout 率是否因 low 而降。注意 d2ccaf2 round 文件写在 `rounds/RN_hm1_optimize_hm2.md`（模板，非规范命名，R322 教训#3），CC 托底时或需规范归档为 `R522_hm1_optimize_hm2.md`。
+
+**本轮未 commit、未 push 任何文件**（`R522_concurrent_event_note.md` 留作本地 untracked 参考）。R522 由 d2ccaf2 完成，live HM2 干净运行 d2ccaf2 的改动。轮到 HM2 优化 HM1。
+[20260702_024011] === claude session退出 code=0 (124=超时) ===

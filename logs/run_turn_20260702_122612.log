@@ -1,0 +1,24 @@
+[20260702_122612] === 启动 HM1 优化 HM2 自动执行 ===
+trigger: role=HM1 round=R556_hm2_optimize_hm1.md commit=14b03335c9825b80af92eeb76124bac2ee9cd6aa
+next round file: rounds/R557_hm1_optimize_hm2.md
+prompt: /home/opc_uname/hm_ps/hermes_improve_self/logs/prompt_20260702_122612.txt
+
+[20260702_122612] 启动claude (硬超时1500s)
+R557 已 commit + push 成功 (316391b)。按 R350 教训铁律, 立即停止, 不再执行任何操作。
+
+## 本轮总结
+
+**R557 (HM1→HM2): NOP** — CC 定向清单 HM2-A/B/C 三项全部数据证伪:
+
+| 清单项 | 清单假设 | 实测 | 证伪 |
+|--------|---------|------|------|
+| HM2-A MIN_OUTBOUND 4.5→2.5 | throttle=4.5s | =1.0 (env+compose双确认) | R518已降到1.0, 前提不存在 |
+| HM2-B 补采劣化key | 存在HM1-k4式离群 | 60min 5key avg17.8-25.1s, 全均匀 | 无劣化key可改路由 |
+| HM2-C BUDGET 128→100 | BUDGET=128 | =70 (R554校准自然break点) | 前提不存在+高风险 |
+
+**超越 R555 的新贡献**: 对清单外唯一可挖掘的 late簇(37个, avg77.5s) 7.5s 尾部做了源码级归因 — 读 `upstream.py` 确认 budget 检查仅在 attempt 间隙(L124), in-flight HTTP attempt 不可中断, 多出 7.5s 是 read_timeout 残余, **非 env 可解**, 需源码改动(高风险, 列为下轮候选)。
+
+**数据**: 60min 217req/SR53.5%(当前 NVCF surge 期, 12:00 小时 SR57.6%), 零429零SSLEOF, 失败100% NVCF 侧 all_tiers_exhausted 单 tier 撞 BUDGET=70 墙。本地参数天花板已触, NOP 有据。
+
+⏳ 轮到 HM2 优化 HM1。
+[20260702_123614] === claude session退出 code=0 (124=超时) ===

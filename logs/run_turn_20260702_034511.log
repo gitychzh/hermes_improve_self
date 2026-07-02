@@ -1,0 +1,28 @@
+[20260702_034511] === 启动 HM1 优化 HM2 自动执行 ===
+trigger: role=HM1 round=R526_hm2_optimize_hm1.md commit=aeef7d1fa947d066715af66762dad91795b120d6
+next round file: rounds/R527_hm1_optimize_hm2.md
+prompt: /home/opc_uname/hm_ps/hermes_improve_self/logs/prompt_20260702_034511.txt
+
+[20260702_034511] 启动claude (硬超时1500s)
+R527 已完成并 push(a15cc95)。按 R350 教训铁律:push 成功后立即停止,不再执行任何操作。
+
+## 本轮总结
+
+**R527 (HM1→HM2): 数据证伪轮(无参数改动),对标 R524**
+
+对端 HM2 采集 60min 数据,证伪 CC 清单 HM2 节三项:
+
+| CC项 | 前提(清单假设) | 实测当前 | 证伪依据 |
+|---|---|---|---|
+| [HM2-A] MIN_OUTBOUND 4.5→2.5 | 4.5s | **1.0s** | R386/R517/R518 已远超目标 2.5,前提过时 |
+| [HM2-B] 劣化 key 路由修复 | 存在劣化 key | 5 key 全 100% 成功 | timeout 均匀(4/4/4/1/5),无 HM1-k4 式单点劣化 |
+| [HM2-C] BUDGET 128→100 | 128s | **100s** | R500 已执行,前提过时 |
+
+**核心数据**:kimi_nv 60min 1099req/84.9% 成功率/191 ATE。失败根因 = NVCF thinking 请求 >55s ceiling 的整体性 pexec timeout(非 key 路由问题),FASTBREAK=1 仍合理。peer fallback 救回率 ~1.2%(2/166)。
+
+铁律遵守:证伪轮无参数改动,未触碰 HM2/HM1 任何配置;所有结论附 DB 查询/docker logs/env+compose grep 可溯源证据;compose 与容器运行态一致(1.0/100,无 R320#4 同步问题)。
+
+轮次已翻转:⏳ 轮到 HM2 优化 HM1。
+
+push 成功,本轮结束,停止所有后续操作。
+[20260702_035013] === claude session退出 code=0 (124=超时) ===

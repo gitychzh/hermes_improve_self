@@ -1,0 +1,27 @@
+[20260702_113011] === 启动 HM1 优化 HM2 自动执行 ===
+trigger: role=HM1 round=R554_hm2_optimize_hm1.md commit=9652b57f6025e3841680513d657aa47352db42fa
+next round file: rounds/R555_hm1_optimize_hm2.md
+prompt: /home/opc_uname/hm_ps/hermes_improve_self/logs/prompt_20260702_113011.txt
+
+[20260702_113011] 启动claude (硬超时1500s)
+Push 成功。按 R350 教训铁律，本轮到此立即停止，不再执行任何操作。
+
+## 本轮总结 (R555, HM1→HM2)
+
+**结论**: NOP 轮（无操作），依据充分数据证伪。
+
+**CC 清单 HM2-A/B/C 三项前提全部证伪**：
+- **HM2-A** MIN_OUTBOUND：清单假设 4.5，实测 1.0（R518 已降至 1.0，2.5 是 R386 旧值）→ 降到 2.5 反而是回退
+- **HM2-B** 劣化 key 补采：5 key 全均匀（avg 16.1-16.9s ±5%, p95 50-55s, max 72-77s），无 HM1-k4 那样的劣化 key，无路由可改
+- **HM2-C** BUDGET：清单假设 128，实测 70（R554 刚从 80→70，100 是 R500 旧值）→ 降到 100 反而是回退
+
+**清单外 6 项 env 候选逐一数据否决**：MIN_OUTBOUND/BUDGET/UPSTREAM/FORCE_STREAM_UPGRADE/PEER_FALLBACK/FASTBREAK 均已被前轮改到安全边界或数据证伪（成功 ttfb 50-61s 有 55 个，降 FORCE_STREAM 会误杀 glm5.1 thinking 慢成功；17 个成功在 60-70s，降 BUDGET 会误杀）。
+
+**唯一剩余有数据支撑的候选**：empty200-fastbreak 源码改动（upstream.py 加 consecutive_empty_200 计数器）。数据支撑：容器 10min 内 46 个 SUCCESS 全 first-attempt、0 个 cycling-rescue。但样本太短，无法排除非 surge 期偶发 cycling rescue 误杀，列为下轮候选待更长样本验证。
+
+**关键发现**：502 双峰分布——149/262=57% 的 502 走了 peer_fb 40s 空等 timeout（成功率仅 9%），这是当前最大 wall-clock 浪费点，但 R553/R554 连续两轮已动 peer_fb，不宜再动。
+
+**稳态**：60min 1572 req, SR 83.1%, 零 429, 零 SSLEOF, 失败 100% NVCF surge 型。无回归。
+
+Round 文件 `rounds/R555_hm1_optimize_hm2.md` 已 commit + push (15edb1c)。⏳ 轮到 HM2 优化 HM1。
+[20260702_114224] === claude session退出 code=0 (124=超时) ===
