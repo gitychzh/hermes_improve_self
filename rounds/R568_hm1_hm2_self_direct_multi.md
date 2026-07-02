@@ -150,4 +150,14 @@ openclaw(→dsv4p)/hermes(→kimi)/opencode(→glm5.1) 三 agent 真实流量全
 
 ---
 
+### 追加验证 (21:20, compact 续轮)
+- **func_health 故障切换实测**: HM1 容器内对 dsv4p 首选 74f02205 连灌 8 次 record_result(False) → 健康度降到 0.0 → `select_healthy_function` 自动返回备选 8915fd28 ✅ (日志 `[HM-FUNC-HEALTH] model=dsv4p_nv primary=74f02205... unhealthy → switched to 8915fd28...`). 之后 `docker compose restart hm40006` 清掉测试污染, snapshot 归 {}.
+- **多候选当前选择**: kimi→f966661c / dsv4p→74f02205(备8915fd28) / glm5.1→6155636e(备af904f0c).
+- **openclaw name 字段清理**: 两机 openclaw.json 的 dsv4p_nv.name 旧文案 "sglang 8915fd28" → "ai-deepseek 74f02205" (仅显示名, 不影响路由). 备份 `.bak.cleanup_20260702`.
+- **三 agent 配置整洁确认**: hermes 两机 default=kimi_nv 无 providers/aliases; opencode 两机只 glm5_1_nv 无 kimi/dsv4p/deepseek 残留; openclaw 两机只 dsv4p_nv.
+- **peer fallback 范围确认**: HM1→http://100.109.57.26:40006, HM2→http://100.109.153.83:40006 (仅两机互指); FALLBACK_GRAPH 默认空 (不跨模型). 符合"fallback只在两台设备不同IP间"要求.
+- **HM1 重启后 health**: `{"status":"ok","nvcf_pexec_models":["kimi_nv","dsv4p_nv","glm5_1_nv"],"hm_default_model":"dsv4p_nv"}`.
+
+---
+
 ## ⏳ 轮到HM2优化HM1
